@@ -401,47 +401,57 @@
       animation: card-breathe 5s ease-in-out infinite;
       /* Starts hidden for pop entrance */
       opacity: 0;
-      transform: scale(0) rotateY(90deg);
+      transform: perspective(1200px) scale(0) rotateY(180deg) rotateX(20deg) translateZ(-200px);
       transform-origin: center center;
     }
 
     .container.visible .profile-card {
-      animation: card-pop-in 1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards, card-breathe 5s ease-in-out infinite 1.2s;
+      animation: card-pop-in 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards, card-breathe 5s ease-in-out infinite 2.2s;
     }
 
     @keyframes card-pop-in {
       0% {
         opacity: 0;
-        transform: scale(0) rotateY(90deg);
+        transform: perspective(1200px) scale(0) rotateY(180deg) rotateX(20deg) translateZ(-200px);
         box-shadow: 0 0 0 rgba(139, 92, 246, 0);
-        filter: blur(10px);
+        filter: blur(20px) brightness(0);
       }
-      20% {
-        opacity: 0.5;
-        transform: scale(0.3) rotateY(60deg);
-        filter: blur(5px);
+      15% {
+        opacity: 0.3;
+        transform: perspective(1200px) scale(0.15) rotateY(140deg) rotateX(15deg) translateZ(-100px);
+        filter: blur(15px) brightness(0.5);
       }
-      40% {
+      30% {
+        opacity: 0.7;
+        transform: perspective(1200px) scale(0.5) rotateY(80deg) rotateX(8deg) translateZ(-50px);
+        filter: blur(8px) brightness(1.2);
+      }
+      45% {
         opacity: 1;
-        transform: scale(1.08) rotateY(-10deg);
-        box-shadow: 0 0 80px rgba(139, 92, 246, 0.5), 0 0 160px rgba(139, 92, 246, 0.2);
-        filter: blur(0px);
+        transform: perspective(1200px) scale(1.12) rotateY(-15deg) rotateX(-3deg) translateZ(0);
+        box-shadow: 0 0 100px rgba(139, 92, 246, 0.6), 0 0 200px rgba(139, 92, 246, 0.3), inset 0 0 30px rgba(139, 92, 246, 0.1);
+        filter: blur(0px) brightness(1.5);
       }
-      55% {
-        transform: scale(0.97) rotateY(5deg);
-        box-shadow: 0 0 60px rgba(139, 92, 246, 0.4), 0 0 120px rgba(139, 92, 246, 0.15);
+      58% {
+        transform: perspective(1200px) scale(0.96) rotateY(8deg) rotateX(2deg);
+        box-shadow: 0 0 70px rgba(139, 92, 246, 0.4), 0 0 140px rgba(139, 92, 246, 0.15);
+        filter: blur(0px) brightness(1.1);
       }
       70% {
-        transform: scale(1.02) rotateY(-2deg);
+        transform: perspective(1200px) scale(1.04) rotateY(-4deg) rotateX(-1deg);
+        filter: brightness(1);
       }
-      85% {
-        transform: scale(0.995) rotateY(1deg);
+      82% {
+        transform: perspective(1200px) scale(0.99) rotateY(2deg);
+      }
+      92% {
+        transform: perspective(1200px) scale(1.01) rotateY(-0.5deg);
       }
       100% {
         opacity: 1;
-        transform: scale(1) rotateY(0deg);
+        transform: perspective(1200px) scale(1) rotateY(0deg) rotateX(0deg) translateZ(0);
         box-shadow: 0 0 40px rgba(139, 92, 246, 0.1), 0 0 80px rgba(139, 92, 246, 0.05);
-        filter: blur(0px);
+        filter: blur(0px) brightness(1);
       }
     }
 
