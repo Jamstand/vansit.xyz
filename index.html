@@ -845,13 +845,13 @@
       animation-delay: 0.6s;
     }
 
-    /* Spotify - Green */
-    .social-link[data-name="spotify"] {
-      --btn-color: #1db954;
-      --btn-color-dim: rgba(29, 185, 84, 0.35);
-      --btn-glow: rgba(29, 185, 84, 0.5);
-      --btn-bg: rgba(29, 185, 84, 0.08);
-      --btn-color-bright: #1ed760;
+    /* Discord Server - Blurple */
+    .social-link[data-name="discord-server"] {
+      --btn-color: #5865f2;
+      --btn-color-dim: rgba(88, 101, 242, 0.35);
+      --btn-glow: rgba(88, 101, 242, 0.5);
+      --btn-bg: rgba(88, 101, 242, 0.08);
+      --btn-color-bright: #7289da;
       animation-delay: 0.9s;
     }
 
@@ -971,13 +971,13 @@
       animation-duration: 1s;
     }
 
-    /* Spotify green/grey spinning border */
-    .social-link[data-name="spotify"]::before {
-      background: conic-gradient(from 0deg, #1db954, #888, #1db954, transparent, #888, #1db954);
+    /* Discord Server blurple spinning border */
+    .social-link[data-name="discord-server"]::before {
+      background: conic-gradient(from 0deg, #5865f2, #7289da, #5865f2, transparent, #7289da, #5865f2);
       opacity: 0.7;
       animation: btn-border-spin 2.5s linear infinite;
     }
-    .social-link[data-name="spotify"]:hover::before {
+    .social-link[data-name="discord-server"]:hover::before {
       opacity: 1;
       animation-duration: 1s;
     }
@@ -1084,16 +1084,13 @@
       60% { transform: scale(1); }
     }
 
-    /* Spotify - music wave / bounce */
-    .social-link[data-name="spotify"] svg {
-      animation: spotify-icon-dance 2.8s ease-in-out infinite;
+    /* Discord Server - globe spin */
+    .social-link[data-name="discord-server"] svg {
+      animation: server-icon-spin 3s ease-in-out infinite;
     }
-    @keyframes spotify-icon-dance {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      20% { transform: translateY(-2px) rotate(-4deg); }
-      40% { transform: translateY(1px) rotate(2deg); }
-      60% { transform: translateY(-1px) rotate(-2deg); }
-      80% { transform: translateY(0px) rotate(3deg); }
+    @keyframes server-icon-spin {
+      0%, 100% { transform: translateY(0) rotateY(0deg); }
+      50% { transform: translateY(-2px) rotateY(180deg); }
     }
 
     /* TikTok - color shift glow */
@@ -1575,35 +1572,35 @@
 
       <div class="socials">
         <!-- Twitch -->
-        <a href="#" class="social-link" data-tooltip="Twitch" data-name="twitch">
+        <a href="https://twitch.tv/vans_it" target="_blank" class="social-link" data-tooltip="Twitch" data-name="twitch">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 2H3v16h5v4l4-4h5l4-4V2zm-10 9V7m5 4V7"/>
           </svg>
           <span class="click-count">0</span>
         </a>
         <!-- Discord -->
-        <a href="#" class="social-link" data-tooltip="Discord" data-name="discord">
+        <a href="https://discord.com/users/vans1010" target="_blank" class="social-link" data-tooltip="Discord" data-name="discord">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09-.01-.02-.04-.03-.07-.03-1.5.26-2.93.71-4.27 1.33-.01 0-.02.01-.03.02-2.72 4.07-3.47 8.03-3.1 11.95 0 .02.01.04.03.05 1.8 1.32 3.53 2.12 5.24 2.65.03.01.06 0 .07-.02.4-.55.76-1.13 1.07-1.74.02-.04 0-.08-.04-.09-.57-.22-1.11-.48-1.64-.78-.04-.02-.04-.08-.01-.11.11-.08.22-.17.33-.25.02-.02.05-.02.07-.01 3.44 1.57 7.15 1.57 10.55 0 .02-.01.05-.01.07.01.11.09.22.17.33.26.04.03.04.09-.01.11-.52.31-1.07.56-1.64.78-.04.01-.05.06-.04.09.32.61.68 1.19 1.07 1.74.03.01.06.02.09.01 1.72-.53 3.45-1.33 5.25-2.65.02-.01.03-.03.03-.05.44-4.53-.73-8.46-3.1-11.95-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.83 2.12-1.89 2.12z"/>
           </svg>
           <span class="click-count">0</span>
         </a>
+        <!-- Discord Server -->
+        <a href="https://discord.gg/m6dqsynCxy" target="_blank" class="social-link" data-tooltip="Server" data-name="discord-server">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          </svg>
+          <span class="click-count">0</span>
+        </a>
         <!-- YouTube -->
-        <a href="#" class="social-link" data-tooltip="YouTube" data-name="youtube">
+        <a href="https://youtube.com/@vans_it" target="_blank" class="social-link" data-tooltip="YouTube" data-name="youtube">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
           </svg>
           <span class="click-count">0</span>
         </a>
-        <!-- Spotify -->
-        <a href="#" class="social-link" data-tooltip="Spotify" data-name="spotify">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-          <span class="click-count">0</span>
-        </a>
         <!-- TikTok -->
-        <a href="#" class="social-link" data-tooltip="TikTok" data-name="tiktok">
+        <a href="https://tiktok.com/@jott_it1" target="_blank" class="social-link" data-tooltip="TikTok" data-name="tiktok">
           <div class="tiktok-ring"></div>
           <div class="tiktok-ring-glow"></div>
           <svg viewBox="0 0 24 24" fill="currentColor">
