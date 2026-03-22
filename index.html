@@ -325,29 +325,30 @@
       text-transform: uppercase;
     }
 
-    /* Flash overlay on enter */
-    .flash-overlay {
+    /* Splash flash layers */
+    .splash-flash {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: var(--primary);
-      z-index: 10000;
+      inset: 0;
+      z-index: 9998;
       pointer-events: none;
-      opacity: 0;
     }
 
-    .flash-overlay.flash {
-      animation: screen-flash 0.8s ease-out forwards;
+    /* Shockwave rings */
+    .shockwave {
+      position: fixed;
+      border-radius: 50%;
+      border: 2px solid;
+      pointer-events: none;
+      z-index: 10000;
+      transform: translate(-50%, -50%);
     }
 
-    @keyframes screen-flash {
-      0% { opacity: 0; }
-      15% { opacity: 0.8; }
-      30% { opacity: 0.1; }
-      45% { opacity: 0.5; }
-      100% { opacity: 0; }
+    /* Splash particles */
+    .splash-particle {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10001;
     }
 
     @keyframes pulse-text {
@@ -1372,9 +1373,6 @@
   <div class="cursor"></div>
   <div class="cursor-dot"></div>
 
-  <!-- Flash Overlay -->
-  <div class="flash-overlay" id="flashOverlay"></div>
-
   <!-- Start Screen -->
   <div class="start-screen" id="startScreen">
     <div class="start-content">
@@ -1692,33 +1690,173 @@
     // ==========================================
     const startScreen = document.getElementById('startScreen');
     const mainContainer = document.getElementById('mainContainer');
-    const flashOverlay = document.getElementById('flashOverlay');
     const elapsedEl = document.getElementById('elapsed');
     let startTime;
     let entered = false;
 
-    startScreen.addEventListener('click', () => {
+    // Shuffle the splash name on load
+    const splashLogo = document.querySelector('.start-logo');
+    splashLogo.textContent = '';
+    setTimeout(() => shuffleReveal(splashLogo, 'VANS_IT'), 300);
+
+    startScreen.addEventListener('click', (e) => {
       if (entered) return;
       entered = true;
+      startScreen.style.pointerEvents = 'none';
 
-      // Play music immediately on click (user gesture)
+      const cx = e.clientX || window.innerWidth / 2;
+      const cy = e.clientY || window.innerHeight / 2;
+
+      // Play music immediately
       audio.play().catch(() => {});
       audioPlaying = true;
       document.querySelectorAll('.audio-bar').forEach(b => b.classList.add('active'));
 
-      // Flash effect
-      flashOverlay.classList.add('flash');
+      // ── FULL SCREEN WHITE FLASH ──
+      const whiteFlash = document.createElement('div');
+      whiteFlash.className = 'splash-flash';
+      whiteFlash.style.background = '#fff';
+      whiteFlash.style.opacity = '0.6';
+      whiteFlash.style.transition = 'opacity 1.2s ease-out';
+      document.body.appendChild(whiteFlash);
+      requestAnimationFrame(() => { whiteFlash.style.opacity = '0'; });
+      setTimeout(() => whiteFlash.remove(), 1300);
 
-      // Dramatic exit
-      startScreen.classList.add('exit');
+      // ── COLOR GRADIENT FLASH ──
+      const flash = document.createElement('div');
+      flash.className = 'splash-flash';
+      flash.style.background = `radial-gradient(circle at ${cx}px ${cy}px, rgba(139,92,246,0.5), rgba(196,181,253,0.3), rgba(139,92,246,0.2), transparent 70%)`;
+      flash.style.opacity = '1';
+      flash.style.transition = 'opacity 1s ease-out';
+      document.body.appendChild(flash);
+      setTimeout(() => { flash.style.opacity = '0'; }, 100);
+      setTimeout(() => flash.remove(), 1200);
 
-      // After flash, reveal content
+      // ── SCREEN SHAKE ──
+      document.body.style.transition = 'none';
+      let shakeCount = 0;
+      const shakeInterval = setInterval(() => {
+        const x = (Math.random() - 0.5) * (12 - shakeCount * 0.8);
+        const y = (Math.random() - 0.5) * (12 - shakeCount * 0.8);
+        document.body.style.transform = `translate(${x}px, ${y}px)`;
+        shakeCount++;
+        if (shakeCount > 14) {
+          clearInterval(shakeInterval);
+          document.body.style.transform = '';
+        }
+      }, 30);
+
+      // ── 5 SHOCKWAVE RINGS ──
+      const ringColors = ['rgba(255,255,255,0.5)', 'rgba(139,92,246,0.4)', 'rgba(196,181,253,0.35)', 'rgba(167,139,250,0.3)', 'rgba(255,255,255,0.2)'];
+      for (let r = 0; r < 5; r++) {
+        ((i) => {
+          const ring = document.createElement('div');
+          ring.className = 'shockwave';
+          ring.style.left = cx + 'px';
+          ring.style.top = cy + 'px';
+          ring.style.width = '10px';
+          ring.style.height = '10px';
+          ring.style.borderColor = ringColors[i];
+          ring.style.borderWidth = (3 - i * 0.4) + 'px';
+          ring.style.boxShadow = `0 0 ${15 - i * 2}px ${ringColors[i]}`;
+          ring.style.transition = `all ${0.8 + i * 0.15}s cubic-bezier(0.16, 1, 0.3, 1)`;
+          document.body.appendChild(ring);
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              const size = (800 + i * 300) + 'px';
+              ring.style.width = size;
+              ring.style.height = size;
+              ring.style.opacity = '0';
+              ring.style.borderWidth = '0.5px';
+              ring.style.boxShadow = 'none';
+            }, i * 60);
+          });
+          setTimeout(() => ring.remove(), 1400 + i * 200);
+        })(r);
+      }
+
+      // ── DIAGONAL STREAK LINES ──
+      const streakColors = ['rgba(255,255,255,0.6)', 'rgba(139,92,246,0.5)', 'rgba(196,181,253,0.4)', 'rgba(167,139,250,0.4)'];
+      for (let s = 0; s < 8; s++) {
+        ((i) => {
+          const streak = document.createElement('div');
+          streak.className = 'splash-flash';
+          const angle = -35 + (Math.random() * 20 - 10);
+          const len = 200 + Math.random() * 400;
+          streak.style.cssText = `position:fixed;width:${len}px;height:2px;left:${cx}px;top:${cy}px;transform-origin:left center;transform:translate(-50%,-50%) rotate(${angle}deg);background:linear-gradient(90deg,transparent,${streakColors[i % streakColors.length]},transparent);filter:blur(1px);opacity:0.8;transition:all 0.8s ease-out;z-index:9998;pointer-events:none;`;
+          document.body.appendChild(streak);
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              streak.style.width = (len * 3) + 'px';
+              streak.style.opacity = '0';
+            }, i * 40);
+          });
+          setTimeout(() => streak.remove(), 1000 + i * 50);
+        })(s);
+      }
+
+      // ── 40 PARTICLES ──
+      const particleColors = ['#8b5cf6', '#a78bfa', '#c4b5fd', '#fff', '#fff', '#8b5cf6', '#a78bfa', '#fff'];
+      for (let p = 0; p < 40; p++) {
+        (() => {
+          const dot = document.createElement('div');
+          dot.className = 'splash-particle';
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 80 + Math.random() * 500;
+          const size = 1 + Math.random() * 5;
+          const dx = Math.cos(angle) * dist;
+          const dy = Math.sin(angle) * dist;
+          const dur = 0.5 + Math.random() * 1;
+          dot.style.left = cx + 'px';
+          dot.style.top = cy + 'px';
+          dot.style.width = size + 'px';
+          dot.style.height = size + 'px';
+          const c = particleColors[Math.floor(Math.random() * particleColors.length)];
+          dot.style.background = c;
+          dot.style.boxShadow = `0 0 ${4 + Math.random() * 6}px ${c}`;
+          dot.style.opacity = '0.9';
+          dot.style.transform = 'translate(-50%, -50%)';
+          dot.style.transition = `all ${dur}s cubic-bezier(0.16, 1, 0.3, 1)`;
+          document.body.appendChild(dot);
+          requestAnimationFrame(() => {
+            dot.style.left = (cx + dx) + 'px';
+            dot.style.top = (cy + dy) + 'px';
+            dot.style.opacity = '0';
+            dot.style.width = '0px';
+            dot.style.height = '0px';
+          });
+          setTimeout(() => dot.remove(), dur * 1000 + 100);
+        })();
+      }
+
+      // ── SPLASH NAME SCRAMBLE OUT ──
+      const scrambleOut = 'VANS_IT';
+      let outIter = 0;
+      const outChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_!@#$%';
+      const outInterval = setInterval(() => {
+        splashLogo.textContent = scrambleOut.split('').map((c, i) => {
+          if (i < outIter) return ' ';
+          return outChars[Math.floor(Math.random() * outChars.length)];
+        }).join('');
+        outIter += 0.5;
+        if (outIter > scrambleOut.length) {
+          clearInterval(outInterval);
+          splashLogo.textContent = '';
+        }
+      }, 30);
+
+      // ── FADE OUT SPLASH ──
+      startScreen.style.transition = 'opacity 0.8s ease 0.3s';
+      startScreen.style.opacity = '0';
+
+      // ── SHOW CONTENT ──
       setTimeout(() => {
         videoBg.play();
         videoBg.classList.add('loaded');
       }, 300);
 
       setTimeout(() => {
+        startScreen.style.display = 'none';
         mainContainer.classList.add('visible');
         elapsedEl.classList.add('visible');
         startTime = Date.now();
@@ -1727,13 +1865,7 @@
         initParticles();
         updateElapsed();
         checkTwitchStatus();
-      }, 800);
-
-      // Cleanup start screen after animation
-      setTimeout(() => {
-        startScreen.classList.add('hidden');
-        flashOverlay.classList.remove('flash');
-      }, 2000);
+      }, 900);
     });
 
     // ==========================================
