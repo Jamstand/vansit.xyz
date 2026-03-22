@@ -198,7 +198,20 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.8s ease, visibility 0.8s ease;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .start-screen.exit {
+      animation: start-exit 1.5s cubic-bezier(0.7, 0, 0.3, 1) forwards;
+    }
+
+    @keyframes start-exit {
+      0% { clip-path: inset(0 0 0 0); filter: brightness(1); }
+      30% { clip-path: inset(0 0 0 0); filter: brightness(3); }
+      50% { clip-path: inset(0 48% 0 48%); filter: brightness(3); }
+      80% { clip-path: inset(45% 49.5% 45% 49.5%); filter: brightness(1); }
+      100% { clip-path: inset(50% 50% 50% 50%); filter: brightness(0); opacity: 0; visibility: hidden; }
     }
 
     .start-screen.hidden {
@@ -206,10 +219,90 @@
       visibility: hidden;
     }
 
+    /* Start screen ambient particles */
+    .start-particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--primary-glow);
+      animation: start-float linear infinite;
+      opacity: 0;
+    }
+
+    @keyframes start-float {
+      0% { transform: translateY(100vh) scale(0); opacity: 0; }
+      10% { opacity: 0.8; }
+      90% { opacity: 0.8; }
+      100% { transform: translateY(-20vh) scale(1); opacity: 0; }
+    }
+
+    .start-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 1;
+    }
+
+    .start-logo {
+      font-family: 'Furore', 'Space Grotesk', sans-serif;
+      font-size: 2.5rem;
+      letter-spacing: 12px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--text), var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 30px;
+      animation: logo-glow 3s ease-in-out infinite;
+      text-shadow: none;
+    }
+
+    @keyframes logo-glow {
+      0%, 100% { filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.3)); }
+      50% { filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.6)); }
+    }
+
+    .start-ring {
+      width: 80px;
+      height: 80px;
+      border: 2px solid transparent;
+      border-top-color: var(--primary);
+      border-right-color: var(--accent);
+      border-radius: 50%;
+      animation: spin-ring 2s linear infinite;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .start-ring::before {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      border: 1px solid transparent;
+      border-bottom-color: var(--secondary);
+      border-left-color: var(--primary);
+      border-radius: 50%;
+      animation: spin-ring 1.5s linear infinite reverse;
+    }
+
+    .start-ring::after {
+      content: '▶';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      font-size: 1.2rem;
+      animation: pulse-text 2s ease-in-out infinite;
+    }
+
     .start-text {
       font-family: 'Furore', 'Space Grotesk', sans-serif;
-      font-size: 1.2rem;
-      letter-spacing: 6px;
+      font-size: 0.85rem;
+      letter-spacing: 8px;
       text-transform: uppercase;
       color: var(--text-dim);
       animation: pulse-text 2s ease-in-out infinite;
@@ -219,8 +312,42 @@
       width: 60px;
       height: 1px;
       background: linear-gradient(90deg, transparent, var(--primary), transparent);
-      margin-top: 20px;
+      margin-top: 16px;
       animation: expand-line 2s ease-in-out infinite;
+    }
+
+    .start-hint {
+      font-family: 'Furore', sans-serif;
+      font-size: 0.55rem;
+      letter-spacing: 4px;
+      color: rgba(139, 92, 246, 0.3);
+      margin-top: 40px;
+      text-transform: uppercase;
+    }
+
+    /* Flash overlay on enter */
+    .flash-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: var(--primary);
+      z-index: 10000;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .flash-overlay.flash {
+      animation: screen-flash 0.8s ease-out forwards;
+    }
+
+    @keyframes screen-flash {
+      0% { opacity: 0; }
+      15% { opacity: 0.8; }
+      30% { opacity: 0.1; }
+      45% { opacity: 0.5; }
+      100% { opacity: 0; }
     }
 
     @keyframes pulse-text {
@@ -1245,10 +1372,18 @@
   <div class="cursor"></div>
   <div class="cursor-dot"></div>
 
+  <!-- Flash Overlay -->
+  <div class="flash-overlay" id="flashOverlay"></div>
+
   <!-- Start Screen -->
   <div class="start-screen" id="startScreen">
-    <div class="start-text">Click to Enter</div>
-    <div class="start-line"></div>
+    <div class="start-content">
+      <div class="start-logo">VANS_IT</div>
+      <div class="start-ring"></div>
+      <div class="start-text">Click to Enter</div>
+      <div class="start-line"></div>
+      <div class="start-hint">Sound On for Best Experience</div>
+    </div>
   </div>
 
   <!-- Video Background -->
@@ -1527,25 +1662,78 @@
     });
 
     // ==========================================
+    // START SCREEN PARTICLES
+    // ==========================================
+    (function() {
+      const screen = document.getElementById('startScreen');
+      for (let i = 0; i < 30; i++) {
+        const p = document.createElement('div');
+        p.className = 'start-particle';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDuration = (3 + Math.random() * 5) + 's';
+        p.style.animationDelay = (Math.random() * 5) + 's';
+        p.style.width = (1 + Math.random() * 3) + 'px';
+        p.style.height = p.style.width;
+        screen.appendChild(p);
+      }
+    })();
+
+    // ==========================================
+    // MUSIC
+    // ==========================================
+    const songs = ['song1.mp3', 'song2.mp3', 'song3.mp3'];
+    const audio = new Audio(songs[Math.floor(Math.random() * songs.length)]);
+    audio.loop = true;
+    audio.volume = 0.4;
+    let audioPlaying = false;
+
+    // ==========================================
     // START SCREEN
     // ==========================================
     const startScreen = document.getElementById('startScreen');
     const mainContainer = document.getElementById('mainContainer');
+    const flashOverlay = document.getElementById('flashOverlay');
     const elapsedEl = document.getElementById('elapsed');
     let startTime;
+    let entered = false;
 
     startScreen.addEventListener('click', () => {
-      startScreen.classList.add('hidden');
-      videoBg.play();
-      videoBg.classList.add('loaded');
-      mainContainer.classList.add('visible');
-      elapsedEl.classList.add('visible');
-      startTime = Date.now();
-      typeUsername();
-      setTimeout(typeBio, 800);
-      initParticles();
-      updateElapsed();
-      checkTwitchStatus();
+      if (entered) return;
+      entered = true;
+
+      // Play music immediately on click (user gesture)
+      audio.play().catch(() => {});
+      audioPlaying = true;
+      document.querySelectorAll('.audio-bar').forEach(b => b.classList.add('active'));
+
+      // Flash effect
+      flashOverlay.classList.add('flash');
+
+      // Dramatic exit
+      startScreen.classList.add('exit');
+
+      // After flash, reveal content
+      setTimeout(() => {
+        videoBg.play();
+        videoBg.classList.add('loaded');
+      }, 300);
+
+      setTimeout(() => {
+        mainContainer.classList.add('visible');
+        elapsedEl.classList.add('visible');
+        startTime = Date.now();
+        typeUsername();
+        setTimeout(typeBio, 800);
+        initParticles();
+        updateElapsed();
+        checkTwitchStatus();
+      }, 800);
+
+      // Cleanup start screen after animation
+      setTimeout(() => {
+        startScreen.classList.add('hidden');
+        flashOverlay.classList.remove('flash');
+      }, 2000);
     });
 
     // ==========================================
@@ -1808,16 +1996,19 @@
     // ==========================================
     const audioBtn = document.getElementById('audioBtn');
     const bars = document.querySelectorAll('.audio-bar');
-    let audioPlaying = false;
-    // Add your audio file: const audio = new Audio('song.mp3');
 
     audioBtn.addEventListener('click', () => {
-      audioPlaying = !audioPlaying;
+      if (audio.paused) {
+        audio.play().catch(() => {});
+        audioPlaying = true;
+      } else {
+        audio.pause();
+        audioPlaying = false;
+      }
       bars.forEach(bar => {
         bar.classList.toggle('active', audioPlaying);
         if (!audioPlaying) bar.style.height = '4px';
       });
-      // audio.paused ? audio.play() : audio.pause();
     });
   </script>
 </body>
