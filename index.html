@@ -1193,7 +1193,7 @@
       right: 30px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       z-index: 100;
     }
 
@@ -1209,6 +1209,8 @@
       align-items: center;
       justify-content: center;
       transition: all 0.3s ease;
+      position: relative;
+      cursor: pointer;
     }
 
     .audio-btn:hover {
@@ -1220,6 +1222,118 @@
     .audio-btn svg {
       width: 18px;
       height: 18px;
+      transition: transform 0.3s ease, opacity 0.2s ease;
+    }
+
+    /* Mute animation */
+    .audio-btn.muted svg {
+      animation: mute-shake 0.4s ease;
+    }
+
+    .audio-btn.unmuted svg {
+      animation: unmute-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes mute-shake {
+      0% { transform: scale(1) rotate(0); }
+      20% { transform: scale(0.8) rotate(-10deg); }
+      40% { transform: scale(0.9) rotate(8deg); }
+      60% { transform: scale(0.85) rotate(-5deg); }
+      80% { transform: scale(0.95) rotate(2deg); }
+      100% { transform: scale(1) rotate(0); }
+    }
+
+    @keyframes unmute-pop {
+      0% { transform: scale(0.6); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    /* Mute pulse ring */
+    .audio-btn .mute-ring {
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1.5px solid var(--primary);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .audio-btn.muted .mute-ring {
+      animation: mute-ring-pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes mute-ring-pulse {
+      0%, 100% { opacity: 0; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.15); }
+    }
+
+    /* Volume Slider */
+    .volume-slider-wrap {
+      display: flex;
+      align-items: center;
+      background: var(--bg-card);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      gap: 6px;
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+      transition: opacity 0.3s ease, width 0.3s ease, padding 0.3s ease;
+    }
+
+    .audio-controls:hover .volume-slider-wrap,
+    .volume-slider-wrap.visible {
+      opacity: 1;
+      width: 100px;
+      padding: 4px 12px;
+    }
+
+    .volume-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 70px;
+      height: 4px;
+      border-radius: 2px;
+      background: linear-gradient(to right, var(--primary) var(--vol, 40%), rgba(139, 92, 246, 0.15) var(--vol, 40%));
+      outline: none;
+      cursor: pointer;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 8px var(--primary-glow);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .volume-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.3);
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+
+    .volume-slider::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 8px var(--primary-glow);
+      border: none;
+      cursor: pointer;
+    }
+
+    .vol-icon {
+      color: var(--text-dim);
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
     }
 
     .audio-visualizer {
@@ -1465,11 +1579,23 @@
       <div class="audio-bar"></div>
       <div class="audio-bar"></div>
     </div>
+    <div class="volume-slider-wrap" id="volumeWrap">
+      <svg class="vol-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
+      <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="40">
+    </div>
     <button class="audio-btn" id="audioBtn">
-      <svg id="audioIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="mute-ring"></div>
+      <!-- Unmuted icon -->
+      <svg id="audioIconOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      </svg>
+      <!-- Muted icon (hidden by default) -->
+      <svg id="audioIconOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <line x1="23" y1="9" x2="17" y2="15"/>
+        <line x1="17" y1="9" x2="23" y2="15"/>
       </svg>
     </button>
   </div>
@@ -1666,9 +1792,16 @@
     })();
 
     // ==========================================
-    // MUSIC
+    // MUSIC — ADD YOUR SONGS HERE
     // ==========================================
-    const songs = ['song1.mp3', 'song2.mp3', 'song3.mp3'];
+    // To add songs: upload .mp3 files to your repo,
+    // then add them to this array. They play randomly.
+    const songs = [
+      'song1.mp3',   // Bad Bunny - DtMF
+      'song2.mp3',   // La Murga
+      'song3.mp3',   // Travis Scott - MAFIA
+      // 'song4.mp3', ← add more songs here
+    ];
     const audio = new Audio(songs[Math.floor(Math.random() * songs.length)]);
     audio.loop = true;
     audio.volume = 0.4;
@@ -2122,19 +2255,49 @@
     // ==========================================
     const audioBtn = document.getElementById('audioBtn');
     const bars = document.querySelectorAll('.audio-bar');
+    const iconOn = document.getElementById('audioIconOn');
+    const iconOff = document.getElementById('audioIconOff');
+    const volumeSlider = document.getElementById('volumeSlider');
 
+    // Mute/unmute toggle
     audioBtn.addEventListener('click', () => {
+      audioBtn.classList.remove('muted', 'unmuted');
+      void audioBtn.offsetWidth; // force reflow for re-trigger
+
       if (audio.paused) {
         audio.play().catch(() => {});
         audioPlaying = true;
+        iconOn.style.display = '';
+        iconOff.style.display = 'none';
+        audioBtn.classList.add('unmuted');
       } else {
         audio.pause();
         audioPlaying = false;
+        iconOn.style.display = 'none';
+        iconOff.style.display = '';
+        audioBtn.classList.add('muted');
       }
       bars.forEach(bar => {
         bar.classList.toggle('active', audioPlaying);
         if (!audioPlaying) bar.style.height = '4px';
       });
+    });
+
+    // Volume slider
+    volumeSlider.style.setProperty('--vol', '40%');
+    volumeSlider.addEventListener('input', (e) => {
+      const vol = e.target.value / 100;
+      audio.volume = vol;
+      e.target.style.setProperty('--vol', e.target.value + '%');
+
+      // If volume is 0, show muted state
+      if (vol === 0 && audioPlaying) {
+        iconOn.style.display = 'none';
+        iconOff.style.display = '';
+      } else if (vol > 0 && audioPlaying) {
+        iconOn.style.display = '';
+        iconOff.style.display = 'none';
+      }
     });
   </script>
 </body>
