@@ -396,7 +396,8 @@
       overflow: hidden;
       min-width: 380px;
       max-width: 420px;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.1s ease;
+      transform-style: preserve-3d;
       box-shadow: 0 0 40px rgba(139, 92, 246, 0.1), 0 0 80px rgba(139, 92, 246, 0.05);
       animation: card-breathe 5s ease-in-out infinite;
       /* Starts hidden for pop entrance */
@@ -558,7 +559,7 @@
       width: 100px;
       height: 100px;
       margin: 0 auto 20px;
-      transition: transform 0.3s ease;
+      transition: transform 0.2s ease-out;
     }
 
     .avatar-container:hover {
@@ -645,6 +646,7 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      transition: transform 0.2s ease-out;
     }
 
     .verified-badge {
@@ -785,6 +787,7 @@
       gap: 14px;
       justify-content: center;
       flex-wrap: wrap;
+      transition: transform 0.2s ease-out;
     }
 
     .social-link {
@@ -1734,18 +1737,61 @@
     // CARD GLOW + 3D TILT
     // ==========================================
     const profileCard = document.getElementById('profileCard');
+    let cardTiltX = 0, cardTiltY = 0, targetTiltX = 0, targetTiltY = 0;
+    let cardAnimating = false;
+
     profileCard.addEventListener('mousemove', (e) => {
       const rect = profileCard.getBoundingClientRect();
       const x = (e.clientX - rect.left) / rect.width;
       const y = (e.clientY - rect.top) / rect.height;
       profileCard.style.setProperty('--mouse-x', (x * 100) + '%');
       profileCard.style.setProperty('--mouse-y', (y * 100) + '%');
-      profileCard.style.transform = `perspective(1000px) rotateY(${(x - 0.5) * 10}deg) rotateX(${-(y - 0.5) * 10}deg)`;
+
+      targetTiltX = (x - 0.5) * 25;
+      targetTiltY = -(y - 0.5) * 25;
+
+      if (!cardAnimating) {
+        cardAnimating = true;
+        animateCard();
+      }
+
+      // Inner elements pop-out toward cursor (translateZ)
+      const avatarEl = document.querySelector('.avatar-container');
+      const usernameEl = document.querySelector('.username');
+      const socialsEl = document.querySelector('.socials');
+      if (avatarEl) avatarEl.style.transform = `translateZ(40px) translate(${(x - 0.5) * 8}px, ${(y - 0.5) * 8}px)`;
+      if (usernameEl) usernameEl.style.transform = `translateZ(30px) translate(${(x - 0.5) * 5}px, ${(y - 0.5) * 5}px)`;
+      if (socialsEl) socialsEl.style.transform = `translateZ(50px) translate(${(x - 0.5) * 12}px, ${(y - 0.5) * 12}px)`;
     });
 
     profileCard.addEventListener('mouseleave', () => {
-      profileCard.style.transform = 'perspective(1000px) rotateY(0) rotateX(0)';
+      targetTiltX = 0;
+      targetTiltY = 0;
+
+      // Reset inner elements
+      const avatarEl = document.querySelector('.avatar-container');
+      const usernameEl = document.querySelector('.username');
+      const socialsEl = document.querySelector('.socials');
+      if (avatarEl) avatarEl.style.transform = '';
+      if (usernameEl) usernameEl.style.transform = '';
+      if (socialsEl) socialsEl.style.transform = '';
     });
+
+    function animateCard() {
+      cardTiltX += (targetTiltX - cardTiltX) * 0.08;
+      cardTiltY += (targetTiltY - cardTiltY) * 0.08;
+
+      profileCard.style.transform = `perspective(800px) rotateY(${cardTiltX}deg) rotateX(${cardTiltY}deg) translateZ(10px)`;
+
+      if (Math.abs(targetTiltX - cardTiltX) > 0.01 || Math.abs(targetTiltY - cardTiltY) > 0.01) {
+        requestAnimationFrame(animateCard);
+      } else {
+        cardAnimating = false;
+        if (targetTiltX === 0 && targetTiltY === 0) {
+          profileCard.style.transform = 'perspective(800px) rotateY(0) rotateX(0)';
+        }
+      }
+    }
 
     // ==========================================
     // AVATAR GLITCH ON CLICK
@@ -2178,6 +2224,8 @@
     const canvas = document.getElementById('particleCanvas');
     const ctx = canvas.getContext('2d');
     const particlesArr = [];
+    const ripples = [];
+    let isMouseDown = false;
 
     function resizeCanvas() {
       canvas.width = window.innerWidth;
@@ -2186,14 +2234,44 @@
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
+    // Click ripple effect on background
+    document.addEventListener('mousedown', (e) => {
+      isMouseDown = true;
+      ripples.push({
+        x: e.clientX,
+        y: e.clientY,
+        radius: 0,
+        maxRadius: 250,
+        opacity: 0.6,
+        speed: 8,
+        lineWidth: 3
+      });
+      // Burst particles outward from click
+      particlesArr.forEach(p => {
+        const dx = p.x - e.clientX;
+        const dy = p.y - e.clientY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 200 && dist > 0) {
+          const force = (200 - dist) / 200 * 4;
+          p.vx += (dx / dist) * force;
+          p.vy += (dy / dist) * force;
+        }
+      });
+    });
+    document.addEventListener('mouseup', () => { isMouseDown = false; });
+
     function initParticles() {
-      for (let i = 0; i < 30; i++) {
+      const count = Math.min(60, Math.floor(window.innerWidth * window.innerHeight / 25000));
+      for (let i = 0; i < count; i++) {
         particlesArr.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          size: Math.random() * 2.5 + 1
+          vx: (Math.random() - 0.5) * 0.7,
+          vy: (Math.random() - 0.5) * 0.7,
+          size: Math.random() * 3 + 1,
+          baseSize: Math.random() * 3 + 1,
+          pulse: Math.random() * Math.PI * 2,
+          hue: Math.random() > 0.7 ? 270 : 260 // mix of purples
         });
       }
       animateParticles();
@@ -2201,57 +2279,119 @@
 
     function animateParticles() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const now = Date.now();
+
+      // Draw and update ripples
+      for (let i = ripples.length - 1; i >= 0; i--) {
+        const r = ripples[i];
+        r.radius += r.speed;
+        r.opacity *= 0.96;
+        r.lineWidth *= 0.98;
+        if (r.opacity < 0.01 || r.radius > r.maxRadius) {
+          ripples.splice(i, 1);
+          continue;
+        }
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(139, 92, 246, ${r.opacity})`;
+        ctx.lineWidth = r.lineWidth;
+        ctx.stroke();
+        // Inner glow ring
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, r.radius * 0.7, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(167, 139, 250, ${r.opacity * 0.4})`;
+        ctx.lineWidth = r.lineWidth * 0.5;
+        ctx.stroke();
+      }
+
+      // Draw mouse glow on background
+      if (mouseX > 0 && mouseY > 0) {
+        const glowRadius = isMouseDown ? 120 : 80;
+        const glowOpacity = isMouseDown ? 0.12 : 0.06;
+        const gradient = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, glowRadius);
+        gradient.addColorStop(0, `rgba(139, 92, 246, ${glowOpacity})`);
+        gradient.addColorStop(0.5, `rgba(139, 92, 246, ${glowOpacity * 0.4})`);
+        gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(mouseX - glowRadius, mouseY - glowRadius, glowRadius * 2, glowRadius * 2);
+      }
+
+      ctx.lineWidth = 0.5;
 
       particlesArr.forEach(p => {
         p.x += p.vx;
         p.y += p.vy;
+        p.pulse += 0.02;
 
         if (p.x < 0) p.x = canvas.width;
         if (p.x > canvas.width) p.x = 0;
         if (p.y < 0) p.y = canvas.height;
         if (p.y > canvas.height) p.y = 0;
 
-        // Mouse repulsion
+        // Mouse interaction
         const dx = p.x - mouseX;
         const dy = p.y - mouseY;
         const dist = Math.sqrt(dx * dx + dy * dy);
         let drawX = p.x, drawY = p.y;
 
-        if (dist < 150) {
-          const force = (150 - dist) / 150;
-          drawX += (dx / dist) * force * 50;
-          drawY += (dy / dist) * force * 50;
+        // Strong repulsion close to cursor
+        if (dist < 180 && dist > 0) {
+          const force = (180 - dist) / 180;
+          drawX += (dx / dist) * force * 60;
+          drawY += (dy / dist) * force * 60;
+          // Particles grow when near cursor
+          p.size = p.baseSize + force * 3;
+        } else {
+          p.size = p.baseSize + Math.sin(p.pulse) * 0.5;
         }
 
-        // Mouse attraction at medium range
-        if (dist > 150 && dist < 300) {
-          const pull = (300 - dist) / 300 * 0.15;
+        // Mouse hold = attract particles toward cursor
+        if (isMouseDown && dist < 400 && dist > 30) {
+          const pull = (400 - dist) / 400 * 0.8;
+          p.vx += (mouseX - p.x) * pull * 0.003;
+          p.vy += (mouseY - p.y) * pull * 0.003;
+        }
+        // Gentle attraction at medium range
+        else if (dist > 180 && dist < 350) {
+          const pull = (350 - dist) / 350 * 0.15;
           p.vx += (mouseX - p.x) * pull * 0.001;
           p.vy += (mouseY - p.y) * pull * 0.001;
         }
 
-        // Speed limit
+        // Friction + speed limit
+        p.vx *= 0.99;
+        p.vy *= 0.99;
         const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-        if (speed > 1.5) {
-          p.vx *= 1.5 / speed;
-          p.vy *= 1.5 / speed;
+        if (speed > 2.5) {
+          p.vx *= 2.5 / speed;
+          p.vy *= 2.5 / speed;
         }
 
         p.drawX = drawX;
         p.drawY = drawY;
 
-        // Draw particle
-        const opacity = 0.3 + Math.sin(Date.now() * 0.002 + p.x) * 0.2;
+        // Draw particle with glow
+        const opacity = 0.4 + Math.sin(now * 0.002 + p.pulse) * 0.2;
+        const glowSize = p.size * 3;
+        const grd = ctx.createRadialGradient(drawX, drawY, 0, drawX, drawY, glowSize);
+        grd.addColorStop(0, `hsla(${p.hue}, 75%, 65%, ${opacity})`);
+        grd.addColorStop(0.4, `hsla(${p.hue}, 75%, 55%, ${opacity * 0.3})`);
+        grd.addColorStop(1, `hsla(${p.hue}, 75%, 50%, 0)`);
+        ctx.beginPath();
+        ctx.arc(drawX, drawY, glowSize, 0, Math.PI * 2);
+        ctx.fillStyle = grd;
+        ctx.fill();
+
+        // Core dot
         ctx.beginPath();
         ctx.arc(drawX, drawY, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(139, 92, 246, ${opacity})`;
+        ctx.fillStyle = `hsla(${p.hue}, 80%, 75%, ${opacity + 0.2})`;
         ctx.fill();
       });
 
-      // Draw connection lines between nearby particles (optimized with squared distance)
-      const maxDist2 = 120 * 120;
-      const maxMouseDist2 = 180 * 180;
-      ctx.lineWidth = 0.5;
+      // Connection lines between particles
+      const maxDist2 = 140 * 140;
+      const maxMouseDist2 = 220 * 220;
 
       for (let i = 0; i < particlesArr.length; i++) {
         const a = particlesArr[i];
@@ -2262,25 +2402,32 @@
           const dist2 = dx * dx + dy * dy;
 
           if (dist2 < maxDist2) {
-            const opacity = (1 - Math.sqrt(dist2) / 120) * 0.15;
+            const opacity = (1 - Math.sqrt(dist2) / 140) * 0.2;
             ctx.beginPath();
             ctx.moveTo(a.drawX, a.drawY);
             ctx.lineTo(b.drawX, b.drawY);
             ctx.strokeStyle = `rgba(139, 92, 246, ${opacity})`;
+            ctx.lineWidth = 0.6;
             ctx.stroke();
           }
         }
 
-        // Draw lines from particle to cursor if close
+        // Lines from particle to cursor (web effect)
         const dmx = a.drawX - mouseX;
         const dmy = a.drawY - mouseY;
         const dm2 = dmx * dmx + dmy * dmy;
         if (dm2 < maxMouseDist2) {
-          const opacity = (1 - Math.sqrt(dm2) / 180) * 0.2;
+          const dist = Math.sqrt(dm2);
+          const opacity = (1 - dist / 220) * 0.35;
           ctx.beginPath();
           ctx.moveTo(a.drawX, a.drawY);
           ctx.lineTo(mouseX, mouseY);
-          ctx.strokeStyle = `rgba(167, 139, 250, ${opacity})`;
+          // Gradient line from particle color to cursor
+          const grad = ctx.createLinearGradient(a.drawX, a.drawY, mouseX, mouseY);
+          grad.addColorStop(0, `rgba(167, 139, 250, ${opacity})`);
+          grad.addColorStop(1, `rgba(139, 92, 246, ${opacity * 0.5})`);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 0.8 * (1 - dist / 220) + 0.2;
           ctx.stroke();
         }
       }
