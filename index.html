@@ -48,11 +48,13 @@
     /* Custom Crosshair Cursor */
     .cursor {
       position: fixed;
+      top: 0;
+      left: 0;
       pointer-events: none;
       z-index: 10000;
       width: 30px;
       height: 30px;
-      transition: transform 0.15s ease, opacity 0.3s ease;
+      will-change: transform;
     }
 
     .cursor::before, .cursor::after {
@@ -84,10 +86,12 @@
       background: var(--accent);
       border-radius: 50%;
       position: fixed;
+      top: 0;
+      left: 0;
       pointer-events: none;
       z-index: 10001;
       box-shadow: 0 0 8px var(--primary), 0 0 20px var(--primary-glow);
-      transition: transform 0.08s ease;
+      will-change: transform;
     }
 
     .cursor.hover {
@@ -101,6 +105,8 @@
     /* Cursor Trail */
     .trail-dot {
       position: fixed;
+      top: 0;
+      left: 0;
       pointer-events: none;
       z-index: 9999;
       width: 4px;
@@ -109,7 +115,7 @@
       background: var(--primary);
       box-shadow: 0 0 6px var(--primary-glow);
       opacity: 0;
-      transition: none;
+      will-change: transform, opacity;
     }
 
     /* Click Ripple */
@@ -150,6 +156,7 @@
       z-index: -2;
       opacity: 0;
       transition: opacity 1.5s ease;
+      will-change: transform, opacity;
     }
 
     .video-bg.loaded {
@@ -1149,6 +1156,7 @@
       height: 100vh;
       pointer-events: none;
       z-index: 0;
+      will-change: contents;
     }
 
     /* Scan Line Effect */
@@ -1351,7 +1359,7 @@
     // ==========================================
     const cursor = document.querySelector('.cursor');
     const cursorDot = document.querySelector('.cursor-dot');
-    const TRAIL_LENGTH = 20;
+    const TRAIL_LENGTH = 12;
     const trailDots = [];
     const trailPositions = [];
     let mouseX = 0, mouseY = 0;
@@ -1367,10 +1375,8 @@
     document.addEventListener('mousemove', (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
-      cursor.style.left = mouseX - 15 + 'px';
-      cursor.style.top = mouseY - 15 + 'px';
-      cursorDot.style.left = mouseX - 3 + 'px';
-      cursorDot.style.top = mouseY - 3 + 'px';
+      cursor.style.transform = `translate(${mouseX - 15}px, ${mouseY - 15}px)`;
+      cursorDot.style.transform = `translate(${mouseX - 3}px, ${mouseY - 3}px)`;
     });
 
     function animateTrail() {
@@ -1382,15 +1388,14 @@
         trailPositions[i].y += (trailPositions[i - 1].y - trailPositions[i].y) * 0.3;
       }
 
-      trailDots.forEach((dot, i) => {
+      for (let i = 0; i < TRAIL_LENGTH; i++) {
         const progress = i / TRAIL_LENGTH;
         const size = 4 * (1 - progress);
-        dot.style.left = trailPositions[i].x - size / 2 + 'px';
-        dot.style.top = trailPositions[i].y - size / 2 + 'px';
-        dot.style.width = size + 'px';
-        dot.style.height = size + 'px';
-        dot.style.opacity = 0.6 * (1 - progress);
-      });
+        trailDots[i].style.transform = `translate(${trailPositions[i].x - size / 2}px, ${trailPositions[i].y - size / 2}px)`;
+        trailDots[i].style.width = size + 'px';
+        trailDots[i].style.height = size + 'px';
+        trailDots[i].style.opacity = 0.6 * (1 - progress);
+      }
 
       requestAnimationFrame(animateTrail);
     }
@@ -1414,13 +1419,13 @@
       ripple.addEventListener('animationend', () => ripple.remove());
 
       // Burst particles
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < 5; i++) {
         const p = document.createElement('div');
         p.className = 'burst-particle';
         p.style.left = e.clientX + 'px';
         p.style.top = e.clientY + 'px';
         document.body.appendChild(p);
-        const angle = (Math.PI * 2 / 8) * i + Math.random() * 0.5;
+        const angle = (Math.PI * 2 / 5) * i + Math.random() * 0.5;
         const speed = 40 + Math.random() * 40;
         const tx = Math.cos(angle) * speed;
         const ty = Math.sin(angle) * speed;
@@ -1547,11 +1552,12 @@
     // ELAPSED TIMER
     // ==========================================
     function updateElapsed() {
-      const s = Math.floor((Date.now() - startTime) / 1000);
-      const m = Math.floor(s / 60);
-      const sec = s % 60;
-      elapsedEl.textContent = String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
-      requestAnimationFrame(updateElapsed);
+      setInterval(() => {
+        const s = Math.floor((Date.now() - startTime) / 1000);
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        elapsedEl.textContent = String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+      }, 1000);
     }
 
     // ==========================================
@@ -1688,7 +1694,7 @@
     window.addEventListener('resize', resizeCanvas);
 
     function initParticles() {
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 30; i++) {
         particlesArr.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
@@ -1749,36 +1755,39 @@
         ctx.fill();
       });
 
-      // Draw connection lines between nearby particles
+      // Draw connection lines between nearby particles (optimized with squared distance)
+      const maxDist2 = 120 * 120;
+      const maxMouseDist2 = 180 * 180;
+      ctx.lineWidth = 0.5;
+
       for (let i = 0; i < particlesArr.length; i++) {
+        const a = particlesArr[i];
         for (let j = i + 1; j < particlesArr.length; j++) {
-          const a = particlesArr[i];
           const b = particlesArr[j];
           const dx = a.drawX - b.drawX;
           const dy = a.drawY - b.drawY;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          const dist2 = dx * dx + dy * dy;
 
-          if (dist < 120) {
-            const opacity = (1 - dist / 120) * 0.15;
+          if (dist2 < maxDist2) {
+            const opacity = (1 - Math.sqrt(dist2) / 120) * 0.15;
             ctx.beginPath();
             ctx.moveTo(a.drawX, a.drawY);
             ctx.lineTo(b.drawX, b.drawY);
             ctx.strokeStyle = `rgba(139, 92, 246, ${opacity})`;
-            ctx.lineWidth = 0.5;
             ctx.stroke();
           }
         }
 
         // Draw lines from particle to cursor if close
-        const a = particlesArr[i];
-        const dm = Math.sqrt((a.drawX - mouseX) ** 2 + (a.drawY - mouseY) ** 2);
-        if (dm < 180) {
-          const opacity = (1 - dm / 180) * 0.2;
+        const dmx = a.drawX - mouseX;
+        const dmy = a.drawY - mouseY;
+        const dm2 = dmx * dmx + dmy * dmy;
+        if (dm2 < maxMouseDist2) {
+          const opacity = (1 - Math.sqrt(dm2) / 180) * 0.2;
           ctx.beginPath();
           ctx.moveTo(a.drawX, a.drawY);
           ctx.lineTo(mouseX, mouseY);
           ctx.strokeStyle = `rgba(167, 139, 250, ${opacity})`;
-          ctx.lineWidth = 0.5;
           ctx.stroke();
         }
       }
