@@ -463,8 +463,8 @@
     }
 
     @keyframes card-breathe {
-      0%, 100% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.1), 0 0 80px rgba(139, 92, 246, 0.05); }
-      50% { box-shadow: 0 0 60px rgba(139, 92, 246, 0.15), 0 0 120px rgba(139, 92, 246, 0.08); }
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.97; }
     }
 
     /* Primary flowing border — intense upfold effect */
@@ -922,13 +922,10 @@
     .server-button::before {
       content: '';
       position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: conic-gradient(from 0deg, transparent, #5865f2, #7289da, transparent, transparent);
-      animation: btn-border-spin 3s linear infinite;
-      opacity: 0.5;
+      inset: -1px;
+      border-radius: 15px;
+      background: linear-gradient(135deg, #5865f2, transparent, #7289da);
+      opacity: 0.4;
     }
 
     .server-button::after {
@@ -1031,8 +1028,8 @@
     }
 
     @keyframes server-glow-pulse {
-      0%, 100% { box-shadow: 0 0 15px rgba(88, 101, 242, 0.2), 0 0 30px rgba(88, 101, 242, 0.1); }
-      50% { box-shadow: 0 0 25px rgba(88, 101, 242, 0.4), 0 0 50px rgba(88, 101, 242, 0.2); }
+      0%, 100% { opacity: 0.9; }
+      50% { opacity: 1; }
     }
 
     /* TikTok - Cyan/Pink dual */
@@ -1046,14 +1043,8 @@
     }
 
     @keyframes button-glow-pulse {
-      0%, 100% {
-        box-shadow: 0 0 10px var(--btn-glow), 0 0 3px var(--btn-glow), inset 0 0 8px var(--btn-bg);
-        border-color: var(--btn-color-dim);
-      }
-      50% {
-        box-shadow: 0 0 22px var(--btn-glow), 0 0 44px var(--btn-glow), inset 0 0 12px var(--btn-bg);
-        border-color: var(--btn-color);
-      }
+      0%, 100% { opacity: 0.85; }
+      50% { opacity: 1; }
     }
 
     @keyframes button-float {
@@ -1061,17 +1052,14 @@
       50% { transform: translateY(-3px); }
     }
 
-    /* Shimmer sweep effect */
+    /* Static glow border effect */
     .social-link::before {
       content: '';
       position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: conic-gradient(from 0deg, transparent, var(--btn-glow), transparent, transparent);
-      animation: btn-border-spin 4s linear infinite;
-      opacity: 0.4;
+      inset: -1px;
+      border-radius: 17px;
+      background: linear-gradient(135deg, var(--btn-glow), transparent, var(--btn-glow));
+      opacity: 0.3;
     }
 
     .social-link::after {
@@ -1118,50 +1106,33 @@
       transform: scale(1.15);
     }
 
-    /* Discord blurple/grey spinning border */
+    /* Discord blurple border */
     .social-link[data-name="discord"]::before {
-      background: conic-gradient(from 0deg, #5865f2, #888, #5865f2, transparent, #888, #5865f2);
-      opacity: 0.7;
-      animation: btn-border-spin 2.5s linear infinite;
+      background: linear-gradient(135deg, #5865f2, transparent, #5865f2);
+      opacity: 0.5;
     }
-    .social-link[data-name="discord"]:hover::before {
-      opacity: 1;
-      animation-duration: 1s;
-    }
+    .social-link[data-name="discord"]:hover::before { opacity: 1; }
 
-    /* Twitch purple/grey spinning border */
+    /* Twitch purple border */
     .social-link[data-name="twitch"]::before {
-      background: conic-gradient(from 0deg, #9146ff, #888, #9146ff, transparent, #888, #9146ff);
-      opacity: 0.7;
-      animation: btn-border-spin 2.5s linear infinite;
+      background: linear-gradient(135deg, #9146ff, transparent, #9146ff);
+      opacity: 0.5;
     }
-    .social-link[data-name="twitch"]:hover::before {
-      opacity: 1;
-      animation-duration: 1s;
-    }
+    .social-link[data-name="twitch"]:hover::before { opacity: 1; }
 
-    /* YouTube red/white spinning border */
+    /* YouTube red border */
     .social-link[data-name="youtube"]::before {
-      background: conic-gradient(from 0deg, #ff0000, #fff, #ff0000, transparent, #fff, #ff0000);
-      opacity: 0.7;
-      animation: btn-border-spin 2.5s linear infinite;
+      background: linear-gradient(135deg, #ff0000, transparent, #ff0000);
+      opacity: 0.5;
     }
-    .social-link[data-name="youtube"]:hover::before {
-      opacity: 1;
-      animation-duration: 1s;
-    }
+    .social-link[data-name="youtube"]:hover::before { opacity: 1; }
 
-    /* TikTok dual color spinning border */
+    /* TikTok dual color border */
     .social-link[data-name="tiktok"]::before {
-      background: conic-gradient(from 0deg, #ff0050, #00f2ea, #ff0050, transparent, #00f2ea, #ff0050);
-      opacity: 0.7;
-      animation: btn-border-spin 2.5s linear infinite;
+      background: linear-gradient(135deg, #ff0050, transparent, #00f2ea);
+      opacity: 0.5;
     }
-
-    .social-link[data-name="tiktok"]:hover::before {
-      opacity: 1;
-      animation-duration: 1s;
-    }
+    .social-link[data-name="tiktok"]:hover::before { opacity: 1; }
 
     /* TikTok dual color glow */
     .social-link[data-name="tiktok"] svg {
@@ -1171,102 +1142,35 @@
       filter: drop-shadow(0 0 10px rgba(255, 0, 80, 0.8)) drop-shadow(0 0 10px rgba(0, 242, 234, 0.8));
     }
 
-    /* TikTok glowing ring - animated pulsing glow */
+    /* TikTok static glow ring */
     .social-link[data-name="tiktok"] .tiktok-ring {
-      position: absolute;
-      inset: -4px;
-      border-radius: 18px;
-      pointer-events: none;
-      z-index: -1;
-      padding: 2px;
-      background: linear-gradient(135deg, #ff0050, #00f2ea, #ff0050);
-      background-size: 200% 200%;
-      animation: tiktok-gradient-shift 2s ease-in-out infinite, tiktok-ring-pulse 2s ease-in-out infinite;
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
+      display: none;
     }
 
     .social-link[data-name="tiktok"] .tiktok-ring-glow {
-      position: absolute;
-      inset: -6px;
-      border-radius: 20px;
-      pointer-events: none;
-      z-index: -2;
-      animation: tiktok-ring-pulse 2s ease-in-out infinite;
-      box-shadow:
-        0 0 12px rgba(255, 0, 80, 0.5),
-        0 0 24px rgba(0, 242, 234, 0.3);
+      display: none;
     }
 
-    @keyframes tiktok-gradient-shift {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
+    /* === ICON EFFECTS (hover only) === */
+
+    .social-link svg {
+      transition: transform 0.3s ease, filter 0.3s ease;
     }
 
-    @keyframes tiktok-ring-pulse {
-      0%, 100% {
-        opacity: 0.6;
-        transform: scale(1);
-      }
-      50% {
-        opacity: 1;
-        transform: scale(1.04);
-      }
+    .social-link:hover svg {
+      transform: scale(1.15);
     }
 
-    /* === ICON ANIMATIONS === */
-
-    /* Twitch - chat bubble bounce */
-    .social-link[data-name="twitch"] svg {
-      animation: twitch-icon-pulse 2s ease-in-out infinite;
-    }
     @keyframes twitch-icon-pulse {
       0%, 100% { transform: scale(1); }
       25% { transform: scale(1.1) rotate(-3deg); }
       75% { transform: scale(0.95) rotate(3deg); }
     }
 
-    /* Discord - wobble/shake */
-    .social-link[data-name="discord"] svg {
-      animation: discord-icon-wobble 3s ease-in-out infinite;
-    }
-    @keyframes discord-icon-wobble {
-      0%, 100% { transform: rotate(0deg); }
-      15% { transform: rotate(5deg) scale(1.05); }
-      30% { transform: rotate(-5deg) scale(1.05); }
-      45% { transform: rotate(3deg); }
-      60% { transform: rotate(-2deg); }
-      75% { transform: rotate(0deg); }
-    }
-
-    /* YouTube - play button pulse with glow */
-    .social-link[data-name="youtube"] svg {
-      animation: youtube-icon-beat 2.5s ease-in-out infinite;
-    }
-    @keyframes youtube-icon-beat {
-      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px rgba(255, 0, 51, 0.5)); }
-      15% { transform: scale(1.15); filter: drop-shadow(0 0 10px rgba(255, 0, 51, 0.8)); }
-      30% { transform: scale(0.95); filter: drop-shadow(0 0 3px rgba(255, 0, 51, 0.5)); }
-      45% { transform: scale(1.08); filter: drop-shadow(0 0 8px rgba(255, 0, 51, 0.7)); }
-      60% { transform: scale(1); }
-    }
-
-    /* TikTok - color shift glow */
-    .social-link[data-name="tiktok"] svg {
-      animation: tiktok-icon-glow 2.5s ease-in-out infinite;
-    }
-    @keyframes tiktok-icon-glow {
-      0%, 100% {
-        filter: drop-shadow(2px 0 0 rgba(255, 0, 80, 0.7)) drop-shadow(-2px 0 0 rgba(0, 242, 234, 0.7));
-        transform: scale(1);
-      }
-      50% {
-        filter: drop-shadow(-2px 0 0 rgba(255, 0, 80, 0.9)) drop-shadow(2px 0 0 rgba(0, 242, 234, 0.9)) drop-shadow(0 0 8px rgba(255, 0, 80, 0.4));
-        transform: scale(1.08);
-      }
-    }
+    /* Hover glow per button type */
+    .social-link[data-name="discord"]:hover svg { filter: drop-shadow(0 0 8px #5865f2); }
+    .social-link[data-name="youtube"]:hover svg { filter: drop-shadow(0 0 8px #ff0033); }
+    .social-link[data-name="tiktok"]:hover svg { filter: drop-shadow(0 0 6px #ff0050) drop-shadow(0 0 6px #00f2ea); }
 
     /* Click Counter Badge */
     .click-count {
@@ -2059,7 +1963,7 @@
     // ==========================================
     const cursor = document.querySelector('.cursor');
     const cursorDot = document.querySelector('.cursor-dot');
-    const TRAIL_LENGTH = 12;
+    const TRAIL_LENGTH = 6;
     const trailDots = [];
     const trailPositions = [];
     let mouseX = 0, mouseY = 0;
@@ -2271,14 +2175,8 @@
     });
 
     // ==========================================
-    // PARALLAX BACKGROUND
+    // PARALLAX BACKGROUND (disabled for performance)
     // ==========================================
-    const videoBg = document.getElementById('videoBg');
-    document.addEventListener('mousemove', (e) => {
-      const mx = (e.clientX / window.innerWidth - 0.5) * 2;
-      const my = (e.clientY / window.innerHeight - 0.5) * 2;
-      videoBg.style.transform = `scale(1.08) translate(${mx * -12}px, ${my * -12}px)`;
-    });
 
     // ==========================================
     // START SCREEN PARTICLES
