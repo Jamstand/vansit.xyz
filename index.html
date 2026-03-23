@@ -921,19 +921,74 @@
       z-index: 0;
     }
 
-    .server-btn-icon {
-      width: 22px;
-      height: 22px;
+    .server-btn-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
       position: relative;
       z-index: 1;
-      color: #5865f2;
-      filter: drop-shadow(0 0 6px rgba(88, 101, 242, 0.6));
+      object-fit: cover;
+      border: 2px solid rgba(88, 101, 242, 0.4);
+      flex-shrink: 0;
     }
 
-    .server-btn-text {
+    .server-btn-info {
+      display: flex;
+      flex-direction: column;
       position: relative;
       z-index: 1;
+      text-align: left;
+      gap: 2px;
+    }
+
+    .server-btn-name {
+      font-family: 'Furore', sans-serif;
+      font-size: 12px;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+
+    .server-btn-members {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .server-btn-members .online-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #3ba55d;
+      margin-right: 2px;
+      box-shadow: 0 0 6px rgba(59, 165, 93, 0.6);
+    }
+
+    .server-btn-members .member-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #72767d;
+      margin-right: 2px;
+    }
+
+    .server-btn-join {
+      position: relative;
+      z-index: 1;
+      font-family: 'Furore', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1.5px;
       text-transform: uppercase;
+      background: #5865f2;
+      color: #fff;
+      padding: 6px 16px;
+      border-radius: 8px;
+      margin-left: auto;
+      transition: background 0.2s ease;
     }
 
     .server-button:hover {
@@ -947,9 +1002,8 @@
       animation-duration: 1.5s;
     }
 
-    .server-button:hover .server-btn-icon {
-      color: #7289da;
-      filter: drop-shadow(0 0 10px rgba(88, 101, 242, 0.8));
+    .server-button:hover .server-btn-join {
+      background: #4752c4;
     }
 
     @keyframes server-btn-entrance {
@@ -1640,7 +1694,7 @@
       <div class="avatar-container" id="avatarContainer">
         <div class="avatar-ring"></div>
         <div class="avatar-pulse"></div>
-        <img class="avatar" src="avatar.png" alt="avatar" onerror="this.style.background='linear-gradient(135deg, var(--primary), #4c1d95)'; this.src='';">
+        <video class="avatar" src="https://static.klipy.com/ii/c3a19a0b747a76e98651f2b9a3cca5ff/40/7e/Ju3uxxN08pigLVF.mp4" autoplay loop muted playsinline></video>
       </div>
 
       <div class="username" id="username"><span id="usernameText"></span><svg class="verified-badge" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 1l3.09 2.41L19 4.5l.41 3.91L22 12l-2.59 3.59L19 19.5l-3.91.41L12 23l-3.09-2.41L5 19.5l-.41-3.91L2 12l2.59-3.59L5 4.5l3.91-.41L12 1z" fill="#1d9bf0" stroke="#4db8ff" stroke-width="0.5"/><path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
@@ -1693,10 +1747,12 @@
       <!-- Discord Server - centered big button -->
       <div class="server-button-wrap">
         <a href="https://discord.gg/m6dqsynCxy" target="_blank" class="server-button" data-name="discord-server">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="server-btn-icon">
-            <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09-.01-.02-.04-.03-.07-.03-1.5.26-2.93.71-4.27 1.33-.01 0-.02.01-.03.02-2.72 4.07-3.47 8.03-3.1 11.95 0 .02.01.04.03.05 1.8 1.32 3.53 2.12 5.24 2.65.03.01.06 0 .07-.02.4-.55.76-1.13 1.07-1.74.02-.04 0-.08-.04-.09-.57-.22-1.11-.48-1.64-.78-.04-.02-.04-.08-.01-.11.11-.08.22-.17.33-.25.02-.02.05-.02.07-.01 3.44 1.57 7.15 1.57 10.55 0 .02-.01.05-.01.07.01.11.09.22.17.33.26.04.03.04.09-.01.11-.52.31-1.07.56-1.64.78-.04.01-.05.06-.04.09.32.61.68 1.19 1.07 1.74.03.01.06.02.09.01 1.72-.53 3.45-1.33 5.25-2.65.02-.01.03-.03.03-.05.44-4.53-.73-8.46-3.1-11.95-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.83 2.12-1.89 2.12z"/>
-          </svg>
-          <span class="server-btn-text">Join Server</span>
+          <img class="server-btn-avatar" id="serverIcon" src="" alt="">
+          <div class="server-btn-info">
+            <span class="server-btn-name" id="serverName">Discord Server</span>
+            <span class="server-btn-members" id="serverMembers"></span>
+          </div>
+          <span class="server-btn-join">Join</span>
         </a>
       </div>
 
@@ -2217,6 +2273,38 @@
       // Re-check every 60 seconds
       setTimeout(checkTwitchStatus, 60000);
     }
+
+    // ==========================================
+    // DISCORD SERVER INFO
+    // ==========================================
+    async function fetchDiscordServer() {
+      try {
+        const res = await fetch('https://discord.com/api/v9/invites/m6dqsynCxy?with_counts=true');
+        const data = await res.json();
+        if (data.guild) {
+          const iconEl = document.getElementById('serverIcon');
+          const nameEl = document.getElementById('serverName');
+          const membersEl = document.getElementById('serverMembers');
+
+          // Server icon
+          if (data.guild.icon) {
+            const ext = data.guild.icon.startsWith('a_') ? 'gif' : 'png';
+            iconEl.src = `https://cdn.discordapp.com/icons/${data.guild.id}/${data.guild.icon}.${ext}?size=64`;
+          }
+
+          // Server name
+          nameEl.textContent = data.guild.name;
+
+          // Member counts
+          const online = data.approximate_presence_count || 0;
+          const total = data.approximate_member_count || 0;
+          membersEl.innerHTML = `<span class="online-dot"></span>${online} Online <span class="member-dot"></span>${total} Members`;
+        }
+      } catch (e) {
+        console.log('Discord invite fetch failed:', e);
+      }
+    }
+    fetchDiscordServer();
 
     // ==========================================
     // TYPEWRITER + NAME SHUFFLE
