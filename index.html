@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Scene</title>
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <meta name="referrer" content="no-referrer">
+  <title>vans_it</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -2521,26 +2523,37 @@
       const statusEl = document.getElementById('liveStatus');
       const textEl = document.getElementById('liveText');
 
-      // Using a free proxy to check if a Twitch channel is live
-      // For production, use the Twitch API with your client ID
+      // Try multiple APIs for reliability
+      let isLive = false;
+
       try {
+        // Primary: decapi.me
         const res = await fetch(`https://decapi.me/twitch/uptime/${TWITCH_USERNAME}`);
         const text = await res.text();
-
-        if (text.includes('offline') || text.includes('not found')) {
-          statusEl.className = 'live-status offline';
-          textEl.textContent = 'Offline';
-        } else {
-          statusEl.className = 'live-status live';
-          textEl.textContent = 'Live';
+        if (!text.includes('offline') && !text.includes('not found') && !text.includes('error') && text.trim().length > 0) {
+          isLive = true;
         }
       } catch {
+        try {
+          // Fallback: check if Twitch channel page embed loads
+          const res2 = await fetch(`https://decapi.me/twitch/game/${TWITCH_USERNAME}`);
+          const game = await res2.text();
+          if (game && !game.includes('offline') && !game.includes('not found') && game.trim().length > 0) {
+            isLive = true;
+          }
+        } catch { /* stay offline */ }
+      }
+
+      if (isLive) {
+        statusEl.className = 'live-status live';
+        textEl.textContent = 'Live';
+      } else {
         statusEl.className = 'live-status offline';
         textEl.textContent = 'Offline';
       }
 
-      // Re-check every 60 seconds
-      setTimeout(checkTwitchStatus, 60000);
+      // Re-check every 45 seconds
+      setTimeout(checkTwitchStatus, 45000);
     }
 
     // ==========================================
