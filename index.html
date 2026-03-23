@@ -405,14 +405,13 @@
       transform-style: preserve-3d;
       box-shadow: 0 0 40px rgba(139, 92, 246, 0.1), 0 0 80px rgba(139, 92, 246, 0.05);
       animation: card-breathe 5s ease-in-out infinite;
-      /* Starts hidden for pop entrance */
-      opacity: 0;
-      transform: perspective(1200px) scale(0) rotateY(180deg) rotateX(20deg) translateZ(-200px);
+      opacity: 1;
+      transform: perspective(1200px) scale(1);
       transform-origin: center center;
     }
 
     .container.visible .profile-card {
-      animation: card-pop-in 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards, card-breathe 5s ease-in-out infinite 2.2s;
+      animation: card-breathe 5s ease-in-out infinite;
     }
 
     @keyframes card-pop-in {
