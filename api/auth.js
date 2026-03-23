@@ -1,6 +1,10 @@
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (!process.env.ADMIN_PASSWORD) {
+    return res.status(500).json({ error: 'ADMIN_PASSWORD env var is not set' });
   }
 
   const { password } = req.body || {};
@@ -13,4 +17,4 @@ export default function handler(req, res) {
     token: process.env.GITHUB_TOKEN,
     repo: process.env.GITHUB_REPO,
   });
-}
+};
