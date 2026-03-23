@@ -224,7 +224,10 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: pwd }),
       });
-      if (!res.ok) throw new Error('Wrong password');
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Wrong password');
+      }
       const data = await res.json();
       ghToken = data.token;
       ghRepo = data.repo;
