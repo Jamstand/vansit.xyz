@@ -376,7 +376,12 @@
     .container.visible .social-link:nth-child(2) { animation-delay: 0.35s, 1.15s, 1.15s; }
     .container.visible .social-link:nth-child(3) { animation-delay: 0.5s, 1.3s, 1.3s; }
     .container.visible .social-link:nth-child(4) { animation-delay: 0.65s, 1.45s, 1.45s; }
-    .container.visible .social-link:nth-child(5) { animation-delay: 0.8s, 1.6s, 1.6s; }
+
+    .container.visible .server-button {
+      animation: server-btn-entrance 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.9s forwards, server-glow-pulse 3s ease-in-out infinite 1.6s;
+      opacity: 0;
+      transform: translateY(15px) scale(0.7);
+    }
 
     @keyframes button-entrance {
       0% { opacity: 0; transform: translateY(20px) scale(0.5); }
@@ -461,7 +466,7 @@
       50% { box-shadow: 0 0 60px rgba(139, 92, 246, 0.15), 0 0 120px rgba(139, 92, 246, 0.08); }
     }
 
-    /* Primary flowing border — upfold effect */
+    /* Primary flowing border — intense upfold effect */
     .profile-card::before {
       content: '';
       position: absolute;
@@ -470,60 +475,62 @@
       right: -2px;
       bottom: -2px;
       border-radius: 22px;
-      padding: 2px;
+      padding: 2.5px;
       background: conic-gradient(
         from var(--border-angle, 0deg),
-        transparent 10%,
-        var(--primary) 20%,
-        var(--accent) 25%,
-        #fff 27%,
-        var(--secondary) 30%,
-        var(--primary) 35%,
-        transparent 45%,
-        transparent 60%,
-        var(--secondary) 70%,
-        var(--accent) 75%,
-        #fff 77%,
-        var(--primary) 80%,
+        transparent 5%,
+        var(--primary) 12%,
+        var(--accent) 18%,
+        #fff 22%,
+        var(--secondary) 26%,
+        var(--primary) 32%,
+        transparent 40%,
+        transparent 55%,
+        var(--secondary) 62%,
+        var(--accent) 68%,
+        #fff 72%,
+        var(--primary) 78%,
+        transparent 85%
+      );
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      animation: spin-border 2s linear infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Secondary glow trail — intense outer bloom */
+    .profile-card::after {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      right: -6px;
+      bottom: -6px;
+      border-radius: 26px;
+      padding: 6px;
+      background: conic-gradient(
+        from var(--border-angle2, 180deg),
+        transparent 15%,
+        rgba(139, 92, 246, 0.7) 25%,
+        rgba(167, 139, 250, 1) 30%,
+        rgba(255, 255, 255, 0.6) 33%,
+        rgba(139, 92, 246, 0.7) 38%,
+        transparent 48%,
+        transparent 65%,
+        rgba(139, 92, 246, 0.5) 75%,
+        rgba(167, 139, 250, 0.8) 80%,
         transparent 90%
       );
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
       mask-composite: exclude;
-      animation: spin-border 2.5s linear infinite;
+      animation: spin-border-reverse 3s linear infinite;
       pointer-events: none;
-      z-index: 1;
-    }
-
-    /* Secondary glow trail — outer bloom */
-    .profile-card::after {
-      content: '';
-      position: absolute;
-      top: -4px;
-      left: -4px;
-      right: -4px;
-      bottom: -4px;
-      border-radius: 24px;
-      padding: 4px;
-      background: conic-gradient(
-        from var(--border-angle2, 180deg),
-        transparent 25%,
-        rgba(139, 92, 246, 0.6) 35%,
-        rgba(167, 139, 250, 0.8) 40%,
-        rgba(139, 92, 246, 0.6) 45%,
-        transparent 55%,
-        transparent 75%,
-        rgba(139, 92, 246, 0.4) 85%,
-        transparent 95%
-      );
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      animation: spin-border-reverse 4s linear infinite;
-      pointer-events: none;
-      filter: blur(6px);
+      filter: blur(8px);
       z-index: 0;
     }
 
@@ -548,13 +555,13 @@
     }
 
     .profile-card:hover::before {
-      animation-duration: 1.5s;
-      filter: brightness(1.3);
+      animation-duration: 1s;
+      filter: brightness(1.5);
     }
 
     .profile-card:hover::after {
-      animation-duration: 2.5s;
-      filter: blur(8px) brightness(1.5);
+      animation-duration: 1.5s;
+      filter: blur(10px) brightness(2);
     }
 
     .profile-card .glow {
@@ -866,14 +873,93 @@
       animation-delay: 0.6s;
     }
 
-    /* Discord Server - Blurple */
-    .social-link[data-name="discord-server"] {
-      --btn-color: #5865f2;
-      --btn-color-dim: rgba(88, 101, 242, 0.35);
-      --btn-glow: rgba(88, 101, 242, 0.5);
-      --btn-bg: rgba(88, 101, 242, 0.08);
-      --btn-color-bright: #7289da;
-      animation-delay: 0.9s;
+    /* Discord Server - Big centered button */
+    .server-button-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 12px;
+    }
+
+    .server-button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 28px;
+      border-radius: 14px;
+      border: 1.5px solid rgba(88, 101, 242, 0.4);
+      background: rgba(88, 101, 242, 0.1);
+      color: #fff;
+      text-decoration: none;
+      font-family: 'Furore', sans-serif;
+      font-size: 13px;
+      letter-spacing: 1.5px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 15px rgba(88, 101, 242, 0.2), 0 0 30px rgba(88, 101, 242, 0.1);
+    }
+
+    .server-button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(from 0deg, transparent, #5865f2, #7289da, transparent, transparent);
+      animation: btn-border-spin 3s linear infinite;
+      opacity: 0.5;
+    }
+
+    .server-button::after {
+      content: '';
+      position: absolute;
+      inset: 1.5px;
+      border-radius: 12.5px;
+      background: rgba(14, 14, 20, 0.9);
+      z-index: 0;
+    }
+
+    .server-btn-icon {
+      width: 22px;
+      height: 22px;
+      position: relative;
+      z-index: 1;
+      color: #5865f2;
+      filter: drop-shadow(0 0 6px rgba(88, 101, 242, 0.6));
+    }
+
+    .server-btn-text {
+      position: relative;
+      z-index: 1;
+      text-transform: uppercase;
+    }
+
+    .server-button:hover {
+      border-color: rgba(88, 101, 242, 0.8);
+      box-shadow: 0 0 25px rgba(88, 101, 242, 0.4), 0 0 60px rgba(88, 101, 242, 0.2);
+      transform: translateY(-2px) scale(1.03);
+    }
+
+    .server-button:hover::before {
+      opacity: 0.9;
+      animation-duration: 1.5s;
+    }
+
+    .server-button:hover .server-btn-icon {
+      color: #7289da;
+      filter: drop-shadow(0 0 10px rgba(88, 101, 242, 0.8));
+    }
+
+    @keyframes server-btn-entrance {
+      0% { opacity: 0; transform: translateY(15px) scale(0.7); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes server-glow-pulse {
+      0%, 100% { box-shadow: 0 0 15px rgba(88, 101, 242, 0.2), 0 0 30px rgba(88, 101, 242, 0.1); }
+      50% { box-shadow: 0 0 25px rgba(88, 101, 242, 0.4), 0 0 50px rgba(88, 101, 242, 0.2); }
     }
 
     /* TikTok - Cyan/Pink dual */
@@ -992,17 +1078,6 @@
       animation-duration: 1s;
     }
 
-    /* Discord Server blurple spinning border */
-    .social-link[data-name="discord-server"]::before {
-      background: conic-gradient(from 0deg, #5865f2, #7289da, #5865f2, transparent, #7289da, #5865f2);
-      opacity: 0.7;
-      animation: btn-border-spin 2.5s linear infinite;
-    }
-    .social-link[data-name="discord-server"]:hover::before {
-      opacity: 1;
-      animation-duration: 1s;
-    }
-
     /* TikTok dual color spinning border */
     .social-link[data-name="tiktok"]::before {
       background: conic-gradient(from 0deg, #ff0050, #00f2ea, #ff0050, transparent, #00f2ea, #ff0050);
@@ -1103,15 +1178,6 @@
       30% { transform: scale(0.95); filter: drop-shadow(0 0 3px rgba(255, 0, 51, 0.5)); }
       45% { transform: scale(1.08); filter: drop-shadow(0 0 8px rgba(255, 0, 51, 0.7)); }
       60% { transform: scale(1); }
-    }
-
-    /* Discord Server - globe spin */
-    .social-link[data-name="discord-server"] svg {
-      animation: server-icon-spin 3s ease-in-out infinite;
-    }
-    @keyframes server-icon-spin {
-      0%, 100% { transform: translateY(0) rotateY(0deg); }
-      50% { transform: translateY(-2px) rotateY(180deg); }
     }
 
     /* TikTok - color shift glow */
@@ -1606,13 +1672,6 @@
           </svg>
           <span class="click-count">0</span>
         </a>
-        <!-- Discord Server -->
-        <a href="https://discord.gg/m6dqsynCxy" target="_blank" class="social-link" data-tooltip="Server" data-name="discord-server">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-          </svg>
-          <span class="click-count">0</span>
-        </a>
         <!-- YouTube -->
         <a href="https://youtube.com/@vans_it" target="_blank" class="social-link" data-tooltip="YouTube" data-name="youtube">
           <svg viewBox="0 0 24 24" fill="currentColor">
@@ -1628,6 +1687,16 @@
             <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.49a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15.2a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V9.05a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.01-.48z"/>
           </svg>
           <span class="click-count">0</span>
+        </a>
+      </div>
+
+      <!-- Discord Server - centered big button -->
+      <div class="server-button-wrap">
+        <a href="https://discord.gg/m6dqsynCxy" target="_blank" class="server-button" data-name="discord-server">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="server-btn-icon">
+            <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09-.01-.02-.04-.03-.07-.03-1.5.26-2.93.71-4.27 1.33-.01 0-.02.01-.03.02-2.72 4.07-3.47 8.03-3.1 11.95 0 .02.01.04.03.05 1.8 1.32 3.53 2.12 5.24 2.65.03.01.06 0 .07-.02.4-.55.76-1.13 1.07-1.74.02-.04 0-.08-.04-.09-.57-.22-1.11-.48-1.64-.78-.04-.02-.04-.08-.01-.11.11-.08.22-.17.33-.25.02-.02.05-.02.07-.01 3.44 1.57 7.15 1.57 10.55 0 .02-.01.05-.01.07.01.11.09.22.17.33.26.04.03.04.09-.01.11-.52.31-1.07.56-1.64.78-.04.01-.05.06-.04.09.32.61.68 1.19 1.07 1.74.03.01.06.02.09.01 1.72-.53 3.45-1.33 5.25-2.65.02-.01.03-.03.03-.05.44-4.53-.73-8.46-3.1-11.95-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12 0 1.17-.83 2.12-1.89 2.12z"/>
+          </svg>
+          <span class="server-btn-text">Join Server</span>
         </a>
       </div>
 
