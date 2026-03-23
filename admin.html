@@ -643,7 +643,8 @@
     try {
       const data = await ghFetch(`/repos/${ghRepo}/contents/index.html`);
       indexSha = data.sha;
-      const html = atob(data.content.replace(/\n/g, ''));
+      const bytes = Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0));
+      const html = new TextDecoder().decode(bytes);
       indexContent = html;
       const match = html.match(/const songs = \[([\s\S]*?)\];/);
       if (!match) return;
@@ -881,7 +882,8 @@
     // Re-fetch latest index.html
     const data = await ghFetch(`/repos/${ghRepo}/contents/index.html`);
     indexSha = data.sha;
-    const html = atob(data.content.replace(/\n/g, ''));
+    const bytes = Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0));
+    const html = new TextDecoder().decode(bytes);
 
     const newArray = songsData.map(s => `  '${s.filename}',   // ${s.label}`).join('\n');
     const updated = html.replace(
@@ -979,7 +981,8 @@
         setProgress(pctBase + pctStep * 0.8);
 
         const indexData = await ghFetch(`/repos/${ghRepo}/contents/index.html`);
-        const idxContent = atob(indexData.content.replace(/\n/g, ''));
+        const idxBytes = Uint8Array.from(atob(indexData.content.replace(/\n/g, '')), c => c.charCodeAt(0));
+        const idxContent = new TextDecoder().decode(idxBytes);
 
         const newEntry = `  '${newFilename}',   // ${label}`;
         let finalContent = idxContent.replace(
