@@ -664,10 +664,12 @@
       font-size: 1.6rem;
       font-weight: 700;
       margin-bottom: 4px;
-      background: linear-gradient(135deg, var(--text), var(--accent));
+      background: linear-gradient(90deg, var(--text), var(--accent), var(--primary), var(--text));
+      background-size: 300% 100%;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      animation: username-gradient 4s ease-in-out infinite;
       letter-spacing: 3px;
       text-transform: uppercase;
       display: flex;
@@ -675,6 +677,73 @@
       justify-content: center;
       gap: 8px;
       transition: transform 0.2s ease-out;
+      position: relative;
+    }
+
+    @keyframes username-gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .username:hover {
+      animation: username-gradient 1.5s ease-in-out infinite, username-glitch 0.3s ease infinite;
+    }
+
+    @keyframes username-glitch {
+      0%, 100% { transform: translate(0); }
+      20% { transform: translate(-2px, 1px); }
+      40% { transform: translate(2px, -1px); }
+      60% { transform: translate(-1px, -1px); }
+      80% { transform: translate(1px, 2px); }
+    }
+
+    #usernameText {
+      position: relative;
+      text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+    }
+
+    #usernameText::before,
+    #usernameText::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      -webkit-text-fill-color: transparent;
+    }
+
+    #usernameText::before {
+      background: linear-gradient(90deg, #ff006e, transparent);
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: glitch-1 3s ease-in-out infinite;
+      clip-path: inset(0 0 65% 0);
+      opacity: 0;
+    }
+
+    #usernameText::after {
+      background: linear-gradient(90deg, #00f2ea, transparent);
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: glitch-2 3s ease-in-out infinite;
+      clip-path: inset(65% 0 0 0);
+      opacity: 0;
+    }
+
+    @keyframes glitch-1 {
+      0%, 85%, 100% { transform: translate(0); opacity: 0; }
+      86% { transform: translate(3px, -1px); opacity: 0.8; }
+      87% { transform: translate(-2px, 1px); opacity: 0.6; }
+      88% { transform: translate(0); opacity: 0; }
+    }
+
+    @keyframes glitch-2 {
+      0%, 90%, 100% { transform: translate(0); opacity: 0; }
+      91% { transform: translate(-3px, 1px); opacity: 0.8; }
+      92% { transform: translate(2px, -1px); opacity: 0.6; }
+      93% { transform: translate(0); opacity: 0; }
     }
 
     .verified-badge {
@@ -2346,6 +2415,7 @@
           }
         }
         el.textContent = result;
+        el.setAttribute('data-text', result);
 
         // Lock characters one by one from left to right
         if (iterations > 3) {
