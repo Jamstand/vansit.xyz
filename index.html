@@ -2249,9 +2249,8 @@
         link.style.transform = 'translate(0, 0) scale(1)';
       });
 
-      // Click counter
+      // Click counter — count click then open link
       link.addEventListener('click', (e) => {
-        e.preventDefault();
         clickCounts[name] = (clickCounts[name] || 0) + 1;
         countEl.textContent = clickCounts[name];
         localStorage.setItem('scene_clicks', JSON.stringify(clickCounts));
