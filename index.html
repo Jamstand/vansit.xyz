@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Scene</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1644,33 +1644,255 @@
     }
 
     /* Mobile */
-    @media (max-width: 480px) {
-      .profile-card {
-        min-width: unset;
-        width: 90vw;
-        padding: 30px 25px;
-      }
-
-      .username {
-        font-size: 1.3rem;
-      }
-
-      .audio-controls {
-        bottom: 20px;
-        right: 20px;
-      }
-
-      .watermark {
-        bottom: 20px;
-        left: 20px;
-      }
-
+    /* ===== MOBILE / TABLET ===== */
+    @media (max-width: 768px) {
       .cursor, .cursor-dot, .trail-dot {
-        display: none;
+        display: none !important;
       }
 
       * {
-        cursor: auto;
+        cursor: auto !important;
+      }
+
+      body {
+        overflow-x: hidden;
+      }
+
+      .profile-card {
+        min-width: unset;
+        width: 92vw;
+        max-width: 400px;
+        padding: 28px 20px;
+        margin: 10px auto;
+      }
+
+      .profile-card::before {
+        inset: -1px;
+        padding: 2px;
+        border-radius: 22px;
+      }
+
+      .profile-card::after {
+        inset: -3px;
+        padding: 3px;
+        border-radius: 24px;
+        filter: blur(5px);
+      }
+
+      .container {
+        padding: 10px;
+        min-height: 100vh;
+        justify-content: center;
+      }
+
+      .avatar-container {
+        width: 90px;
+        height: 90px;
+      }
+
+      .avatar {
+        width: 90px;
+        height: 90px;
+      }
+
+      .avatar-ring {
+        width: 96px;
+        height: 96px;
+      }
+
+      .avatar-pulse {
+        width: 96px;
+        height: 96px;
+      }
+
+      .username {
+        font-size: 1.2rem;
+        letter-spacing: 2px;
+        gap: 6px;
+      }
+
+      .verified-badge {
+        width: 18px;
+        height: 18px;
+      }
+
+      .live-status {
+        font-size: 0.6rem;
+        padding: 4px 12px;
+      }
+
+      .role-badge {
+        font-size: 0.55rem;
+        padding: 4px 10px;
+      }
+
+      #bio {
+        font-size: 0.65rem;
+        letter-spacing: 2px;
+      }
+
+      .socials {
+        gap: 10px;
+      }
+
+      .social-link {
+        width: 48px;
+        height: 48px;
+        border-radius: 13px;
+      }
+
+      .social-link svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .social-link .click-count {
+        font-size: 7px;
+      }
+
+      .server-button-wrap {
+        margin-top: 8px;
+      }
+
+      .server-button {
+        padding: 10px 16px;
+        font-size: 11px;
+        gap: 8px;
+        width: 100%;
+        border-radius: 12px;
+      }
+
+      .server-btn-icon {
+        width: 32px;
+        height: 32px;
+      }
+
+      .server-btn-info {
+        font-size: 9px;
+      }
+
+      .server-btn-name {
+        font-size: 12px;
+      }
+
+      .server-btn-join {
+        padding: 5px 14px;
+        font-size: 10px;
+      }
+
+      .view-count {
+        font-size: 0.6rem;
+        margin-top: 10px;
+      }
+
+      .audio-controls {
+        bottom: 15px;
+        right: 15px;
+      }
+
+      .audio-btn {
+        width: 34px;
+        height: 34px;
+      }
+
+      .audio-btn svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .volume-slider-wrap {
+        width: 80px;
+      }
+
+      .watermark {
+        bottom: 15px;
+        left: 15px;
+        font-size: 0.5rem;
+        letter-spacing: 2px;
+      }
+
+      .elapsed {
+        top: 12px;
+        right: 12px;
+        font-size: 0.6rem;
+      }
+
+      .start-logo {
+        font-size: 1.8rem;
+        letter-spacing: 8px;
+      }
+
+      .start-text {
+        font-size: 0.75rem;
+      }
+
+      .start-hint {
+        font-size: 0.6rem;
+      }
+
+      .music-visualizer {
+        bottom: 15px;
+      }
+
+      .music-visualizer .bar {
+        width: 2px;
+        margin: 0 1px;
+      }
+
+      .tooltip {
+        display: none !important;
+      }
+
+      .video-bg {
+        object-fit: cover;
+        width: 100vw;
+        height: 100vh;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .profile-card {
+        width: 95vw;
+        padding: 22px 15px;
+      }
+
+      .username {
+        font-size: 1rem;
+        letter-spacing: 1px;
+      }
+
+      .social-link {
+        width: 42px;
+        height: 42px;
+      }
+
+      .social-link svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .socials {
+        gap: 8px;
+      }
+
+      .start-logo {
+        font-size: 1.4rem;
+        letter-spacing: 5px;
+      }
+
+      .server-button {
+        padding: 8px 12px;
+        font-size: 10px;
+      }
+    }
+
+    /* Fix for notched phones */
+    @supports (padding: env(safe-area-inset-bottom)) {
+      .audio-controls {
+        bottom: calc(15px + env(safe-area-inset-bottom));
+      }
+      .watermark {
+        bottom: calc(15px + env(safe-area-inset-bottom));
       }
     }
   </style>
@@ -1835,6 +2057,18 @@
       cursor.style.transform = `translate(${mouseX - 15}px, ${mouseY - 15}px)`;
       cursorDot.style.transform = `translate(${mouseX - 3}px, ${mouseY - 3}px)`;
     });
+
+    // Touch support for mobile
+    document.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      mouseX = touch.clientX;
+      mouseY = touch.clientY;
+    }, { passive: true });
+    document.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      mouseX = touch.clientX;
+      mouseY = touch.clientY;
+    }, { passive: true });
 
     function animateTrail() {
       trailPositions[0].x += (mouseX - trailPositions[0].x) * 0.4;
