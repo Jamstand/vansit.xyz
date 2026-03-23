@@ -65,27 +65,140 @@
       color: #fff;
       border: 1px solid #333;
     }
+    .btn-danger {
+      background: #1a1a1a;
+      color: #ff4444;
+      border: 1px solid #331111;
+    }
+    .btn-sm {
+      width: auto;
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
     .gap { margin-top: 12px; }
+    .header-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .header-row h1 { margin-bottom: 0; }
+    .logout-btn {
+      width: auto;
+      padding: 8px 16px;
+      font-size: 13px;
+      background: transparent;
+      color: #666;
+      border: 1px solid #333;
+      border-radius: 8px;
+    }
+
+    /* Song list */
     .song-list {
       width: 100%;
       list-style: none;
       margin-top: 16px;
     }
     .song-list li {
-      padding: 12px 16px;
+      padding: 10px 12px;
       background: #1a1a1a;
       border-radius: 10px;
       margin-bottom: 8px;
       font-size: 14px;
       color: #ccc;
       display: flex;
-      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.15s, transform 0.15s;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .song-list li.dragging {
+      opacity: 0.5;
+      background: #222;
+    }
+    .song-list li.drag-over {
+      border-top: 2px solid #fff;
+    }
+    .song-drag-handle {
+      cursor: grab;
+      color: #444;
+      font-size: 16px;
+      padding: 4px;
+      flex-shrink: 0;
+      touch-action: none;
+    }
+    .song-drag-handle:active { cursor: grabbing; }
+    .song-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .song-label {
+      color: #fff;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+    }
+    .song-label:hover { border-color: #333; }
+    .song-label-edit {
+      background: #111;
+      border: 1px solid #444;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 2px 4px;
+      border-radius: 4px;
+      outline: none;
+      width: 100%;
+    }
+    .song-meta {
+      display: flex;
+      gap: 8px;
       align-items: center;
     }
-    .song-list li .num {
+    .song-filename {
       color: #666;
-      font-size: 12px;
+      font-size: 11px;
     }
+    .song-duration {
+      color: #555;
+      font-size: 11px;
+    }
+    .song-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .song-action-btn {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #666;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+    }
+    .song-action-btn:hover { color: #fff; background: #222; }
+    .song-action-btn.delete:hover { color: #ff4444; background: #221111; }
+    .song-action-btn.playing { color: #44ff44; }
+
+    /* Upload area */
     .upload-area {
       width: 100%;
       padding: 40px 20px;
@@ -125,6 +238,8 @@
     }
     .error { color: #ff4444; }
     .success { color: #44ff44; }
+
+    /* File info (single and bulk) */
     .file-info {
       width: 100%;
       padding: 12px 16px;
@@ -137,6 +252,42 @@
     }
     .file-info .name { font-weight: 500; color: #fff; }
     .file-info .size { color: #666; font-size: 12px; }
+    .file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #222;
+    }
+    .file-item:last-child { border-bottom: none; }
+    .file-item .remove-file {
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      background: transparent;
+      color: #666;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .file-item .remove-file:hover { color: #ff4444; }
+
+    /* Audio preview */
+    .audio-preview {
+      width: 100%;
+      margin-top: 8px;
+      display: none;
+    }
+    .audio-preview audio {
+      width: 100%;
+      height: 36px;
+      border-radius: 8px;
+    }
+
     .input-group { width: 100%; margin-top: 12px; }
     .input-group label {
       display: block;
@@ -145,9 +296,105 @@
       margin-bottom: 6px;
       padding-left: 4px;
     }
+
+    /* Confirm dialog */
+    .confirm-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+    .confirm-box {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 320px;
+      width: 100%;
+      text-align: center;
+    }
+    .confirm-box p {
+      font-size: 15px;
+      margin-bottom: 20px;
+      color: #ccc;
+    }
+    .confirm-box .confirm-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .confirm-box .confirm-actions button {
+      flex: 1;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: #222;
+      border: 1px solid #333;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      animation: toastIn 0.25s ease, toastOut 0.25s ease 2.5s forwards;
+      pointer-events: auto;
+    }
+    .toast.toast-error { border-color: #442222; color: #ff6666; }
+    .toast.toast-success { border-color: #224422; color: #66ff66; }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+    /* Deploy status */
+    .deploy-banner {
+      width: 100%;
+      padding: 10px 16px;
+      background: #1a1a0a;
+      border: 1px solid #333300;
+      border-radius: 10px;
+      margin-top: 12px;
+      font-size: 13px;
+      color: #cccc66;
+      text-align: center;
+      display: none;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 0.7; } 50% { opacity: 1; } }
+    .deploy-banner.deployed {
+      background: #0a1a0a;
+      border-color: #003300;
+      color: #66ff66;
+      animation: none;
+    }
+
+    .section-label {
+      width: 100%;
+      font-size: 12px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 28px;
+      margin-bottom: 4px;
+      padding-left: 4px;
+    }
   </style>
 </head>
 <body>
+
+  <div class="toast-container" id="toastContainer"></div>
 
   <!-- Login Screen -->
   <div id="login" class="screen active">
@@ -159,20 +406,24 @@
 
   <!-- Main Screen -->
   <div id="main" class="screen">
-    <h1>Add Song</h1>
+    <div class="header-row">
+      <h1>Song Manager</h1>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
 
     <div class="upload-area" id="dropZone" onclick="filePicker.click()">
       <div class="icon">+</div>
-      <p>Tap to select MP3</p>
+      <p>Tap to select MP3 files</p>
     </div>
-    <input type="file" id="filePicker" accept=".mp3,audio/mpeg" style="display:none" onchange="fileSelected(this.files[0])">
+    <input type="file" id="filePicker" accept=".mp3,audio/mpeg" style="display:none" multiple onchange="filesSelected(this.files)">
 
-    <div class="file-info" id="fileInfo">
-      <div class="name" id="fileName"></div>
-      <div class="size" id="fileSize"></div>
+    <div class="file-info" id="fileInfo"></div>
+
+    <div class="audio-preview" id="audioPreview">
+      <audio id="previewPlayer" controls></audio>
     </div>
 
-    <div class="input-group">
+    <div class="input-group" id="labelGroup" style="display:none">
       <label>Song label (e.g. Artist - Title)</label>
       <input type="text" id="songLabel" placeholder="Artist - Song Title">
     </div>
@@ -184,16 +435,21 @@
     </div>
     <div class="status" id="uploadStatus"></div>
 
-    <ul class="song-list" id="songList"></ul>
+    <div class="deploy-banner" id="deployBanner"></div>
 
-    <button class="btn-secondary gap" onclick="loadSongs()" style="margin-top:24px">Refresh Song List</button>
+    <div class="section-label" style="margin-top:32px">Songs</div>
+    <ul class="song-list" id="songList"></ul>
   </div>
 
 <script>
   const API_BASE = 'https://api.github.com';
   let ghToken = '';
   let ghRepo = '';
-  let selectedFile = null;
+  let selectedFiles = [];
+  let songsData = []; // { filename, label, index }
+  let indexSha = '';
+  let indexContent = '';
+  let currentAudio = null; // for song list preview
   const filePicker = document.getElementById('filePicker');
   const dropZone = document.getElementById('dropZone');
 
@@ -208,9 +464,39 @@
   dropZone.addEventListener('drop', e => {
     e.preventDefault();
     dropZone.classList.remove('drag');
-    const file = e.dataTransfer.files[0];
-    if (file && file.name.endsWith('.mp3')) fileSelected(file);
+    const files = [...e.dataTransfer.files].filter(f => f.name.toLowerCase().endsWith('.mp3'));
+    if (files.length) filesSelected(files);
   });
+
+  // Toast notifications
+  function toast(msg, type = '') {
+    const container = document.getElementById('toastContainer');
+    const el = document.createElement('div');
+    el.className = 'toast' + (type ? ' toast-' + type : '');
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  }
+
+  // Confirm dialog
+  function confirm(msg) {
+    return new Promise(resolve => {
+      const overlay = document.createElement('div');
+      overlay.className = 'confirm-overlay';
+      overlay.innerHTML = `
+        <div class="confirm-box">
+          <p>${msg}</p>
+          <div class="confirm-actions">
+            <button class="btn-secondary" id="confirmNo">Cancel</button>
+            <button class="btn-danger" id="confirmYes">Delete</button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+      overlay.querySelector('#confirmNo').onclick = () => { overlay.remove(); resolve(false); };
+      overlay.querySelector('#confirmYes').onclick = () => { overlay.remove(); resolve(true); };
+      overlay.addEventListener('click', e => { if (e.target === overlay) { overlay.remove(); resolve(false); } });
+    });
+  }
 
   async function login() {
     const pwd = document.getElementById('pwd').value;
@@ -238,6 +524,7 @@
       document.getElementById('login').classList.remove('active');
       document.getElementById('main').classList.add('active');
       loadSongs();
+      toast('Signed in', 'success');
     } catch (e) {
       status.textContent = e.message;
       status.className = 'status error';
@@ -245,18 +532,67 @@
     }
   }
 
-  function fileSelected(file) {
-    if (!file) return;
-    selectedFile = file;
-    document.getElementById('fileName').textContent = file.name;
-    document.getElementById('fileSize').textContent = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
-    document.getElementById('fileInfo').style.display = 'block';
-    document.getElementById('uploadBtn').disabled = false;
+  function logout() {
+    ghToken = '';
+    ghRepo = '';
+    songsData = [];
+    indexSha = '';
+    indexContent = '';
+    selectedFiles = [];
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    document.getElementById('main').classList.remove('active');
+    document.getElementById('login').classList.add('active');
+    document.getElementById('pwd').value = '';
+    document.getElementById('loginStatus').textContent = '';
+    toast('Logged out');
+  }
 
-    // Auto-fill label from filename if empty
-    const label = document.getElementById('songLabel');
-    if (!label.value) {
-      label.value = file.name.replace(/\.mp3$/i, '').replace(/[-_]/g, ' ');
+  function filesSelected(files) {
+    const list = [...files].filter(f => f.name.toLowerCase().endsWith('.mp3'));
+    if (!list.length) return;
+    selectedFiles = list;
+
+    const info = document.getElementById('fileInfo');
+    info.style.display = 'block';
+
+    if (list.length === 1) {
+      // Single file — show preview and label input
+      info.innerHTML = `<div class="name">${list[0].name}</div><div class="size">${(list[0].size / (1024*1024)).toFixed(1)} MB</div>`;
+      const preview = document.getElementById('audioPreview');
+      const player = document.getElementById('previewPlayer');
+      player.src = URL.createObjectURL(list[0]);
+      preview.style.display = 'block';
+
+      const labelGroup = document.getElementById('labelGroup');
+      labelGroup.style.display = 'block';
+      const label = document.getElementById('songLabel');
+      if (!label.value) {
+        label.value = list[0].name.replace(/\.mp3$/i, '').replace(/[-_]/g, ' ');
+      }
+      document.getElementById('uploadBtn').textContent = 'Upload Song';
+    } else {
+      // Multiple files
+      info.innerHTML = list.map((f, i) => `
+        <div class="file-item">
+          <span><span class="name">${f.name}</span> <span class="size">(${(f.size/(1024*1024)).toFixed(1)} MB)</span></span>
+          <button class="remove-file" onclick="removeFile(${i})">x</button>
+        </div>`).join('');
+      document.getElementById('audioPreview').style.display = 'none';
+      document.getElementById('labelGroup').style.display = 'none';
+      document.getElementById('uploadBtn').textContent = `Upload ${list.length} Songs`;
+    }
+    document.getElementById('uploadBtn').disabled = false;
+  }
+
+  function removeFile(idx) {
+    selectedFiles.splice(idx, 1);
+    if (selectedFiles.length === 0) {
+      document.getElementById('fileInfo').style.display = 'none';
+      document.getElementById('uploadBtn').disabled = true;
+      document.getElementById('audioPreview').style.display = 'none';
+      document.getElementById('labelGroup').style.display = 'none';
+    } else {
+      filesSelected(selectedFiles);
     }
   }
 
@@ -289,43 +625,305 @@
     return res.json();
   }
 
+  function getSongDuration(url) {
+    return new Promise(resolve => {
+      const audio = new Audio();
+      audio.preload = 'metadata';
+      audio.onloadedmetadata = () => {
+        const m = Math.floor(audio.duration / 60);
+        const s = Math.floor(audio.duration % 60);
+        resolve(`${m}:${s.toString().padStart(2, '0')}`);
+      };
+      audio.onerror = () => resolve('');
+      audio.src = url;
+    });
+  }
+
   async function loadSongs() {
     try {
       const data = await ghFetch(`/repos/${ghRepo}/contents/index.html`);
+      indexSha = data.sha;
       const html = atob(data.content.replace(/\n/g, ''));
+      indexContent = html;
       const match = html.match(/const songs = \[([\s\S]*?)\];/);
       if (!match) return;
 
       const list = document.getElementById('songList');
       list.innerHTML = '';
+      songsData = [];
 
       const entries = match[1].match(/'([^']+)'/g);
-      if (entries) {
-        entries.forEach((entry, i) => {
-          const filename = entry.replace(/'/g, '');
-          // Try to extract the comment/label
-          const lineMatch = match[1].match(new RegExp(entry + ".*?//\\s*(.*)"));
-          const label = lineMatch ? lineMatch[1].trim() : filename;
+      if (!entries) return;
 
-          const li = document.createElement('li');
-          li.innerHTML = `<span>${label}</span><span class="num">${filename}</span>`;
-          list.appendChild(li);
+      entries.forEach((entry, i) => {
+        const filename = entry.replace(/'/g, '');
+        const lineMatch = match[1].match(new RegExp(entry.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ".*?//\\s*(.*)"));
+        const label = lineMatch ? lineMatch[1].trim() : filename;
+        songsData.push({ filename, label, index: i });
+
+        const li = document.createElement('li');
+        li.setAttribute('draggable', 'true');
+        li.dataset.index = i;
+        li.innerHTML = `
+          <span class="song-drag-handle">&#x2630;</span>
+          <div class="song-info">
+            <span class="song-label" onclick="editLabel(${i}, this)">${label}</span>
+            <div class="song-meta">
+              <span class="song-filename">${filename}</span>
+              <span class="song-duration" id="dur-${i}"></span>
+            </div>
+          </div>
+          <div class="song-actions">
+            <button class="song-action-btn" onclick="togglePlay(${i}, this)" title="Preview">&#9654;</button>
+            <button class="song-action-btn delete" onclick="deleteSong(${i})" title="Delete">&#x2715;</button>
+          </div>`;
+        list.appendChild(li);
+
+        // Load duration
+        getSongDuration(`https://raw.githubusercontent.com/${ghRepo}/main/${filename}`).then(dur => {
+          const el = document.getElementById('dur-' + i);
+          if (el && dur) el.textContent = dur;
         });
-      }
+      });
+
+      setupDragAndDrop();
     } catch (e) {
       console.error('Failed to load songs:', e);
+      toast('Failed to load songs', 'error');
     }
   }
 
+  // Inline label editing
+  function editLabel(idx, el) {
+    const current = songsData[idx].label;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'song-label-edit';
+    input.value = current;
+    el.replaceWith(input);
+    input.focus();
+    input.select();
+
+    const save = async () => {
+      const newLabel = input.value.trim() || current;
+      if (newLabel === current) {
+        const span = document.createElement('span');
+        span.className = 'song-label';
+        span.textContent = current;
+        span.onclick = () => editLabel(idx, span);
+        input.replaceWith(span);
+        return;
+      }
+      songsData[idx].label = newLabel;
+      const span = document.createElement('span');
+      span.className = 'song-label';
+      span.textContent = newLabel;
+      span.onclick = () => editLabel(idx, span);
+      input.replaceWith(span);
+      await commitSongsArray();
+      toast('Label updated', 'success');
+    };
+
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') input.blur();
+      if (e.key === 'Escape') { input.value = current; input.blur(); }
+    });
+  }
+
+  // Audio preview in song list
+  function togglePlay(idx, btn) {
+    const filename = songsData[idx].filename;
+    const url = `https://raw.githubusercontent.com/${ghRepo}/main/${filename}`;
+
+    if (currentAudio && currentAudio.dataset.idx === String(idx)) {
+      currentAudio.pause();
+      currentAudio = null;
+      btn.classList.remove('playing');
+      btn.innerHTML = '&#9654;';
+      return;
+    }
+
+    if (currentAudio) {
+      currentAudio.pause();
+      document.querySelectorAll('.song-action-btn.playing').forEach(b => {
+        b.classList.remove('playing');
+        b.innerHTML = '&#9654;';
+      });
+    }
+
+    currentAudio = new Audio(url);
+    currentAudio.dataset.idx = idx;
+    currentAudio.play();
+    btn.classList.add('playing');
+    btn.innerHTML = '&#9646;&#9646;';
+    currentAudio.onended = () => {
+      btn.classList.remove('playing');
+      btn.innerHTML = '&#9654;';
+      currentAudio = null;
+    };
+  }
+
+  // Delete song
+  async function deleteSong(idx) {
+    const song = songsData[idx];
+    const ok = await confirm(`Delete <strong>${song.label}</strong> (${song.filename})?`);
+    if (!ok) return;
+
+    try {
+      toast('Deleting ' + song.filename + '...');
+
+      // Delete the MP3 file from repo
+      const fileData = await ghFetch(`/repos/${ghRepo}/contents/${song.filename}`);
+      await ghFetch(`/repos/${ghRepo}/contents/${song.filename}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `Delete ${song.filename}`,
+          sha: fileData.sha,
+        }),
+      });
+
+      // Remove from songsData and commit
+      songsData.splice(idx, 1);
+      await commitSongsArray();
+      loadSongs();
+      showDeployBanner();
+      toast('Deleted ' + song.filename, 'success');
+    } catch (e) {
+      toast('Error: ' + e.message, 'error');
+    }
+  }
+
+  // Drag and drop reorder
+  function setupDragAndDrop() {
+    const list = document.getElementById('songList');
+    let dragIdx = null;
+
+    list.querySelectorAll('li').forEach(li => {
+      li.addEventListener('dragstart', e => {
+        dragIdx = parseInt(li.dataset.index);
+        li.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      li.addEventListener('dragend', () => {
+        li.classList.remove('dragging');
+        list.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+      });
+      li.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        list.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        li.classList.add('drag-over');
+      });
+      li.addEventListener('dragleave', () => li.classList.remove('drag-over'));
+      li.addEventListener('drop', async e => {
+        e.preventDefault();
+        li.classList.remove('drag-over');
+        const dropIdx = parseInt(li.dataset.index);
+        if (dragIdx === null || dragIdx === dropIdx) return;
+
+        // Reorder songsData
+        const [moved] = songsData.splice(dragIdx, 1);
+        songsData.splice(dropIdx, 0, moved);
+        songsData.forEach((s, i) => s.index = i);
+
+        await commitSongsArray();
+        loadSongs();
+        toast('Songs reordered', 'success');
+      });
+    });
+
+    // Touch drag support
+    let touchDragIdx = null;
+    let touchClone = null;
+
+    list.querySelectorAll('.song-drag-handle').forEach((handle, i) => {
+      handle.addEventListener('touchstart', e => {
+        e.preventDefault();
+        touchDragIdx = i;
+        const li = handle.closest('li');
+        li.classList.add('dragging');
+      }, { passive: false });
+    });
+
+    document.addEventListener('touchmove', e => {
+      if (touchDragIdx === null) return;
+      const touch = e.touches[0];
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      list.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+      const li = el && el.closest('.song-list li');
+      if (li) li.classList.add('drag-over');
+    }, { passive: true });
+
+    document.addEventListener('touchend', async e => {
+      if (touchDragIdx === null) return;
+      list.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+      const overEl = list.querySelector('.drag-over');
+      list.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+      if (overEl) {
+        const dropIdx = parseInt(overEl.dataset.index);
+        if (touchDragIdx !== dropIdx) {
+          const [moved] = songsData.splice(touchDragIdx, 1);
+          songsData.splice(dropIdx, 0, moved);
+          songsData.forEach((s, i) => s.index = i);
+          await commitSongsArray();
+          loadSongs();
+          toast('Songs reordered', 'success');
+        }
+      }
+      touchDragIdx = null;
+    });
+  }
+
+  // Commit the songs array to index.html
+  async function commitSongsArray() {
+    // Re-fetch latest index.html
+    const data = await ghFetch(`/repos/${ghRepo}/contents/index.html`);
+    indexSha = data.sha;
+    const html = atob(data.content.replace(/\n/g, ''));
+
+    const newArray = songsData.map(s => `  '${s.filename}',   // ${s.label}`).join('\n');
+    const updated = html.replace(
+      /const songs = \[[\s\S]*?\];/,
+      `const songs = [\n${newArray}\n  ];`
+    );
+
+    await ghFetch(`/repos/${ghRepo}/contents/index.html`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'Update songs array',
+        content: btoa(unescape(encodeURIComponent(updated))),
+        sha: indexSha,
+      }),
+    });
+  }
+
+  // Deploy banner
+  function showDeployBanner() {
+    const banner = document.getElementById('deployBanner');
+    banner.style.display = 'block';
+    banner.className = 'deploy-banner';
+    banner.textContent = 'Deploying changes...';
+
+    // Check deploy status by polling — after ~30s assume deployed
+    setTimeout(() => {
+      banner.textContent = 'Deployed!';
+      banner.className = 'deploy-banner deployed';
+      setTimeout(() => { banner.style.display = 'none'; }, 3000);
+    }, 30000);
+  }
+
   async function upload() {
-    if (!selectedFile) return;
+    if (!selectedFiles.length) return;
     const btn = document.getElementById('uploadBtn');
     btn.disabled = true;
 
     try {
-      // 1. Determine next song number
+      // Get existing files
       setStatus('Checking existing songs...', '');
-      setProgress(10);
+      setProgress(5);
 
       let existingFiles;
       try {
@@ -334,93 +932,98 @@
         throw new Error('Failed to list repo files');
       }
 
-      const songFiles = existingFiles
+      const songNums = existingFiles
         .filter(f => /^song\d+\.mp3$/.test(f.name))
         .map(f => parseInt(f.name.match(/\d+/)[0]));
-      const nextNum = songFiles.length > 0 ? Math.max(...songFiles) + 1 : 1;
-      const newFilename = `song${nextNum}.mp3`;
+      let nextNum = songNums.length > 0 ? Math.max(...songNums) + 1 : 1;
 
-      // 2. Read file as base64
-      setStatus('Reading file...', '');
-      setProgress(20);
-      const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(selectedFile);
-      });
+      const total = selectedFiles.length;
+      const isBulk = total > 1;
 
-      // 3. Upload MP3 to repo
-      setStatus('Uploading MP3...', '');
-      setProgress(40);
-      const label = document.getElementById('songLabel').value.trim() || selectedFile.name.replace(/\.mp3$/i, '');
+      for (let fi = 0; fi < total; fi++) {
+        const file = selectedFiles[fi];
+        const pctBase = (fi / total) * 90;
+        const pctStep = 90 / total;
 
-      await ghFetch(`/repos/${ghRepo}/contents/${newFilename}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: `Add ${newFilename} (${label})`,
-          content: base64,
-        }),
-      });
+        const newFilename = `song${nextNum}.mp3`;
+        const label = isBulk
+          ? file.name.replace(/\.mp3$/i, '').replace(/[-_]/g, ' ')
+          : (document.getElementById('songLabel').value.trim() || file.name.replace(/\.mp3$/i, ''));
 
-      // 4. Update index.html songs array
-      setStatus('Updating song list...', '');
-      setProgress(70);
+        // Read file
+        setStatus(`Reading ${isBulk ? `(${fi+1}/${total}) ` : ''}${file.name}...`, '');
+        setProgress(pctBase + pctStep * 0.2);
 
-      const indexData = await ghFetch(`/repos/${ghRepo}/contents/index.html`);
-      const indexContent = atob(indexData.content.replace(/\n/g, ''));
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
 
-      const newEntry = `  '${newFilename}',   // ${label}`;
-      const updated = indexContent.replace(
-        /(const songs = \[[\s\S]*?)(\/\/ 'song\d+\.mp3'.*?\n|(\s*)\];)/,
-        (match, before, ending) => {
-          if (ending.trim() === '];') {
-            // Add before the closing bracket
-            return before + newEntry + '\n  ];';
-          }
-          return before + newEntry + '\n  ' + ending;
-        }
-      );
+        // Upload MP3
+        setStatus(`Uploading ${isBulk ? `(${fi+1}/${total}) ` : ''}${newFilename}...`, '');
+        setProgress(pctBase + pctStep * 0.5);
 
-      // If the simple replace didn't work, try a more direct approach
-      let finalContent = updated;
-      if (!updated.includes(newFilename)) {
-        finalContent = indexContent.replace(
+        await ghFetch(`/repos/${ghRepo}/contents/${newFilename}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `Add ${newFilename} (${label})`,
+            content: base64,
+          }),
+        });
+
+        // Update songs array
+        setStatus(`Updating song list${isBulk ? ` (${fi+1}/${total})` : ''}...`, '');
+        setProgress(pctBase + pctStep * 0.8);
+
+        const indexData = await ghFetch(`/repos/${ghRepo}/contents/index.html`);
+        const idxContent = atob(indexData.content.replace(/\n/g, ''));
+
+        const newEntry = `  '${newFilename}',   // ${label}`;
+        let finalContent = idxContent.replace(
           /const songs = \[([\s\S]*?)\];/,
           (match, inner) => {
             const trimmed = inner.trimEnd();
-            return `const songs = [${trimmed}\n  '${newFilename}',   // ${label}\n];`;
+            return `const songs = [${trimmed}\n${newEntry}\n  ];`;
           }
         );
+
+        await ghFetch(`/repos/${ghRepo}/contents/index.html`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `Add ${newFilename} to songs array`,
+            content: btoa(unescape(encodeURIComponent(finalContent))),
+            sha: indexData.sha,
+          }),
+        });
+
+        nextNum++;
       }
 
-      setProgress(85);
-      await ghFetch(`/repos/${ghRepo}/contents/index.html`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: `Add ${newFilename} to songs array`,
-          content: btoa(unescape(encodeURIComponent(finalContent))),
-          sha: indexData.sha,
-        }),
-      });
-
       setProgress(100);
-      setStatus(`Uploaded ${newFilename} — deploying now!`, 'success');
+      setStatus(`Uploaded ${total} song${total > 1 ? 's' : ''} — deploying now!`, 'success');
+      toast(`${total} song${total > 1 ? 's' : ''} uploaded!`, 'success');
 
       // Reset form
-      selectedFile = null;
+      selectedFiles = [];
       document.getElementById('fileInfo').style.display = 'none';
+      document.getElementById('fileInfo').innerHTML = '';
       document.getElementById('songLabel').value = '';
+      document.getElementById('labelGroup').style.display = 'none';
+      document.getElementById('audioPreview').style.display = 'none';
+      document.getElementById('previewPlayer').src = '';
       filePicker.value = '';
       btn.disabled = true;
 
-      // Refresh song list
+      showDeployBanner();
       setTimeout(loadSongs, 1000);
 
     } catch (e) {
       setStatus('Error: ' + e.message, 'error');
+      toast('Upload failed: ' + e.message, 'error');
       btn.disabled = false;
     }
   }

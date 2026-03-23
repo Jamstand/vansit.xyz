@@ -9,6 +9,10 @@ module.exports = function handler(req, res) {
 
   const { password } = req.body || {};
 
+  if (!process.env.ADMIN_PASSWORD) {
+    return res.status(500).json({ error: 'ADMIN_PASSWORD env var is not set' });
+  }
+
   if (!password || password !== process.env.ADMIN_PASSWORD) {
     return res.status(401).json({ error: 'Invalid password' });
   }
