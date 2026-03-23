@@ -1,0 +1,9 @@
+{
+  "name": "vansit Song Manager",
+  "short_name": "Songs",
+  "start_url": "/admin.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": []
+}
