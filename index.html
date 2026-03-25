@@ -1093,8 +1093,8 @@
     }
 
     .social-link svg {
-      width: 20px;
-      height: 20px;
+      width: 32px;
+      height: 32px;
       position: relative;
       z-index: 1;
       filter: drop-shadow(0 0 5px var(--btn-glow));
@@ -1178,6 +1178,7 @@
       color: var(--btn-color);
       position: relative;
       z-index: 1;
+      display: none;
       letter-spacing: 1px;
       opacity: 0.7;
       font-weight: 600;
@@ -1789,17 +1790,17 @@
       }
 
       .social-link {
-        width: 42px;
-        height: 42px;
+        width: 54px;
+        height: 54px;
       }
 
       .social-link svg {
-        width: 18px;
-        height: 18px;
+        width: 26px;
+        height: 26px;
       }
 
       .socials {
-        gap: 8px;
+        gap: 10px;
       }
 
       .start-logo {
@@ -2135,7 +2136,10 @@
       const tooltipName = link.getAttribute('data-tooltip');
 
       // Restore saved count
-      if (clickCounts[name]) countEl.textContent = clickCounts[name];
+      if (clickCounts[name]) {
+        countEl.textContent = clickCounts[name];
+        countEl.style.display = 'block';
+      }
 
       // Add tooltip
       const tooltip = document.createElement('span');
@@ -2161,6 +2165,7 @@
       link.addEventListener('click', (e) => {
         clickCounts[name] = (clickCounts[name] || 0) + 1;
         countEl.textContent = clickCounts[name];
+        countEl.style.display = 'block';
         localStorage.setItem('scene_clicks', JSON.stringify(clickCounts));
 
         // Pop animation
