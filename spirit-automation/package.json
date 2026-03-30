@@ -1,0 +1,14 @@
+{
+  "name": "spirit-automation",
+  "version": "1.0.0",
+  "description": "Automated login for Miami-Dade S.P.I.R.I.T. system",
+  "main": "login.js",
+  "scripts": {
+    "start": "node login.js",
+    "install-browsers": "npx playwright install chromium"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "playwright": "^1.42.0"
+  }
+}
