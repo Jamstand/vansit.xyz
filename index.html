@@ -246,16 +246,22 @@
 
     .start-logo {
       font-family: 'Furore', sans-serif;
-      font-size: 2.5rem;
-      letter-spacing: 12px;
+      font-size: 2.8rem;
+      letter-spacing: 14px;
       text-transform: uppercase;
       background: linear-gradient(135deg, var(--text), var(--primary), var(--accent));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: 30px;
-      animation: logo-glow 3s ease-in-out infinite;
+      background-size: 200% 200%;
+      margin-bottom: 0;
+      animation: logo-glow 3s ease-in-out infinite, logo-shimmer 6s ease-in-out infinite;
       text-shadow: none;
+    }
+
+    @keyframes logo-shimmer {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
     }
 
     @keyframes logo-glow {
@@ -263,48 +269,150 @@
       50% { filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.6)); }
     }
 
-    .start-ring {
-      width: 80px;
-      height: 80px;
-      border: 2px solid transparent;
-      border-top-color: var(--primary);
-      border-right-color: var(--accent);
-      border-radius: 50%;
-      animation: spin-ring 2s linear infinite;
-      margin-bottom: 30px;
-      position: relative;
+    /* 3D perspective grid floor */
+    .start-grid {
+      position: absolute;
+      bottom: 0;
+      left: -50%;
+      width: 200%;
+      height: 60%;
+      background:
+        linear-gradient(90deg, rgba(139, 92, 246, 0.08) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(139, 92, 246, 0.08) 1px, transparent 1px);
+      background-size: 60px 40px;
+      transform: perspective(500px) rotateX(60deg);
+      transform-origin: center bottom;
+      animation: grid-scroll 3s linear infinite;
+      mask-image: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 80%);
+      -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 80%);
     }
 
-    .start-ring::before {
+    @keyframes grid-scroll {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 40px; }
+    }
+
+    /* Horizon glow line */
+    .start-horizon {
+      position: absolute;
+      bottom: 38%;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 5%, var(--primary) 30%, var(--accent) 50%, var(--primary) 70%, transparent 95%);
+      box-shadow: 0 0 30px var(--primary-glow), 0 0 80px var(--primary-glow);
+      animation: horizon-pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes horizon-pulse {
+      0%, 100% { opacity: 0.6; box-shadow: 0 0 30px var(--primary-glow), 0 0 60px var(--primary-glow); }
+      50% { opacity: 1; box-shadow: 0 0 40px var(--primary-glow), 0 0 100px var(--primary-glow), 0 0 150px rgba(139, 92, 246, 0.15); }
+    }
+
+    /* 3D floating card behind logo */
+    .start-card {
+      position: relative;
+      padding: 50px 60px;
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      background: rgba(139, 92, 246, 0.03);
+      backdrop-filter: blur(10px);
+      animation: card-float 6s ease-in-out infinite;
+      margin-bottom: 30px;
+    }
+
+    .start-card::before {
       content: '';
       position: absolute;
-      inset: 6px;
+      inset: 0;
       border: 1px solid transparent;
-      border-bottom-color: var(--secondary);
-      border-left-color: var(--primary);
-      border-radius: 50%;
-      animation: spin-ring 1.5s linear infinite reverse;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), transparent, rgba(168, 85, 247, 0.1)) border-box;
+      mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+      -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      -webkit-mask-composite: xor;
     }
 
-    .start-ring::after {
-      content: '▶';
+    @keyframes card-float {
+      0%, 100% {
+        transform: perspective(800px) rotateX(2deg) rotateY(-1deg) translateY(0);
+        box-shadow: 0 20px 60px rgba(139, 92, 246, 0.1), 0 0 1px rgba(139, 92, 246, 0.3);
+      }
+      50% {
+        transform: perspective(800px) rotateX(-2deg) rotateY(1deg) translateY(-8px);
+        box-shadow: 0 30px 80px rgba(139, 92, 246, 0.15), 0 0 1px rgba(139, 92, 246, 0.5);
+      }
+    }
+
+    /* Corner accents on the card */
+    .start-card-corner {
       position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--primary);
-      font-size: 1.2rem;
-      animation: pulse-text 2s ease-in-out infinite;
+      width: 16px;
+      height: 16px;
+    }
+    .start-card-corner::before, .start-card-corner::after {
+      content: '';
+      position: absolute;
+      background: var(--primary);
+      transition: all 0.3s;
+    }
+    .start-card-corner::before { height: 1px; width: 100%; }
+    .start-card-corner::after { width: 1px; height: 100%; }
+    .start-card-corner.tl { top: -1px; left: -1px; }
+    .start-card-corner.tr { top: -1px; right: -1px; }
+    .start-card-corner.tr::before { right: 0; }
+    .start-card-corner.tr::after { right: 0; }
+    .start-card-corner.bl { bottom: -1px; left: -1px; }
+    .start-card-corner.bl::before { bottom: 0; }
+    .start-card-corner.bl::after { bottom: 0; }
+    .start-card-corner.br { bottom: -1px; right: -1px; }
+    .start-card-corner.br::before { right: 0; bottom: 0; }
+    .start-card-corner.br::after { right: 0; bottom: 0; }
+
+    /* Vertical light beams */
+    .start-beam {
+      position: absolute;
+      top: 0;
+      width: 1px;
+      height: 100%;
+      background: linear-gradient(to bottom, transparent, var(--primary), transparent);
+      opacity: 0;
+      animation: beam-sweep 6s ease-in-out infinite;
+    }
+    .start-beam:nth-child(1) { left: 20%; animation-delay: 0s; }
+    .start-beam:nth-child(2) { left: 50%; animation-delay: 2s; }
+    .start-beam:nth-child(3) { left: 80%; animation-delay: 4s; }
+
+    @keyframes beam-sweep {
+      0%, 100% { opacity: 0; }
+      40% { opacity: 0.15; }
+      60% { opacity: 0.15; }
+    }
+
+    /* Floating status line */
+    .start-status {
+      font-family: 'Furore', sans-serif;
+      font-size: 0.5rem;
+      letter-spacing: 6px;
+      color: rgba(139, 92, 246, 0.25);
+      text-transform: uppercase;
+      position: absolute;
+      top: 40px;
+      animation: status-fade 4s ease-in-out infinite;
+    }
+
+    @keyframes status-fade {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.5; }
     }
 
     .start-text {
       font-family: 'Furore', sans-serif;
-      font-size: 0.85rem;
-      letter-spacing: 8px;
+      font-size: 0.7rem;
+      letter-spacing: 10px;
       text-transform: uppercase;
       color: var(--text-dim);
-      animation: pulse-text 2s ease-in-out infinite;
+      animation: pulse-text 3s ease-in-out infinite;
+      margin-top: 8px;
     }
 
     .start-line {
@@ -710,6 +818,34 @@
       flex-shrink: 0;
       filter: drop-shadow(0 0 6px rgba(29, 155, 240, 0.6));
       animation: badge-glow 2s ease-in-out infinite;
+      cursor: pointer;
+    }
+
+    .verified-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      background: rgba(10, 10, 20, 0.95);
+      border: 1px solid rgba(29, 155, 240, 0.5);
+      padding: 20px 36px;
+      border-radius: 12px;
+      font-family: 'Furore', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 3px;
+      color: #fff;
+      z-index: 10000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      box-shadow: 0 0 30px rgba(29, 155, 240, 0.3), 0 0 60px rgba(29, 155, 240, 0.1);
+      text-align: center;
+    }
+
+    .verified-popup.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+      pointer-events: auto;
     }
 
     @keyframes badge-glow {
@@ -1088,7 +1224,7 @@
       color: var(--btn-color-bright);
       box-shadow: 0 0 30px var(--btn-glow), 0 0 60px var(--btn-glow), 0 0 90px var(--btn-glow), inset 0 0 20px var(--btn-bg);
       animation: none;
-      transform: translateY(-5px) scale(1.12);
+      transform: none;
     }
 
     .social-link:hover::before {
@@ -1111,7 +1247,6 @@
 
     .social-link:hover svg {
       filter: drop-shadow(0 0 10px var(--btn-glow)) drop-shadow(0 0 20px var(--btn-glow));
-      transform: scale(1.15);
     }
 
     /* Discord blurple border */
@@ -1166,7 +1301,6 @@
     }
 
     .social-link:hover svg {
-      transform: scale(1.15);
     }
 
     @keyframes twitch-icon-pulse {
@@ -1839,10 +1973,21 @@
 
   <!-- Start Screen -->
   <div class="start-screen" id="startScreen">
+    <div class="start-grid"></div>
+    <div class="start-horizon"></div>
+    <div class="start-beam"></div>
+    <div class="start-beam"></div>
+    <div class="start-beam"></div>
+    <div class="start-status">Initializing</div>
     <div class="start-content">
-      <div class="start-logo">VANS_IT</div>
-      <div class="start-ring"></div>
-      <div class="start-text">Click to Enter</div>
+      <div class="start-card">
+        <div class="start-card-corner tl"></div>
+        <div class="start-card-corner tr"></div>
+        <div class="start-card-corner bl"></div>
+        <div class="start-card-corner br"></div>
+        <div class="start-logo">VANS_IT</div>
+        <div class="start-text">Click to Enter</div>
+      </div>
       <div class="start-line"></div>
       <div class="start-hint">Sound On for Best Experience</div>
     </div>
@@ -1871,7 +2016,8 @@
         <video class="avatar" src="https://static.klipy.com/ii/c3a19a0b747a76e98651f2b9a3cca5ff/40/7e/Ju3uxxN08pigLVF.mp4" autoplay loop muted playsinline webkit-playsinline disablePictureInPicture></video>
       </div>
 
-      <div class="username" id="username"><span id="usernameText"></span><svg class="verified-badge" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 1l3.09 2.41L19 4.5l.41 3.91L22 12l-2.59 3.59L19 19.5l-3.91.41L12 23l-3.09-2.41L5 19.5l-.41-3.91L2 12l2.59-3.59L5 4.5l3.91-.41L12 1z" fill="#1d9bf0" stroke="#4db8ff" stroke-width="0.5"/><path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="verified-popup" id="verifiedPopup">I'm verified lmao</div>
+      <div class="username" id="username"><span id="usernameText"></span><svg class="verified-badge" id="verifiedBadge" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 1l3.09 2.41L19 4.5l.41 3.91L22 12l-2.59 3.59L19 19.5l-3.91.41L12 23l-3.09-2.41L5 19.5l-.41-3.91L2 12l2.59-3.59L5 4.5l3.91-.41L12 1z" fill="#1d9bf0" stroke="#4db8ff" stroke-width="0.5"/><path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
 
       <!-- Live Status -->
       <div class="live-status offline" id="liveStatus">
@@ -2828,6 +2974,15 @@
         iconOn.style.display = '';
         iconOff.style.display = 'none';
       }
+    });
+
+    // Verified badge popup
+    document.getElementById('verifiedBadge').addEventListener('click', function(e) {
+      e.stopPropagation();
+      const popup = document.getElementById('verifiedPopup');
+      popup.classList.add('show');
+      clearTimeout(popup._timer);
+      popup._timer = setTimeout(() => popup.classList.remove('show'), 5000);
     });
   </script>
 </body>
