@@ -3,328 +3,398 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>S.P.I.R.I.T. Login Automation - Demo</title>
+  <title>S.P.I.R.I.T. Mainframe Automation - Demo</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: #0a0a1a;
+      font-family: 'IBM Plex Mono', 'Courier New', monospace;
+      background: #0a0a0a;
       color: #e0e0e0;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 40px 20px;
+      padding: 30px 20px;
     }
-    h1 {
-      font-size: 1.4rem;
-      color: #00d4ff;
-      margin-bottom: 8px;
-      letter-spacing: 1px;
-    }
-    .subtitle {
-      color: #888;
-      font-size: 0.85rem;
-      margin-bottom: 30px;
-    }
-    .browser-frame {
+    h1 { font-size: 1.2rem; color: #33ff33; margin-bottom: 6px; letter-spacing: 2px; }
+    .subtitle { color: #666; font-size: 0.75rem; margin-bottom: 24px; }
+
+    /* Mainframe terminal window */
+    .mainframe {
       width: 100%;
-      max-width: 600px;
-      background: #1a1a2e;
-      border-radius: 12px;
+      max-width: 720px;
+      background: #000;
+      border: 2px solid #333;
+      border-radius: 4px;
       overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0, 212, 255, 0.1);
-      border: 1px solid #2a2a4a;
+      box-shadow: 0 0 40px rgba(0, 255, 0, 0.05);
     }
-    .browser-bar {
-      background: #12121e;
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-bottom: 1px solid #2a2a4a;
-    }
-    .browser-dots {
-      display: flex;
-      gap: 6px;
-    }
-    .dot { width: 12px; height: 12px; border-radius: 50%; }
-    .dot.red { background: #ff5f57; }
-    .dot.yellow { background: #ffbd2e; }
-    .dot.green { background: #28c840; }
-    .browser-url {
-      flex: 1;
-      background: #0a0a14;
-      border-radius: 6px;
+    .mainframe-bar {
+      background: #1a1a2e;
       padding: 6px 12px;
-      font-size: 0.75rem;
-      color: #666;
-      font-family: monospace;
-    }
-    .login-page {
-      padding: 40px 30px;
       display: flex;
-      flex-direction: column;
       align-items: center;
-    }
-    .login-page h2 {
-      font-size: 1.2rem;
-      color: #fff;
-      margin-bottom: 6px;
-    }
-    .login-page .sys-name {
-      color: #00d4ff;
-      font-size: 0.7rem;
-      letter-spacing: 3px;
-      margin-bottom: 28px;
-      text-transform: uppercase;
-    }
-    .form-group {
-      width: 100%;
-      max-width: 320px;
-      margin-bottom: 16px;
-    }
-    .form-group label {
-      display: block;
-      font-size: 0.75rem;
+      justify-content: space-between;
+      border-bottom: 1px solid #333;
+      font-size: 0.65rem;
       color: #888;
-      margin-bottom: 6px;
     }
-    .form-group input {
-      width: 100%;
-      padding: 10px 14px;
-      background: #0a0a14;
-      border: 1px solid #333;
-      border-radius: 6px;
-      color: #00ff88;
-      font-family: monospace;
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color 0.3s, box-shadow 0.3s;
+    .mainframe-bar .title { color: #aaa; }
+    .mainframe-bar .dots { display: flex; gap: 5px; }
+    .mainframe-bar .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.r { background: #ff5f57; } .dot.y { background: #ffbd2e; } .dot.g { background: #28c840; }
+
+    .screen {
+      padding: 16px 20px;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      min-height: 440px;
+      color: #33ff33;
+      position: relative;
+      overflow: hidden;
     }
-    .form-group input.typing {
-      border-color: #00d4ff;
-      box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+    .screen::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,0,0,0.15) 0px,
+        rgba(0,0,0,0.15) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      pointer-events: none;
     }
-    .form-group input.done {
-      border-color: #00ff88;
-      box-shadow: 0 0 8px rgba(0, 255, 136, 0.2);
+    .row { white-space: pre; min-height: 1.5em; }
+    .row.bright { color: #66ff66; font-weight: bold; }
+    .row.white { color: #ffffff; }
+    .row.dim { color: #1a8a1a; }
+    .cursor {
+      display: inline-block;
+      width: 0.6em;
+      height: 1.1em;
+      background: #33ff33;
+      vertical-align: text-bottom;
+      animation: blink 0.8s step-end infinite;
     }
-    .login-btn {
-      width: 100%;
-      max-width: 320px;
-      padding: 12px;
-      background: #00d4ff;
-      color: #000;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 0.9rem;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: background 0.3s, transform 0.1s;
-    }
-    .login-btn.clicked {
-      background: #00ff88;
-      transform: scale(0.97);
-    }
-    .login-btn.loading {
-      background: #555;
-      color: #aaa;
+    @keyframes blink { 50% { opacity: 0; } }
+    .highlight { color: #ffff33; }
+    .typing-text { color: #33ff33; }
+
+    .status-bar {
+      background: #1a3a1a;
+      padding: 4px 12px;
+      font-size: 0.65rem;
+      color: #33ff33;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid #2a5a2a;
     }
 
-    /* Terminal */
+    /* Python terminal */
     .terminal {
       width: 100%;
-      max-width: 600px;
-      margin-top: 24px;
-      background: #0d0d1a;
-      border-radius: 10px;
-      border: 1px solid #2a2a4a;
+      max-width: 720px;
+      margin-top: 20px;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 4px;
       overflow: hidden;
     }
     .terminal-bar {
-      background: #12121e;
-      padding: 8px 14px;
-      font-size: 0.7rem;
-      color: #666;
-      border-bottom: 1px solid #2a2a4a;
+      background: #1a1a2e;
+      padding: 6px 12px;
+      font-size: 0.65rem;
+      color: #888;
+      border-bottom: 1px solid #333;
     }
     .terminal-body {
-      padding: 16px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.8rem;
+      padding: 12px 16px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
       line-height: 1.6;
-      min-height: 160px;
+      min-height: 140px;
     }
-    .terminal-body .line {
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
+    .terminal-body .line { opacity: 0; transition: opacity 0.3s; }
     .terminal-body .line.visible { opacity: 1; }
-    .line .prefix { color: #00d4ff; }
-    .line .success { color: #00ff88; }
-    .line .info { color: #ffbd2e; }
-    .line .error { color: #ff5f57; }
+    .t-green { color: #33ff33; }
+    .t-yellow { color: #ffbd2e; }
+    .t-cyan { color: #00d4ff; }
+    .t-white { color: #ccc; }
 
-    /* Status badge */
-    .status {
-      margin-top: 20px;
-      padding: 8px 20px;
-      border-radius: 20px;
-      font-size: 0.8rem;
+    .badge {
+      margin-top: 16px;
+      padding: 6px 18px;
+      border-radius: 16px;
+      font-size: 0.75rem;
       font-weight: bold;
       opacity: 0;
       transition: opacity 0.5s;
     }
-    .status.visible { opacity: 1; }
-    .status.success { background: rgba(0,255,136,0.15); color: #00ff88; border: 1px solid #00ff88; }
+    .badge.visible { opacity: 1; }
+    .badge.ok { background: rgba(51,255,51,0.12); color: #33ff33; border: 1px solid #33ff33; }
 
-    .restart-btn {
-      margin-top: 16px;
-      padding: 8px 20px;
+    .replay {
+      margin-top: 14px;
+      padding: 6px 18px;
       background: transparent;
       border: 1px solid #444;
       color: #888;
-      border-radius: 6px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
+      font-family: 'IBM Plex Mono', monospace;
       opacity: 0;
       transition: opacity 0.3s;
     }
-    .restart-btn.visible { opacity: 1; }
-    .restart-btn:hover { border-color: #00d4ff; color: #00d4ff; }
+    .replay.visible { opacity: 1; }
+    .replay:hover { border-color: #33ff33; color: #33ff33; }
   </style>
 </head>
 <body>
-  <h1>S.P.I.R.I.T. Login Automation</h1>
-  <p class="subtitle">Playwright Browser Automation Preview</p>
+  <h1>S.P.I.R.I.T. MAINFRAME AUTOMATION</h1>
+  <p class="subtitle">py3270 TN3270 Terminal Emulation Preview</p>
 
-  <!-- Simulated browser -->
-  <div class="browser-frame">
-    <div class="browser-bar">
-      <div class="browser-dots">
-        <div class="dot red"></div>
-        <div class="dot yellow"></div>
-        <div class="dot green"></div>
-      </div>
-      <div class="browser-url" id="urlBar">about:blank</div>
+  <!-- Simulated mainframe screen -->
+  <div class="mainframe">
+    <div class="mainframe-bar">
+      <div class="dots"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div></div>
+      <span class="title">Quick3270 - Session B - Session1.ecf</span>
+      <span id="connStatus">Disconnected</span>
     </div>
-    <div class="login-page">
-      <h2>Miami-Dade County</h2>
-      <div class="sys-name">S.P.I.R.I.T. System</div>
-      <div class="form-group">
-        <label>Username</label>
-        <input type="text" id="usernameInput" readonly>
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="passwordInput" readonly>
-      </div>
-      <button class="login-btn" id="loginBtn">Sign In</button>
+    <div class="screen" id="screen"></div>
+    <div class="status-bar">
+      <span id="statusLeft">4B&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;B</span>
+      <span id="statusRight">24/32</span>
     </div>
   </div>
 
-  <!-- Terminal output -->
+  <!-- Python terminal -->
   <div class="terminal">
-    <div class="terminal-bar">Terminal &mdash; node login.js</div>
-    <div class="terminal-body" id="terminalBody"></div>
+    <div class="terminal-bar">Terminal &mdash; python login.py</div>
+    <div class="terminal-body" id="termBody"></div>
   </div>
 
-  <div class="status" id="statusBadge"></div>
-  <button class="restart-btn" id="restartBtn" onclick="runDemo()">Replay Demo</button>
+  <div class="badge" id="badge"></div>
+  <button class="replay" id="replayBtn" onclick="runDemo()">Replay Demo</button>
 
   <script>
-    const lines = [
-      { text: '<span class="prefix">$</span> node login.js', delay: 0 },
-      { text: '<span class="info">Launching browser (headless: false)...</span>', delay: 800 },
-      { text: '<span class="info">Navigating to:</span> https://spirit.miamidade.gov/login', delay: 1500, action: 'navigate' },
-      { text: '<span class="info">Filling in credentials...</span>', delay: 2500, action: 'fillUser' },
-      { text: '', delay: 3800, action: 'fillPass' },
-      { text: '<span class="info">Submitting login form...</span>', delay: 5000, action: 'submit' },
-      { text: '<span class="success">Screenshot saved: screenshots/login-1711800000.png</span>', delay: 6500 },
-      { text: '<span class="success">Login successful!</span> Current URL: https://spirit.miamidade.gov/dashboard', delay: 7200, action: 'success' },
-      { text: '<span class="info">Ready for post-login actions.</span>', delay: 8000 },
+    // The mainframe menu content (matching the real screenshot)
+    const MENU_SCREEN = [
+      '',
+      '        CCCCCCCCCCC                     INFORMATION TECHNOLOGY DEPARTMENT',
+      '        CCCCCCCCCCCCC',
+      '              CCCC                      ITD HELP DESK: 305-596-4357',
+      '  M I A M I - D A D E  CCC',
+      '              CCCC                                DATE: 04/08/26',
+      '  CCCCCCCCCCC CCCCCCCCCCCCC                       TIME: 09:02:07',
+      '  CCCCCCCCCCC CCCCCCCCCCCCC                    IP ADDR: 10.28.98.4',
+      '                                               LINK: PROD',
+      '',
+      '     YOU ARE CONNECTED TO MIAMI-DADE COUNTY MAINFRAME SYSTEMS.',
+      '          THIS ACCESS IS FOR AUTHORIZED USE ONLY.',
+      '',
+      '',
+      '  ------------------------- RESIDENT APPLICATIONS --------------------------',
+      '',
+      '  C = CRIMINAL JUSTICE AND COURTS       B = CRIMINAL JUSTICE BACKUP',
+      '  P = POLICE SYSTEMS                    W = WATER AND SEWER SYSTEMS',
+      '  F = FINANCIAL SYSTEMS                 N = GATEWAY1 (SESSION MANAGER)',
+      '  G = GENERAL GOV\'T SYSTEMS             K = DEVELOPMENT TSO',
+      '',
+      '',
+      '',
+      '  PLEASE ENTER APPLICATION CODE: ',
     ];
 
-    function typeText(el, text, speed = 50) {
-      return new Promise(resolve => {
-        let i = 0;
-        el.value = '';
-        const interval = setInterval(() => {
-          el.value += text[i];
-          i++;
-          if (i >= text.length) { clearInterval(interval); resolve(); }
-        }, speed);
+    const LOGIN_SCREEN = [
+      '',
+      '  =========================================================================',
+      '                    CRIMINAL JUSTICE AND COURTS SYSTEM',
+      '                         S.P.I.R.I.T. APPLICATION',
+      '  =========================================================================',
+      '',
+      '',
+      '                          USERID:  __________',
+      '                        PASSWORD:  __________',
+      '',
+      '',
+      '                    PRESS ENTER TO SIGN IN',
+      '',
+      '',
+      '',
+      '          YOU ARE CONNECTED TO MIAMI-DADE COUNTY MAINFRAME SYSTEMS.',
+      '               THIS ACCESS IS FOR AUTHORIZED USE ONLY.',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+    ];
+
+    const LOGGED_IN_SCREEN = [
+      '',
+      '  =========================================================================',
+      '                    CRIMINAL JUSTICE AND COURTS SYSTEM',
+      '                         S.P.I.R.I.T. APPLICATION',
+      '  =========================================================================',
+      '',
+      '                                                    DATE: 04/08/26',
+      '                   WELCOME, JDOE                    TIME: 09:02:15',
+      '',
+      '  ----------------------------- MAIN MENU ---------------------------------',
+      '',
+      '   1 = CASE INQUIRY                    5 = REPORTS',
+      '   2 = NAME SEARCH                     6 = ADMINISTRATION',
+      '   3 = WARRANT INQUIRY                 7 = UTILITIES',
+      '   4 = BOOKING INQUIRY                 8 = SIGN OFF',
+      '',
+      '',
+      '',
+      '   PLEASE ENTER SELECTION: ',
+      '',
+      '',
+      '  LAST LOGIN: 04/07/26  16:45:12',
+      '',
+      '',
+    ];
+
+    function renderScreen(lines) {
+      const screen = document.getElementById('screen');
+      screen.innerHTML = '';
+      lines.forEach(line => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.textContent = line;
+        screen.appendChild(row);
       });
     }
 
-    async function runDemo() {
-      const terminal = document.getElementById('terminalBody');
-      const urlBar = document.getElementById('urlBar');
-      const userInput = document.getElementById('usernameInput');
-      const passInput = document.getElementById('passwordInput');
-      const loginBtn = document.getElementById('loginBtn');
-      const statusBadge = document.getElementById('statusBadge');
-      const restartBtn = document.getElementById('restartBtn');
-
-      // Reset
-      terminal.innerHTML = '';
-      urlBar.textContent = 'about:blank';
-      userInput.value = '';
-      userInput.className = '';
-      passInput.value = '';
-      passInput.className = '';
-      loginBtn.className = 'login-btn';
-      loginBtn.textContent = 'Sign In';
-      statusBadge.className = 'status';
-      restartBtn.className = 'restart-btn';
-
-      for (const line of lines) {
-        await new Promise(r => setTimeout(r, line === lines[0] ? 500 : line.delay - (lines[lines.indexOf(line) - 1]?.delay || 0)));
-
-        if (line.text) {
-          const div = document.createElement('div');
-          div.className = 'line';
-          div.innerHTML = line.text;
-          terminal.appendChild(div);
-          requestAnimationFrame(() => div.classList.add('visible'));
-        }
-
-        if (line.action === 'navigate') {
-          urlBar.textContent = 'https://spirit.miamidade.gov/login';
-        } else if (line.action === 'fillUser') {
-          userInput.classList.add('typing');
-          await typeText(userInput, 'jdoe@miamidade.gov', 60);
-          userInput.classList.remove('typing');
-          userInput.classList.add('done');
-        } else if (line.action === 'fillPass') {
-          passInput.classList.add('typing');
-          await typeText(passInput, '••••••••••••', 80);
-          passInput.classList.remove('typing');
-          passInput.classList.add('done');
-        } else if (line.action === 'submit') {
-          loginBtn.classList.add('clicked');
-          setTimeout(() => {
-            loginBtn.classList.remove('clicked');
-            loginBtn.classList.add('loading');
-            loginBtn.textContent = 'Signing in...';
-          }, 150);
-        } else if (line.action === 'success') {
-          loginBtn.classList.remove('loading');
-          loginBtn.classList.add('clicked');
-          loginBtn.textContent = 'Signed In';
-          urlBar.textContent = 'https://spirit.miamidade.gov/dashboard';
-          statusBadge.textContent = 'LOGIN SUCCESSFUL';
-          statusBadge.className = 'status success visible';
-        }
-      }
-
-      restartBtn.className = 'restart-btn visible';
+    function addTermLine(text) {
+      const body = document.getElementById('termBody');
+      const div = document.createElement('div');
+      div.className = 'line';
+      div.innerHTML = text;
+      body.appendChild(div);
+      requestAnimationFrame(() => div.classList.add('visible'));
     }
 
-    // Auto-start
-    setTimeout(runDemo, 600);
+    function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function typeOnScreen(row, col, text, speed = 80) {
+      const screen = document.getElementById('screen');
+      const rows = screen.querySelectorAll('.row');
+      if (!rows[row]) return;
+      let current = rows[row].textContent;
+      for (let i = 0; i < text.length; i++) {
+        const before = current.substring(0, col + i);
+        const after = current.substring(col + i + 1);
+        current = before + text[i] + after;
+        rows[row].textContent = current;
+        rows[row].classList.add('bright');
+        await wait(speed);
+      }
+    }
+
+    async function typeOnScreenMasked(row, col, length, speed = 80) {
+      const screen = document.getElementById('screen');
+      const rows = screen.querySelectorAll('.row');
+      if (!rows[row]) return;
+      let current = rows[row].textContent;
+      for (let i = 0; i < length; i++) {
+        const before = current.substring(0, col + i);
+        const after = current.substring(col + i + 1);
+        current = before + '*' + after;
+        rows[row].textContent = current;
+        rows[row].classList.add('bright');
+        await wait(speed);
+      }
+    }
+
+    async function runDemo() {
+      const screen = document.getElementById('screen');
+      const termBody = document.getElementById('termBody');
+      const badge = document.getElementById('badge');
+      const replayBtn = document.getElementById('replayBtn');
+      const connStatus = document.getElementById('connStatus');
+
+      // Reset
+      screen.innerHTML = '';
+      termBody.innerHTML = '';
+      badge.className = 'badge';
+      replayBtn.className = 'replay';
+      connStatus.textContent = 'Disconnected';
+
+      await wait(500);
+      addTermLine('<span class="t-cyan">$</span> <span class="t-white">python login.py</span>');
+      await wait(600);
+      addTermLine('<span class="t-yellow">Connecting to IBMPRD.METRO-DADE.COM:23 (visible: True)...</span>');
+      await wait(1200);
+
+      // Show connection
+      connStatus.textContent = 'Connected to IBMPRD.METRO-DADE.COM';
+      addTermLine('<span class="t-green">Connected to mainframe.</span>');
+
+      // Render the menu screen
+      renderScreen(MENU_SCREEN);
+      await wait(1000);
+
+      // Type application code
+      addTermLine('<span class="t-yellow">Entering application code: C</span>');
+      await wait(500);
+      await typeOnScreen(23, 34, 'C', 100);
+      await wait(800);
+
+      addTermLine('<span class="t-green">Application selected.</span>');
+      await wait(400);
+
+      // Transition to login screen
+      screen.innerHTML = '';
+      await wait(300);
+      renderScreen(LOGIN_SCREEN);
+      await wait(800);
+
+      // Fill username
+      addTermLine('<span class="t-yellow">Filling in credentials...</span>');
+      await wait(500);
+      await typeOnScreen(7, 43, 'JDOE      ', 70);
+      await wait(400);
+
+      // Fill password (masked)
+      await typeOnScreenMasked(8, 43, 8, 90);
+      await wait(600);
+
+      // Submit
+      addTermLine('<span class="t-yellow">Submitting login (Enter)...</span>');
+      await wait(300);
+
+      // Flash screen
+      screen.style.opacity = '0.3';
+      await wait(150);
+      screen.style.opacity = '1';
+      await wait(800);
+
+      // Show logged-in screen
+      renderScreen(LOGGED_IN_SCREEN);
+      await wait(500);
+
+      addTermLine('<span class="t-green">Login submitted!</span>');
+      await wait(300);
+      addTermLine('<span class="t-green">Login successful!</span> <span class="t-white">Screen: MAIN MENU</span>');
+      await wait(300);
+      addTermLine('<span class="t-yellow">Session is open. Close the x3270 window to exit.</span>');
+
+      badge.textContent = 'MAINFRAME LOGIN SUCCESSFUL';
+      badge.className = 'badge ok visible';
+      await wait(400);
+      replayBtn.className = 'replay visible';
+    }
+
+    setTimeout(runDemo, 400);
   </script>
 </body>
 </html>

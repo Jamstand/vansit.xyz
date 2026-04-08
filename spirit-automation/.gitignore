@@ -1,3 +1,5 @@
-node_modules/
 .env
 screenshots/
+__pycache__/
+*.pyc
+node_modules/
