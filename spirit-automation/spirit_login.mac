@@ -1,0 +1,67 @@
+' =========================================================================
+' S.P.I.R.I.T. Login Macro for Quick3270
+' =========================================================================
+' This is a Quick3270 VBScript macro that automates the login sequence.
+'
+' TO USE:
+'   1. Open Quick3270 and connect to IBMPRD.METRO-DADE.COM
+'   2. Tools menu -> Macros -> New Macro (or Edit Macro)
+'   3. Paste this script and save
+'   4. Run it with Tools -> Macros -> Run, or assign it to a toolbar button
+'      or hotkey (Tools -> Customize -> Keyboard)
+'
+' BEFORE RUNNING:
+'   - Update USERNAME and PASSWORD below with your credentials
+'   - Verify the APP_CODE is what you want (C = Criminal Justice/Courts)
+'   - Double-check the USERNAME_ROW / USERNAME_COL coordinates match
+'     your actual login screen (check the status bar in Quick3270 — it
+'     shows "row col" at the bottom when you hover a field)
+' =========================================================================
+
+Sub Main
+
+    ' ------ CONFIGURATION -------------------------------------------------
+    Const USERNAME    = "JDOE"
+    Const PASSWORD    = "mypassword"
+    Const APP_CODE    = "C"           ' C = Criminal Justice and Courts
+    Const USERNAME_ROW = 7            ' UPDATE: row of USERID field
+    Const USERNAME_COL = 43           ' UPDATE: col of USERID field
+    Const PASSWORD_ROW = 8            ' UPDATE: row of PASSWORD field
+    Const PASSWORD_COL = 43           ' UPDATE: col of PASSWORD field
+    ' ----------------------------------------------------------------------
+
+    Dim Sess
+    Set Sess = Application.ActiveSession
+
+    If Sess Is Nothing Then
+        MsgBox "No active Quick3270 session. Connect first."
+        Exit Sub
+    End If
+
+    ' Wait until the host is ready to accept input
+    Sess.WaitHostQuiet 2000
+
+    ' --- SCREEN 1: Application code menu ---
+    ' Type the application code wherever the cursor is resting
+    ' (the cursor should already be at "PLEASE ENTER APPLICATION CODE:")
+    Sess.SendKeys APP_CODE
+    Sess.SendKeys "<Enter>"
+    Sess.WaitHostQuiet 2000
+
+    ' --- SCREEN 2: Login screen ---
+    ' Move cursor to the USERID field and type
+    Sess.SetCursor USERNAME_ROW, USERNAME_COL
+    Sess.SendKeys USERNAME
+
+    ' Move cursor to the PASSWORD field and type
+    Sess.SetCursor PASSWORD_ROW, PASSWORD_COL
+    Sess.SendKeys PASSWORD
+
+    ' Submit the login
+    Sess.SendKeys "<Enter>"
+    Sess.WaitHostQuiet 2000
+
+    ' Optional: show a confirmation
+    ' MsgBox "Logged in successfully."
+
+End Sub
