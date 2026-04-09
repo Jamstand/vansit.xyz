@@ -1,0 +1,167 @@
+' =========================================================================
+' UADRCI - Return Court Information Macro (Quick3270)
+' Miami-Dade County Clerk of Courts - Traffic Division
+' =========================================================================
+' Automates data entry on the UADRCI screen. Runs in two phases:
+'
+'   PHASE 1 (LOOKUP): Prompts for CASE NUMBER + HEARING DATE and presses
+'                     Enter so the screen populates with the case data.
+'
+'   PHASE 2 (DISPOSITION): Prompts for the disposition fields (case action,
+'                     plea, disposition, sentence code, fine, cost) and
+'                     fills them in. Press PF12 at the end to update.
+'
+' Both phases are optional — hit Cancel on any prompt to skip it.
+'
+' TO USE:
+'   1. In Quick3270, navigate to the UADRCI screen
+'   2. Tools -> Macros -> New Macro -> paste this -> save as uadrci.mac
+'   3. Tools -> Macros -> Run, or bind to a hotkey (Tools -> Customize)
+'
+' TUNING THE COORDINATES (important!):
+'   The SetCursor row/col values below are estimates. Quick3270 shows
+'   "row col" in the bottom-left status bar — click each field and note
+'   the numbers, then update the constants in the CONFIG section.
+' =========================================================================
+
+Sub Main
+
+    ' ------ FIELD COORDINATES (verify in Quick3270!) -----------------------
+    ' Tip: click the field, look at the bottom-left status bar for row col
+    Const CASE_ROW          = 4  : Const CASE_COL         = 7
+    Const HEAR_DATE_ROW     = 5  : Const HEAR_DATE_COL    = 14
+    Const HEAR_TIME_ROW     = 5  : Const HEAR_TIME_COL    = 32
+    Const CASE_ACTION_ROW   = 7  : Const CASE_ACTION_COL  = 14
+    Const PLEA_ROW          = 12 : Const PLEA_COL         = 7
+    Const DISPOSITION_ROW   = 12 : Const DISPOSITION_COL  = 34
+    Const SENTENCE_ROW      = 12 : Const SENTENCE_COL     = 66
+    Const FINE_ROW          = 15 : Const FINE_COL         = 7
+    Const COST_ROW          = 15 : Const COST_COL         = 30
+    ' -----------------------------------------------------------------------
+
+    Dim Sess
+    Set Sess = Application.ActiveSession
+
+    If Sess Is Nothing Then
+        MsgBox "No active Quick3270 session.", vbExclamation, "UADRCI Macro"
+        Exit Sub
+    End If
+
+    Sess.WaitHostQuiet 1000
+
+    ' Sanity check: confirm we're on the UADRCI screen by reading the
+    ' screen name in the top-right corner (row 2, cols ~73-78)
+    Dim screenName
+    screenName = Trim(Sess.GetText(2, 73, 6))
+    If InStr(UCase(screenName), "UADRCI") = 0 Then
+        Dim r
+        r = MsgBox("Current screen doesn't appear to be UADRCI." & vbCrLf & _
+                   "Found: '" & screenName & "'" & vbCrLf & vbCrLf & _
+                   "Continue anyway?", vbYesNo + vbQuestion, "UADRCI Macro")
+        If r = vbNo Then Exit Sub
+    End If
+
+    ' =====================================================================
+    ' PHASE 1: LOOKUP (CASE NUMBER + HEARING DATE)
+    ' =====================================================================
+    Dim caseNum, hearDate, hearTime
+
+    caseNum = InputBox("Case Number:" & vbCrLf & vbCrLf & _
+                       "(Leave blank to skip lookup phase)", _
+                       "UADRCI - Lookup")
+    If caseNum <> "" Then
+        ' Default hearing date to today in MMDDYYYY
+        Dim defaultDate
+        defaultDate = Right("0" & Month(Now), 2) & _
+                      Right("0" & Day(Now), 2) & _
+                      Year(Now)
+
+        hearDate = InputBox("Hearing Date (MMDDYYYY):", _
+                            "UADRCI - Lookup", defaultDate)
+        hearTime = InputBox("Hearing Time (HHMM, optional):", _
+                            "UADRCI - Lookup", "")
+
+        ' Fill in the lookup fields
+        Sess.SetCursor CASE_ROW, CASE_COL
+        Sess.SendKeys caseNum
+
+        If hearDate <> "" Then
+            Sess.SetCursor HEAR_DATE_ROW, HEAR_DATE_COL
+            Sess.SendKeys hearDate
+        End If
+
+        If hearTime <> "" Then
+            Sess.SetCursor HEAR_TIME_ROW, HEAR_TIME_COL
+            Sess.SendKeys hearTime
+        End If
+
+        ' Submit lookup
+        Sess.SendKeys "<Enter>"
+        Sess.WaitHostQuiet 2000
+    End If
+
+    ' =====================================================================
+    ' PHASE 2: DISPOSITION ENTRY
+    ' =====================================================================
+    Dim doDisp
+    doDisp = MsgBox("Enter disposition now?" & vbCrLf & vbCrLf & _
+                    "Yes = fill disposition fields" & vbCrLf & _
+                    "No  = exit (use the screen manually)", _
+                    vbYesNo + vbQuestion, "UADRCI - Disposition")
+    If doDisp = vbNo Then Exit Sub
+
+    Dim caseAction, plea, disp, sent, fine, cost
+
+    caseAction = InputBox("CASE ACTION:" & vbCrLf & _
+                          "(leave blank to skip this field)", _
+                          "UADRCI - Disposition")
+    plea       = InputBox("PLEA (G=Guilty, N=Not Guilty, NC=Nolo Contendere):", _
+                          "UADRCI - Disposition")
+    disp       = InputBox("DISPOSITION code:", "UADRCI - Disposition")
+    sent       = InputBox("SENTENCE CODE:", "UADRCI - Disposition")
+    fine       = InputBox("FINE amount:", "UADRCI - Disposition")
+    cost       = InputBox("COST amount:", "UADRCI - Disposition")
+
+    ' Write values to their field positions (only if user provided them)
+    If caseAction <> "" Then
+        Sess.SetCursor CASE_ACTION_ROW, CASE_ACTION_COL
+        Sess.SendKeys caseAction
+    End If
+
+    If plea <> "" Then
+        Sess.SetCursor PLEA_ROW, PLEA_COL
+        Sess.SendKeys plea
+    End If
+
+    If disp <> "" Then
+        Sess.SetCursor DISPOSITION_ROW, DISPOSITION_COL
+        Sess.SendKeys disp
+    End If
+
+    If sent <> "" Then
+        Sess.SetCursor SENTENCE_ROW, SENTENCE_COL
+        Sess.SendKeys sent
+    End If
+
+    If fine <> "" Then
+        Sess.SetCursor FINE_ROW, FINE_COL
+        Sess.SendKeys fine
+    End If
+
+    If cost <> "" Then
+        Sess.SetCursor COST_ROW, COST_COL
+        Sess.SendKeys cost
+    End If
+
+    ' =====================================================================
+    ' SUBMIT (PF12 = UPDATE)
+    ' =====================================================================
+    Dim doSubmit
+    doSubmit = MsgBox("Submit with PF12 (UPDATE)?", _
+                      vbYesNo + vbQuestion, "UADRCI - Submit")
+    If doSubmit = vbYes Then
+        Sess.SendKeys "<PF12>"
+        Sess.WaitHostQuiet 2000
+    End If
+
+End Sub
