@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UADRCI Macro Configurator</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --muted: #8b949e;
+    --accent: #33ff33;
+    --accent-dim: #26a126;
+    --warn: #f0c674;
+    --input-bg: #0a0e14;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, 'Segoe UI', Tahoma, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+    line-height: 1.5;
+  }
+  header { max-width: 1100px; margin: 0 auto 20px; }
+  h1 {
+    font-size: 1.3rem;
+    color: var(--accent);
+    margin: 0 0 4px;
+    font-family: 'IBM Plex Mono', 'Courier New', monospace;
+    letter-spacing: 1px;
+  }
+  .subtitle { color: var(--muted); font-size: 0.85rem; margin: 0 0 16px; }
+  .steps {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+  .steps strong { color: var(--accent); }
+  .steps ol { margin: 6px 0 0; padding-left: 22px; }
+  .steps li { margin-bottom: 3px; }
+  .steps a { color: var(--accent); }
+  kbd {
+    background: #000;
+    border: 1px solid #555;
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 1px 7px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--accent);
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+  }
+  @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+  section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  section h2 {
+    font-size: 0.95rem;
+    color: var(--accent);
+    margin: 0 0 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  section h2 .hint {
+    color: var(--muted);
+    font-weight: normal;
+    font-size: 0.72rem;
+    letter-spacing: 0;
+  }
+
+  .field {
+    display: grid;
+    grid-template-columns: 150px 1fr 90px;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .field label {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .field .note {
+    color: var(--muted);
+    font-size: 0.68rem;
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  input[type="text"], input[type="number"] {
+    background: var(--input-bg);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 7px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.88rem;
+    width: 100%;
+  }
+  input::placeholder { color: #3a4048; }
+  input:focus {
+    outline: none;
+    border-color: var(--accent-dim);
+    box-shadow: 0 0 0 2px rgba(51, 255, 51, 0.15);
+  }
+
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 0.82rem;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+  }
+  .check input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+  aside { position: sticky; top: 24px; align-self: start; }
+
+  .preview {
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    min-height: 220px;
+    max-height: 380px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    line-height: 1.6;
+  }
+
+  .actions {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  button {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 11px 16px;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    transition: transform 0.05s, opacity 0.15s;
+  }
+  button:hover { opacity: 0.88; }
+  button:active { transform: scale(0.98); }
+  button.secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-weight: normal;
+  }
+  button.secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .status {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 10px;
+    min-height: 1em;
+  }
+  .status.ok { color: var(--accent); }
+
+  details { margin-top: 6px; }
+  details summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.8rem;
+    padding: 4px 0;
+    user-select: none;
+  }
+  details summary:hover { color: var(--accent); }
+  .coord-grid {
+    display: grid;
+    grid-template-columns: 1fr 70px 70px;
+    gap: 6px 10px;
+    align-items: center;
+    margin-top: 12px;
+  }
+  .coord-grid .lbl { color: var(--muted); font-size: 0.78rem; font-family: 'IBM Plex Mono', monospace; }
+  .coord-grid .hd { color: var(--accent); font-size: 0.7rem; text-align: center; font-family: 'IBM Plex Mono', monospace; }
+  .coord-grid input { font-size: 0.78rem; padding: 4px 6px; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>&gt;_ UADRCI MACRO CONFIGURATOR</h1>
+  <p class="subtitle">Miami-Dade Clerk of Courts &middot; Traffic &middot; Return Court Information</p>
+  <div class="steps">
+    <strong>HOW TO USE</strong>
+    <ol>
+      <li>Edit the fields below (they auto-save in your browser)</li>
+      <li>Click <strong>Download AHK Script</strong> &mdash; requires <a href="https://www.autohotkey.com/" target="_blank" rel="noopener">AutoHotkey v2</a></li>
+      <li>Double-click the downloaded <code>.ahk</code> file to load it</li>
+      <li>In Quick3270, navigate to the UADRCI screen and press <kbd>F6</kbd></li>
+    </ol>
+  </div>
+</header>
+
+<div class="container">
+  <main>
+    <section>
+      <h2>LOOKUP PHASE <span class="hint">Enter submits</span></h2>
+      <div class="field">
+        <label>Case Number</label>
+        <input type="text" id="v_caseNum" placeholder="e.g. 12345AB">
+        <span class="note">r4 c7</span>
+      </div>
+      <div class="field">
+        <label>Hearing Date</label>
+        <input type="text" id="v_hearDate" placeholder="MMDDYYYY">
+        <span class="note">r5 c14</span>
+      </div>
+      <div class="field">
+        <label>Hearing Time</label>
+        <input type="text" id="v_hearTime" placeholder="HHMM">
+        <span class="note">r5 c32</span>
+      </div>
+      <div class="check">
+        <input type="checkbox" id="submitLookup" checked>
+        <label for="submitLookup">Press Enter after lookup fields to retrieve case data</label>
+      </div>
+    </section>
+
+    <section>
+      <h2>DISPOSITION <span class="hint">PF12 updates</span></h2>
+      <div class="field">
+        <label>Case Action</label>
+        <input type="text" id="v_caseAction">
+        <span class="note">r7 c14</span>
+      </div>
+      <div class="field">
+        <label>Plea</label>
+        <input type="text" id="v_plea" placeholder="G / N / NC">
+        <span class="note">r12 c7</span>
+      </div>
+      <div class="field">
+        <label>Disposition</label>
+        <input type="text" id="v_disposition">
+        <span class="note">r12 c34</span>
+      </div>
+      <div class="field">
+        <label>Sentence Code</label>
+        <input type="text" id="v_sentence">
+        <span class="note">r12 c66</span>
+      </div>
+      <div class="field">
+        <label>Fine</label>
+        <input type="text" id="v_fine">
+        <span class="note">r15 c7</span>
+      </div>
+      <div class="field">
+        <label>Cost</label>
+        <input type="text" id="v_cost">
+        <span class="note">r15 c30</span>
+      </div>
+      <div class="check">
+        <input type="checkbox" id="submitDisposition">
+        <label for="submitDisposition">Press PF12 after filling to UPDATE</label>
+      </div>
+    </section>
+
+    <section>
+      <h2>ADVANCED <span class="hint">Tune coordinates</span></h2>
+      <details>
+        <summary>Edit field row / column positions</summary>
+        <p style="font-size:0.78rem;color:var(--muted);margin:8px 0;">
+          Click into each field in Quick3270 and look at the bottom-left
+          status bar &mdash; it shows <code>row col</code>. Update any values
+          that don&rsquo;t match.
+        </p>
+        <div class="coord-grid">
+          <span class="lbl">FIELD</span>
+          <span class="hd">ROW</span>
+          <span class="hd">COL</span>
+        </div>
+        <div id="coordsGrid" class="coord-grid"></div>
+      </details>
+    </section>
+  </main>
+
+  <aside>
+    <section>
+      <h2>KEYSTROKE PREVIEW <span class="hint">on F6</span></h2>
+      <div class="preview" id="preview"></div>
+      <div class="actions">
+        <button id="downloadBtn">&#x2193; DOWNLOAD AHK SCRIPT</button>
+        <button class="secondary" id="copyBtn">Copy AHK to Clipboard</button>
+        <button class="secondary" id="resetBtn">Reset All Fields</button>
+      </div>
+      <div class="status" id="status">Auto-saved to your browser</div>
+    </section>
+  </aside>
+</div>
+
+<script>
+// Field definitions (key, label, default row, default col)
+const FIELDS = [
+  { key: 'caseNum',     label: 'CASE',        row: 4,  col: 7  },
+  { key: 'hearDate',    label: 'HEAR DATE',   row: 5,  col: 14 },
+  { key: 'hearTime',    label: 'HEAR TIME',   row: 5,  col: 32 },
+  { key: 'caseAction',  label: 'CASE ACTION', row: 7,  col: 14 },
+  { key: 'plea',        label: 'PLEA',        row: 12, col: 7  },
+  { key: 'disposition', label: 'DISPOSITION', row: 12, col: 34 },
+  { key: 'sentence',    label: 'SENTENCE',    row: 12, col: 66 },
+  { key: 'fine',        label: 'FINE',        row: 15, col: 7  },
+  { key: 'cost',        label: 'COST',        row: 15, col: 30 },
+];
+const LOOKUP_KEYS = ['caseNum', 'hearDate', 'hearTime'];
+const DISPO_KEYS  = ['caseAction', 'plea', 'disposition', 'sentence', 'fine', 'cost'];
+const STORAGE_KEY = 'uadrci-config-v1';
+
+const $ = id => document.getElementById(id);
+
+function getCoords(key) {
+  const f = FIELDS.find(x => x.key === key);
+  return {
+    row: parseInt($('r_' + key).value, 10) || f.row,
+    col: parseInt($('c_' + key).value, 10) || f.col,
+  };
+}
+
+function getConfig() {
+  const cfg = { values: {}, coords: {}, submitLookup: $('submitLookup').checked, submitDisposition: $('submitDisposition').checked };
+  FIELDS.forEach(f => {
+    cfg.values[f.key] = $('v_' + f.key).value.trim();
+    cfg.coords[f.key] = getCoords(f.key);
+  });
+  return cfg;
+}
+
+function saveConfig() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(getConfig()));
+  updatePreview();
+}
+
+function loadConfig() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return;
+  try {
+    const cfg = JSON.parse(raw);
+    FIELDS.forEach(f => {
+      if (cfg.values && cfg.values[f.key] !== undefined) $('v_' + f.key).value = cfg.values[f.key];
+      if (cfg.coords && cfg.coords[f.key]) {
+        $('r_' + f.key).value = cfg.coords[f.key].row;
+        $('c_' + f.key).value = cfg.coords[f.key].col;
+      }
+    });
+    if ('submitLookup' in cfg)      $('submitLookup').checked = cfg.submitLookup !== false;
+    if ('submitDisposition' in cfg) $('submitDisposition').checked = !!cfg.submitDisposition;
+  } catch (e) {}
+}
+
+function resetConfig() {
+  if (!confirm('Clear all values and reset coordinates?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  FIELDS.forEach(f => {
+    $('v_' + f.key).value = '';
+    $('r_' + f.key).value = f.row;
+    $('c_' + f.key).value = f.col;
+  });
+  $('submitLookup').checked = true;
+  $('submitDisposition').checked = false;
+  updatePreview();
+  flashStatus('Reset to defaults');
+}
+
+function buildCoordsGrid() {
+  const grid = $('coordsGrid');
+  grid.innerHTML = '';
+  FIELDS.forEach(f => {
+    const lbl = document.createElement('span');
+    lbl.className = 'lbl';
+    lbl.textContent = f.label;
+    const r = document.createElement('input');
+    r.type = 'number';
+    r.id = 'r_' + f.key;
+    r.value = f.row;
+    const c = document.createElement('input');
+    c.type = 'number';
+    c.id = 'c_' + f.key;
+    c.value = f.col;
+    grid.append(lbl, r, c);
+    r.addEventListener('input', saveConfig);
+    c.addEventListener('input', saveConfig);
+  });
+}
+
+function updatePreview() {
+  const cfg = getConfig();
+  const lines = [];
+  lines.push('; F6 pressed in Quick3270 -->');
+  lines.push('');
+
+  let any = false;
+  const section = (title, keys, submit, submitLabel) => {
+    const filled = keys.filter(k => cfg.values[k]);
+    if (filled.length === 0) return;
+    any = true;
+    lines.push('; ' + title);
+    filled.forEach(k => {
+      const c = cfg.coords[k];
+      const pad = (cfg.values[k] || '').length;
+      lines.push('  SetCursor(' + c.row + ', ' + c.col + ') <- "' + cfg.values[k] + '"');
+    });
+    if (submit) lines.push('  SendKeys("' + submitLabel + '")');
+    lines.push('');
+  };
+
+  section('LOOKUP',      LOOKUP_KEYS, cfg.submitLookup,      '<Enter>');
+  section('DISPOSITION', DISPO_KEYS,  cfg.submitDisposition, '<PF12>');
+
+  if (!any) lines.push('; (fill in some values above)');
+  $('preview').textContent = lines.join('\n');
+}
+
+function buildAhkScript() {
+  const cfg = getConfig();
+  const esc = s => s.replace(/`/g, '``').replace(/"/g, '""');
+  let body = '';
+
+  const append = (keys, submit, submitCode) => {
+    const filled = keys.filter(k => cfg.values[k]);
+    if (filled.length === 0) return false;
+    filled.forEach(k => {
+      const c = cfg.coords[k];
+      body += '        sess.SetCursor(' + c.row + ', ' + c.col + ')\n';
+      body += '        sess.SendKeys("' + esc(cfg.values[k]) + '")\n';
+    });
+    if (submit) {
+      body += '        sess.SendKeys("' + submitCode + '")\n';
+      body += '        sess.WaitHostQuiet(2000)\n';
+    }
+    body += '\n';
+    return true;
+  };
+
+  append(LOOKUP_KEYS, cfg.submitLookup,      '<Enter>');
+  append(DISPO_KEYS,  cfg.submitDisposition, '<PF12>');
+
+  if (!body.trim()) {
+    body = '        MsgBox("No values configured. Edit uadrci_config.html and regenerate.", "UADRCI", "Icon!")\n        return\n';
+  }
+
+  return `; =========================================================================
+; UADRCI Autofill - Generated by UADRCI Macro Configurator
+; =========================================================================
+; 1. Install AutoHotkey v2:  https://www.autohotkey.com/
+; 2. Double-click this file to load it (tray icon appears)
+; 3. In Quick3270, navigate to the UADRCI screen
+; 4. Press F6 to autofill
+;
+; Ctrl+Shift+Q  = quit this script
+; Ctrl+Shift+R  = reload this script
+; =========================================================================
+
+#Requires AutoHotkey v2.0
+#SingleInstance Force
+
+; --- F6: run the UADRCI autofill ---
+F6::
+{
+    static busy := false
+    if busy
+        return
+    busy := true
+
+    try {
+        sess := ComObject("Quick3270.Application").ActiveSession
+    } catch as e {
+        MsgBox("Cannot connect to Quick3270." . Chr(10) . Chr(10) . "Is it running and connected to a session?" . Chr(10) . Chr(10) . "Error: " . e.Message, "UADRCI Autofill", "Icon!")
+        busy := false
+        return
+    }
+
+    if !IsObject(sess) {
+        MsgBox("No active Quick3270 session.", "UADRCI Autofill", "Icon!")
+        busy := false
+        return
+    }
+
+    try {
+        sess.WaitHostQuiet(1000)
+
+${body}        TrayTip("UADRCI", "Autofill complete", 1)
+    } catch as e {
+        MsgBox("Error while filling: " . e.Message, "UADRCI Autofill", "Icon!")
+    }
+
+    busy := false
+}
+
+; --- Ctrl+Shift+Q: quit ---
+^+q::ExitApp
+
+; --- Ctrl+Shift+R: reload ---
+^+r::Reload
+`;
+}
+
+function downloadAhk() {
+  const script = buildAhkScript();
+  const blob = new Blob([script], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'uadrci_autofill.ahk';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  flashStatus('Downloaded uadrci_autofill.ahk');
+}
+
+function copyAhk() {
+  const script = buildAhkScript();
+  navigator.clipboard.writeText(script).then(
+    () => flashStatus('AHK script copied to clipboard'),
+    () => flashStatus('Copy failed')
+  );
+}
+
+function flashStatus(msg) {
+  const el = $('status');
+  el.textContent = msg;
+  el.classList.add('ok');
+  clearTimeout(flashStatus._t);
+  flashStatus._t = setTimeout(() => {
+    el.textContent = 'Auto-saved to your browser';
+    el.classList.remove('ok');
+  }, 2200);
+}
+
+// Init
+buildCoordsGrid();
+loadConfig();
+updatePreview();
+
+// Bind events
+FIELDS.forEach(f => $('v_' + f.key).addEventListener('input', saveConfig));
+$('submitLookup').addEventListener('change', saveConfig);
+$('submitDisposition').addEventListener('change', saveConfig);
+$('downloadBtn').addEventListener('click', downloadAhk);
+$('copyBtn').addEventListener('click', copyAhk);
+$('resetBtn').addEventListener('click', resetConfig);
+</script>
+</body>
+</html>
