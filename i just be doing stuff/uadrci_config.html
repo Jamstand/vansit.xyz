@@ -235,23 +235,14 @@
       <h2>HOTKEY <span class="hint">Toggle on/off</span></h2>
       <div class="field">
         <label>Keybind</label>
-        <select id="hotkey" style="background:var(--input-bg);color:var(--accent);border:1px solid var(--border);border-radius:4px;padding:7px 10px;font-family:'IBM Plex Mono',monospace;font-size:0.88rem;width:100%;">
-          <option value="F6">F6</option>
-          <option value="F5">F5</option>
-          <option value="F7">F7</option>
-          <option value="F8">F8</option>
-          <option value="F9">F9</option>
-          <option value="F10">F10</option>
-          <option value="F11">F11</option>
-          <option value="^F6">Ctrl+F6</option>
-          <option value="^F5">Ctrl+F5</option>
-          <option value="^+f">Ctrl+Shift+F</option>
-          <option value="^+a">Ctrl+Shift+A</option>
-          <option value="^+r">Ctrl+Shift+R</option>
-        </select>
-        <span class="note">trigger</span>
+        <input type="text" id="hotkey" readonly placeholder="Click here, then press any key combo"
+          style="cursor:pointer;text-align:center;color:#ffaa00;font-weight:bold;"
+          onclick="this.focus();this.value='Press a key...';this.style.color='var(--muted)';">
+        <span class="note" id="ahkKeyNote">F6</span>
       </div>
       <p style="font-size:0.75rem;color:var(--muted);margin-top:8px;">
+        Click the box above and press any key or combo (e.g. F6, Ctrl+Shift+A, Alt+F5).
+        <br>
         First press = <strong style="color:var(--accent);">ARM</strong> (watching).
         Type 7-char case number = <strong style="color:var(--accent);">autofill triggers</strong>.
         Press again = <strong style="color:#ff4444;">OFF</strong>.
@@ -371,6 +362,61 @@ const STORAGE_KEY = 'uadrci-config-v1';
 
 const $ = id => document.getElementById(id);
 
+// =====================================================================
+// KEY CAPTURE — press any key combo to set the hotkey
+// =====================================================================
+let currentHotkey = { ahk: 'F6', display: 'F6' };
+
+function keyToAhk(e) {
+  let ahk = '';
+  let display = '';
+
+  if (e.ctrlKey)  { ahk += '^'; display += 'Ctrl+'; }
+  if (e.altKey)   { ahk += '!'; display += 'Alt+'; }
+  if (e.shiftKey) { ahk += '+'; display += 'Shift+'; }
+
+  // Get the actual key (not modifiers themselves)
+  const key = e.key;
+  if (['Control', 'Alt', 'Shift', 'Meta'].includes(key)) return null; // modifier only
+
+  // Map key names to AHK equivalents
+  const ahkMap = {
+    'F1':'F1','F2':'F2','F3':'F3','F4':'F4','F5':'F5','F6':'F6',
+    'F7':'F7','F8':'F8','F9':'F9','F10':'F10','F11':'F11','F12':'F12',
+    'Escape':'Escape','Tab':'Tab','Enter':'Enter','Backspace':'Backspace',
+    'Delete':'Delete','Insert':'Insert','Home':'Home','End':'End',
+    'PageUp':'PgUp','PageDown':'PgDn',
+    ' ':'Space','ArrowUp':'Up','ArrowDown':'Down','ArrowLeft':'Left','ArrowRight':'Right',
+  };
+
+  const ahkKey = ahkMap[key] || key.toLowerCase();
+  const displayKey = ahkMap[key] || key.toUpperCase();
+
+  ahk += ahkKey;
+  display += displayKey;
+
+  return { ahk, display };
+}
+
+function initHotkeyCapture() {
+  const input = $('hotkey');
+
+  input.addEventListener('keydown', e => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const result = keyToAhk(e);
+    if (!result) return; // modifier-only press, wait for real key
+
+    currentHotkey = result;
+    input.value = result.display;
+    input.style.color = '#ffaa00';
+    $('ahkKeyNote').textContent = result.ahk;
+    saveConfig();
+    input.blur();
+  });
+}
+
 function getCoords(key) {
   const f = FIELDS.find(x => x.key === key);
   return {
@@ -380,7 +426,7 @@ function getCoords(key) {
 }
 
 function getConfig() {
-  const cfg = { values: {}, coords: {}, hotkey: $('hotkey').value, submitLookup: $('submitLookup').checked, submitDisposition: $('submitDisposition').checked };
+  const cfg = { values: {}, coords: {}, hotkey: currentHotkey.ahk, hotkeyDisplay: currentHotkey.display, submitLookup: $('submitLookup').checked, submitDisposition: $('submitDisposition').checked };
   FIELDS.forEach(f => {
     cfg.values[f.key] = $('v_' + f.key).value.trim();
     cfg.coords[f.key] = getCoords(f.key);
@@ -407,7 +453,11 @@ function loadConfig() {
     });
     if ('submitLookup' in cfg)      $('submitLookup').checked = cfg.submitLookup !== false;
     if ('submitDisposition' in cfg) $('submitDisposition').checked = !!cfg.submitDisposition;
-    if (cfg.hotkey) $('hotkey').value = cfg.hotkey;
+    if (cfg.hotkey) {
+      currentHotkey = { ahk: cfg.hotkey, display: cfg.hotkeyDisplay || cfg.hotkey };
+      $('hotkey').value = currentHotkey.display;
+      $('ahkKeyNote').textContent = currentHotkey.ahk;
+    }
   } catch (e) {}
 }
 
@@ -460,7 +510,7 @@ function hotkeyLabel(hk) {
 
 function updatePreview() {
   const cfg = getConfig();
-  const hk = hotkeyLabel(cfg.hotkey || 'F6');
+  const hk = cfg.hotkeyDisplay || hotkeyLabel(cfg.hotkey || 'F6');
   const lines = [];
   lines.push('; ' + hk + ' = ARM (toggle ON/OFF)');
   lines.push('; When armed, type 7-char case number to trigger:');
@@ -518,7 +568,7 @@ function buildAhkScript() {
   }
 
   const hk = cfg.hotkey || 'F6';
-  const hkName = hotkeyLabel(hk);
+  const hkName = cfg.hotkeyDisplay || hotkeyLabel(hk);
   const caseCoord = cfg.coords.caseNum || {row: 4, col: 8};
 
   return `; =========================================================================
@@ -654,6 +704,7 @@ function flashStatus(msg) {
 
 // Init
 buildCoordsGrid();
+initHotkeyCapture();
 loadConfig();
 updatePreview();
 
@@ -661,7 +712,6 @@ updatePreview();
 FIELDS.forEach(f => $('v_' + f.key).addEventListener('input', saveConfig));
 $('submitLookup').addEventListener('change', saveConfig);
 $('submitDisposition').addEventListener('change', saveConfig);
-$('hotkey').addEventListener('change', saveConfig);
 $('downloadBtn').addEventListener('click', downloadAhk);
 $('copyBtn').addEventListener('click', copyAhk);
 $('resetBtn').addEventListener('click', resetConfig);
