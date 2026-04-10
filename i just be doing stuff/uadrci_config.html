@@ -416,7 +416,8 @@
       <h2>KEYSTROKE PREVIEW <span class="hint" id="previewHint">on F6</span></h2>
       <div class="preview" id="preview"></div>
       <div class="actions">
-        <button id="downloadBtn">&#x2193; DOWNLOAD AHK SCRIPT</button>
+        <button id="downloadMacBtn" style="background:#ffaa00;">&#x2193; DOWNLOAD QUICK3270 MACRO (.mac)</button>
+        <button id="downloadBtn" class="secondary">&#x2193; Download AHK Script (advanced)</button>
         <button class="secondary" id="copyBtn">Copy AHK to Clipboard</button>
         <button class="secondary" id="resetBtn">Reset All Fields</button>
       </div>
@@ -444,38 +445,33 @@
       </div>
 
       <div style="background:#0d1117;border:2px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:20px;">
-        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 2 &mdash; Install AutoHotkey (One Time Only)</p>
-        <p style="margin-bottom:10px;">AutoHotkey is a free program that lets you create keyboard shortcuts. You only need to install it once.</p>
+        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 2 &mdash; Download the Macro</p>
+        <p style="margin-bottom:10px;">Click the big yellow <strong>DOWNLOAD QUICK3270 MACRO</strong> button above. It saves a file called <strong>uadrci_fill.mac</strong> with your values baked in.</p>
+        <p style="color:var(--warn);font-size:0.78rem;">If you change any values on this page later, download a fresh .mac file to pick up the changes.</p>
+      </div>
+
+      <div style="background:#0d1117;border:2px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:20px;">
+        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 3 &mdash; Load It Into Quick3270</p>
         <ol style="padding-left:22px;margin-bottom:0;color:var(--text);line-height:2;">
-          <li>Open your browser and go to <strong>autohotkey.com</strong></li>
-          <li>Click the big <strong>Download</strong> button</li>
-          <li>Make sure you pick <strong>AutoHotkey v2</strong> (not v1 &mdash; v1 won't work)</li>
-          <li>Run the installer &mdash; just click <strong>Next</strong> through everything, then <strong>Finish</strong></li>
-          <li>That's it! No restart needed. You won't see anything new on your desktop yet &mdash; that's normal</li>
+          <li>Open the <strong>uadrci_fill.mac</strong> file in <strong>Notepad</strong> (right-click &rarr; Open with &rarr; Notepad)</li>
+          <li>Press <strong>Ctrl+A</strong> to select all, then <strong>Ctrl+C</strong> to copy</li>
+          <li>In Quick3270, go to <strong>Tools &rarr; Macros &rarr; New Macro</strong></li>
+          <li>In the macro editor, <strong>Ctrl+V</strong> to paste</li>
+          <li>Click <strong>Save</strong> &mdash; name it something like <strong>uadrci_fill</strong></li>
+          <li>Close the macro editor</li>
         </ol>
       </div>
 
       <div style="background:#0d1117;border:2px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:20px;">
-        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 3 &mdash; Download Your Script</p>
-        <p style="margin-bottom:10px;">This page builds a custom script with your values baked in. Every time you change values, you need to download a fresh copy.</p>
+        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 4 &mdash; (Optional) Assign a Hotkey</p>
+        <p style="margin-bottom:10px;">So you don't have to go through the menus every time:</p>
         <ol style="padding-left:22px;margin-bottom:0;color:var(--text);line-height:2;">
-          <li>Scroll up and click the big green <strong>DOWNLOAD AHK SCRIPT</strong> button</li>
-          <li>Your browser will download a file called <strong>uadrci_autofill.ahk</strong></li>
-          <li>Save it somewhere easy to find &mdash; your <strong>Desktop</strong> or <strong>Documents</strong> folder</li>
+          <li>In Quick3270, go to <strong>Tools &rarr; Customize &rarr; Keyboard</strong></li>
+          <li>Find your macro in the list</li>
+          <li>Assign it to a key (like <strong>Ctrl+F6</strong> or any combo you like)</li>
+          <li>Click <strong>OK</strong></li>
         </ol>
-        <p style="margin-top:10px;color:var(--warn);font-size:0.78rem;">Remember: if you change any values on this page later, you need to click the green button again to get an updated script!</p>
-      </div>
-
-      <div style="background:#0d1117;border:2px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:20px;">
-        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 4 &mdash; Run the Script</p>
-        <ol style="padding-left:22px;margin-bottom:0;color:var(--text);line-height:2;">
-          <li><strong>Double-click</strong> the <strong>uadrci_autofill.ahk</strong> file you just downloaded</li>
-          <li>Look at the <strong>bottom-right corner of your screen</strong> near the clock (the system tray). You should see a small green <strong>H</strong> icon appear</li>
-          <li>If you see the green H &mdash; the script is running! It's sitting in the background waiting for your keybind</li>
-          <li>If Windows asks "How do you want to open this file?" &mdash; choose <strong>AutoHotkey</strong></li>
-          <li>To stop the script later: <strong>right-click</strong> the green H icon &rarr; click <strong>Exit</strong></li>
-        </ol>
-        <p style="margin-top:10px;color:var(--muted);font-size:0.78rem;">Tip: you can click the little <strong>^</strong> arrow in the system tray to see hidden icons if you don't see the green H right away.</p>
+        <p style="margin-top:10px;color:var(--muted);font-size:0.78rem;">Now you can press that key anytime on the UADRCI screen to autofill!</p>
       </div>
 
       <div style="background:#0d1117;border:2px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:20px;">
@@ -483,13 +479,13 @@
         <ol style="padding-left:22px;margin-bottom:0;color:var(--text);line-height:2;">
           <li>Open <strong>Quick3270</strong> and go to the <strong>UADRCI</strong> screen like you normally would</li>
           <li>Type your <strong>case number</strong> in the CASE field (7 characters)</li>
-          <li>Press your <strong>keybind</strong> &mdash; you'll see a notification pop up near the clock that says <strong>"Filling fields..."</strong></li>
-          <li>The script <strong>automatically fills in</strong> all the other fields &mdash; hearing date, time, type, plea, disposition, fine, cost, everything you configured</li>
+          <li>Run the macro: <strong>Tools &rarr; Macros &rarr; Run</strong> (or press your assigned hotkey)</li>
+          <li>The macro <strong>automatically fills in</strong> all the other fields &mdash; hearing date, time, type, plea, disposition, fine, cost, everything you configured</li>
           <li>Look over the screen to make sure everything looks right</li>
-          <li>Press <strong>PF12</strong> to update (or the script does it for you if you checked that box)</li>
-          <li>For the next case: type a new case number, press your keybind again &mdash; that's it!</li>
+          <li>Press <strong>PF12</strong> to update (or the macro does it for you if you checked that box)</li>
+          <li>For the next case: type a new case number, run the macro again &mdash; that's it!</li>
         </ol>
-        <p style="margin-top:10px;color:var(--muted);font-size:0.78rem;">That's the whole workflow: <strong>type case number &rarr; press keybind &rarr; done</strong>. Repeat for each case.</p>
+        <p style="margin-top:10px;color:var(--muted);font-size:0.78rem;">That's the whole workflow: <strong>type case number &rarr; run macro &rarr; done</strong>. Repeat for each case.</p>
       </div>
 
       <div style="background:#1a1111;border:2px solid #ff6644;border-radius:8px;padding:20px 24px;">
@@ -988,6 +984,80 @@ function copyAhk() {
   );
 }
 
+function buildMacScript() {
+  const cfg = getConfig();
+  const esc = s => s.replace(/"/g, '""');
+  let body = '';
+
+  const append = (keys, submit, submitLabel) => {
+    const filled = keys.filter(k => cfg.values[k]);
+    if (filled.length === 0) return;
+    filled.forEach(k => {
+      const c = cfg.coords[k];
+      body += '    Sess.SetCursor ' + c.row + ', ' + c.col + '\n';
+      body += '    Sess.SendKeys "' + esc(cfg.values[k]) + '"\n';
+    });
+    if (submit) {
+      body += '    Sess.SendKeys "' + submitLabel + '"\n';
+      body += '    Sess.WaitHostQuiet 2000\n';
+    }
+    body += '\n';
+  };
+
+  append(LOOKUP_KEYS, cfg.submitLookup,      '<Enter>');
+  append(DISPO_KEYS,  cfg.submitDisposition, '<PF12>');
+
+  if (!body.trim()) {
+    body = '    MsgBox "No values configured. Edit the config page and re-download.", vbExclamation, "UADRCI"\n    Exit Sub\n';
+  }
+
+  return "' =========================================================================\n" +
+"' UADRCI Autofill Macro - Generated by UADRCI Macro Configurator\n" +
+"' =========================================================================\n" +
+"' This runs INSIDE Quick3270 - no external software needed.\n" +
+"'\n" +
+"' TO USE:\n" +
+"'   1. In Quick3270: Tools > Macros > New Macro\n" +
+"'   2. Paste this entire script\n" +
+"'   3. Save it (give it a name like 'uadrci_fill')\n" +
+"'   4. Navigate to the UADRCI screen, type your case number\n" +
+"'   5. Tools > Macros > Run (or press your assigned hotkey)\n" +
+"'\n" +
+"' TIP: Assign it to a toolbar button or hotkey:\n" +
+"'   Tools > Customize > Keyboard > pick a key > assign this macro\n" +
+"' =========================================================================\n" +
+"\n" +
+"Sub Main\n" +
+"\n" +
+"    Dim Sess\n" +
+"    Set Sess = Application.ActiveSession\n" +
+"\n" +
+"    If Sess Is Nothing Then\n" +
+'        MsgBox "No active session.", vbExclamation, "UADRCI"\n' +
+"        Exit Sub\n" +
+"    End If\n" +
+"\n" +
+"    Sess.WaitHostQuiet 500\n" +
+"\n" +
+body +
+"\n" +
+"End Sub\n";
+}
+
+function downloadMac() {
+  const script = buildMacScript();
+  const blob = new Blob([script], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'uadrci_fill.mac';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  flashStatus('Downloaded uadrci_fill.mac');
+}
+
 function flashStatus(msg) {
   const el = $('status');
   el.textContent = msg;
@@ -1009,6 +1079,7 @@ updatePreview();
 FIELDS.forEach(f => $('v_' + f.key).addEventListener('input', saveConfig));
 $('submitLookup').addEventListener('change', saveConfig);
 $('submitDisposition').addEventListener('change', saveConfig);
+$('downloadMacBtn').addEventListener('click', downloadMac);
 $('downloadBtn').addEventListener('click', downloadAhk);
 $('copyBtn').addEventListener('click', copyAhk);
 $('resetBtn').addEventListener('click', resetConfig);
