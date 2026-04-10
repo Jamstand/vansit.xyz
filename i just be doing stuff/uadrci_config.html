@@ -234,6 +234,14 @@
     0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 170, 0, 0.6); }
     50% { opacity: 0.7; box-shadow: 0 0 12px 4px rgba(255, 170, 0, 0.3); }
   }
+  @keyframes smileyWiggle {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    20% { transform: translateX(6px) rotate(12deg); }
+    40% { transform: translateX(-4px) rotate(-8deg); }
+    60% { transform: translateX(5px) rotate(6deg); }
+    80% { transform: translateX(-3px) rotate(-4deg); }
+  }
+  #joshSmiley { animation: smileyWiggle 1.5s ease-in-out infinite; cursor: default; }
   .armed-bar .hint-text {
     font-size: 0.7rem;
     font-weight: normal;
@@ -273,7 +281,7 @@
       <li>Edit the fields below (they auto-save in your browser)</li>
       <li>Click <strong>Download AHK Script</strong> &mdash; requires <a href="https://www.autohotkey.com/" target="_blank" rel="noopener">AutoHotkey v2</a></li>
       <li>Double-click the downloaded <code>.ahk</code> file to load it</li>
-      <li>In Quick3270, press your keybind to ARM, then type the 7-char case number — it autofills the rest</li>
+      <li>In Quick3270, type the case number, then press your keybind — it fills in all the other fields</li>
     </ol>
   </div>
 </header>
@@ -308,9 +316,8 @@
         <span><span style="color:#ffaa00;">Shift</span> — just Shift alone</span>
       </div>
       <p style="font-size:0.72rem;color:var(--muted);margin-top:8px;">
-        First press = <strong style="color:var(--accent);">ARM</strong> (watching).
-        Type 7-char case number = <strong style="color:var(--accent);">autofill triggers</strong>.
-        Press again = <strong style="color:#ff4444;">OFF</strong>.
+        Type your case number first, then press keybind = <strong style="color:var(--accent);">all other fields fill in</strong>.
+        Press again for the next case.
       </p>
     </section>
 
@@ -424,55 +431,79 @@
     <h2>SETUP GUIDE <span class="hint">Step by step</span></h2>
     <div style="font-size:0.82rem;line-height:1.8;">
 
-      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 1: FILL IN YOUR VALUES (this page)</p>
-      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
-        <li>Set your <strong>keybind</strong> above (click the box, press your combo like Ctrl+Shift+F5)</li>
-        <li>Fill in the <strong>Lookup</strong> fields you use every time (hearing date, time, type)</li>
-        <li>Fill in the <strong>Disposition</strong> fields (plea, disposition, fine, cost, etc.)</li>
-        <li>Check the boxes if you want it to auto-press Enter / PF12</li>
-        <li>Everything saves automatically in your browser</li>
-      </ol>
+      <div style="background:#0d1117;border:2px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:20px;">
+        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 1 &mdash; Set Up Your Values (Do This First!)</p>
+        <p style="margin-bottom:10px;">Scroll up on this page and fill in the fields you want the macro to auto-type for you.</p>
+        <ol style="padding-left:22px;margin-bottom:0;color:var(--text);line-height:2;">
+          <li><strong>Pick your keybind</strong> &mdash; scroll up to the HOTKEY section, click the box, and press the key combo you want (like F6, or Ctrl+F5, or whatever you prefer)</li>
+          <li><strong>Fill in the Lookup fields</strong> &mdash; hearing date, hearing time, type (these are the fields that go in BEFORE you press Enter on the real screen)</li>
+          <li><strong>Fill in the Disposition fields</strong> &mdash; case action, continuance, plea, disposition, sentence code, fine, cost</li>
+          <li><strong>Check the boxes</strong> if you want the macro to automatically press Enter (for lookup) or PF12 (for update)</li>
+          <li>Don't worry about saving &mdash; <strong>everything saves automatically</strong> in your browser</li>
+        </ol>
+      </div>
 
-      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 2: INSTALL AUTOHOTKEY (one time only)</p>
-      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
-        <li>Go to <strong>autohotkey.com</strong></li>
-        <li>Click <strong>Download</strong> &mdash; get <strong>AutoHotkey v2</strong> (not v1)</li>
-        <li>Run the installer, click Next through everything</li>
-        <li>That's it &mdash; no restart needed</li>
-      </ol>
+      <div style="background:#0d1117;border:2px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:20px;">
+        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 2 &mdash; Install AutoHotkey (One Time Only)</p>
+        <p style="margin-bottom:10px;">AutoHotkey is a free program that lets you create keyboard shortcuts. You only need to install it once.</p>
+        <ol style="padding-left:22px;margin-bottom:0;color:var(--text);line-height:2;">
+          <li>Open your browser and go to <strong>autohotkey.com</strong></li>
+          <li>Click the big <strong>Download</strong> button</li>
+          <li>Make sure you pick <strong>AutoHotkey v2</strong> (not v1 &mdash; v1 won't work)</li>
+          <li>Run the installer &mdash; just click <strong>Next</strong> through everything, then <strong>Finish</strong></li>
+          <li>That's it! No restart needed. You won't see anything new on your desktop yet &mdash; that's normal</li>
+        </ol>
+      </div>
 
-      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 3: DOWNLOAD YOUR SCRIPT</p>
-      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
-        <li>Click the green <strong>DOWNLOAD AHK SCRIPT</strong> button on this page</li>
-        <li>Save the <code>uadrci_autofill.ahk</code> file somewhere (Desktop is fine)</li>
-        <li>If you change any values on this page, download a new script to pick up the changes</li>
-      </ol>
+      <div style="background:#0d1117;border:2px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:20px;">
+        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 3 &mdash; Download Your Script</p>
+        <p style="margin-bottom:10px;">This page builds a custom script with your values baked in. Every time you change values, you need to download a fresh copy.</p>
+        <ol style="padding-left:22px;margin-bottom:0;color:var(--text);line-height:2;">
+          <li>Scroll up and click the big green <strong>DOWNLOAD AHK SCRIPT</strong> button</li>
+          <li>Your browser will download a file called <strong>uadrci_autofill.ahk</strong></li>
+          <li>Save it somewhere easy to find &mdash; your <strong>Desktop</strong> or <strong>Documents</strong> folder</li>
+        </ol>
+        <p style="margin-top:10px;color:var(--warn);font-size:0.78rem;">Remember: if you change any values on this page later, you need to click the green button again to get an updated script!</p>
+      </div>
 
-      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 4: RUN THE SCRIPT</p>
-      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
-        <li><strong>Double-click</strong> the <code>.ahk</code> file &mdash; a green <strong>H</strong> icon appears in your system tray (bottom-right near the clock)</li>
-        <li>The script is now running in the background</li>
-        <li>To stop it: right-click the <strong>H</strong> tray icon &rarr; <strong>Exit</strong>, or press <strong>Ctrl+Shift+Q</strong></li>
-      </ol>
+      <div style="background:#0d1117;border:2px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:20px;">
+        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 4 &mdash; Run the Script</p>
+        <ol style="padding-left:22px;margin-bottom:0;color:var(--text);line-height:2;">
+          <li><strong>Double-click</strong> the <strong>uadrci_autofill.ahk</strong> file you just downloaded</li>
+          <li>Look at the <strong>bottom-right corner of your screen</strong> near the clock (the system tray). You should see a small green <strong>H</strong> icon appear</li>
+          <li>If you see the green H &mdash; the script is running! It's sitting in the background waiting for your keybind</li>
+          <li>If Windows asks "How do you want to open this file?" &mdash; choose <strong>AutoHotkey</strong></li>
+          <li>To stop the script later: <strong>right-click</strong> the green H icon &rarr; click <strong>Exit</strong></li>
+        </ol>
+        <p style="margin-top:10px;color:var(--muted);font-size:0.78rem;">Tip: you can click the little <strong>^</strong> arrow in the system tray to see hidden icons if you don't see the green H right away.</p>
+      </div>
 
-      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 5: USE IT IN QUICK3270</p>
-      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
-        <li>Open Quick3270 and navigate to the <strong>UADRCI</strong> screen</li>
-        <li>Press your <strong>keybind</strong> &mdash; tray says <strong>"ARMED"</strong></li>
-        <li>Click into the <strong>CASE</strong> field and type the <strong>7-character case number</strong></li>
-        <li>The moment you type the 7th character, the script <strong>automatically fills</strong> hearing date, time, type, plea, disposition, fine, cost &mdash; everything you configured</li>
-        <li>Review the screen, then press <strong>PF12</strong> to update (or the script presses it if you checked that box)</li>
-        <li>The script <strong>auto-disarms</strong> after filling &mdash; press your keybind again for the next case</li>
-      </ol>
+      <div style="background:#0d1117;border:2px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:20px;">
+        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 5 &mdash; Use It!</p>
+        <ol style="padding-left:22px;margin-bottom:0;color:var(--text);line-height:2;">
+          <li>Open <strong>Quick3270</strong> and go to the <strong>UADRCI</strong> screen like you normally would</li>
+          <li>Type your <strong>case number</strong> in the CASE field (7 characters)</li>
+          <li>Press your <strong>keybind</strong> &mdash; you'll see a notification pop up near the clock that says <strong>"Filling fields..."</strong></li>
+          <li>The script <strong>automatically fills in</strong> all the other fields &mdash; hearing date, time, type, plea, disposition, fine, cost, everything you configured</li>
+          <li>Look over the screen to make sure everything looks right</li>
+          <li>Press <strong>PF12</strong> to update (or the script does it for you if you checked that box)</li>
+          <li>For the next case: type a new case number, press your keybind again &mdash; that's it!</li>
+        </ol>
+        <p style="margin-top:10px;color:var(--muted);font-size:0.78rem;">That's the whole workflow: <strong>type case number &rarr; press keybind &rarr; done</strong>. Repeat for each case.</p>
+      </div>
 
-      <p style="color:var(--warn);font-weight:bold;margin-bottom:8px;">TROUBLESHOOTING</p>
-      <ul style="padding-left:22px;color:var(--muted);">
-        <li><strong>"Cannot connect to Quick3270"</strong> &mdash; make sure Quick3270 is open and connected before pressing the keybind</li>
-        <li><strong>Nothing happens when I press the keybind</strong> &mdash; check the system tray for the green H icon. If it's not there, double-click the .ahk file again</li>
-        <li><strong>Fields fill in the wrong spot</strong> &mdash; open the Advanced section on this page and update the row/col coordinates (click each field in Quick3270 and read the bottom-left status bar)</li>
-        <li><strong>Changed values but not working</strong> &mdash; you need to download a NEW .ahk script after changing values, then double-click it (it replaces the old one automatically)</li>
-        <li style="margin-top:10px;color:var(--warn);"><strong>Last resort</strong> &mdash; contact Josh</li>
-      </ul>
+      <div style="background:#1a1111;border:2px solid #ff6644;border-radius:8px;padding:20px 24px;">
+        <p style="color:#ff6644;font-size:1rem;font-weight:bold;margin-bottom:12px;">TROUBLESHOOTING</p>
+        <ul style="padding-left:22px;color:var(--text);line-height:2.2;">
+          <li><strong>"Cannot connect to Quick3270"</strong><br><span style="color:var(--muted);">Make sure Quick3270 is open AND connected to the mainframe before pressing the keybind. The script can't fill fields if Quick3270 isn't running.</span></li>
+          <li><strong>Nothing happens when I press the keybind</strong><br><span style="color:var(--muted);">Look for the green <strong>H</strong> icon in your system tray (bottom-right by the clock). If it's not there, double-click the .ahk file again. If Windows asks how to open it, pick AutoHotkey.</span></li>
+          <li><strong>I see the green H but the keybind still does nothing</strong><br><span style="color:var(--muted);">Try right-clicking the green H &rarr; Exit, then double-click the .ahk file again. Some keybinds (like plain F6) might conflict with Quick3270 &mdash; try a different combo like Ctrl+F6.</span></li>
+          <li><strong>The fields fill in the wrong spot</strong><br><span style="color:var(--muted);">The row/column numbers might be off. On this page, open the "Advanced" section and update the coordinates. To find them: in Quick3270, click a field and look at the bottom-left of the window &mdash; it shows the row and column numbers.</span></li>
+          <li><strong>I changed values but it's still using the old ones</strong><br><span style="color:var(--muted);">You need to download a NEW .ahk script every time you change values on this page. Click the green button again, then double-click the new file (it replaces the old script automatically).</span></li>
+          <li><strong>AutoHotkey doesn't work at all on my computer</strong><br><span style="color:var(--muted);">Try the Quick3270 native macro instead &mdash; it doesn't need AutoHotkey. In Quick3270 go to <strong>Tools &rarr; Macros &rarr; New Macro</strong>, paste the code from <strong>uadrci.mac</strong>, and save. Then run it from <strong>Tools &rarr; Macros &rarr; Run</strong>. It uses popup boxes instead of auto-filling, but it still saves time.</span></li>
+          <li style="margin-top:12px;"><strong style="color:var(--warn);">Last resort</strong> &mdash; <span style="color:var(--warn);">contact Josh</span> <span id="joshSmiley" style="display:inline-block;font-size:1.2rem;">&#x263A;</span></li>
+        </ul>
+      </div>
     </div>
   </section>
 </div>
@@ -713,8 +744,8 @@ function updatePreview() {
   const cfg = getConfig();
   const hk = cfg.hotkeyDisplay || hotkeyLabel(cfg.hotkey || 'F6');
   const lines = [];
-  lines.push('; ' + hk + ' = ARM (toggle ON/OFF)');
-  lines.push('; When armed, type 7-char case number to trigger:');
+  lines.push('; ' + hk + ' = fill all fields');
+  lines.push('; Type case number first, then press ' + hk + ':');
   lines.push('');
 
   let any = false;
@@ -765,104 +796,59 @@ function buildAhkScript() {
   append(DISPO_KEYS,  cfg.submitDisposition, '<PF12>');
 
   if (!body.trim()) {
-    body = '        MsgBox("No values configured. Edit uadrci_config.html and regenerate.", "UADRCI", "Icon!")\n        return\n';
+    body = '        MsgBox("No values configured. Go to the config page and fill in your values, then download a new script.", "UADRCI", "Icon!")\n        return\n';
   }
 
   const hk = cfg.hotkey || 'F6';
   const hkName = cfg.hotkeyDisplay || hotkeyLabel(hk);
-  const caseCoord = cfg.coords.caseNum || {row: 4, col: 8};
 
   return `; =========================================================================
 ; UADRCI Autofill - Generated by UADRCI Macro Configurator
 ; =========================================================================
-; Hotkey:  ${hkName}  (toggle ON / OFF)
+; Hotkey:  ${hkName}
 ;
-; 1. Install AutoHotkey v2:  https://www.autohotkey.com/
-; 2. Double-click this file to load it (tray icon appears)
-; 3. In Quick3270, navigate to the UADRCI screen
-; 4. Press ${hkName} to ARM
-; 5. Type the 7-character case number — autofill triggers automatically
-; 6. Press ${hkName} again to turn OFF
+; HOW TO USE:
+;   1. Install AutoHotkey v2:  https://www.autohotkey.com/
+;   2. Double-click this file to load it (green H appears in system tray)
+;   3. In Quick3270, go to the UADRCI screen
+;   4. Type your case number in the CASE field (7 characters)
+;   5. Press ${hkName} — all other fields fill automatically
+;   6. Repeat for each case
 ;
-; Ctrl+Shift+Q  = quit this script
+;   Ctrl+Shift+Q = quit this script
 ; =========================================================================
 
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 
-armed := false
+TrayTip("UADRCI Autofill", "Ready! Press ${hkName} in Quick3270 to fill fields.", 2)
 
-; --- ${hkName}: toggle autofill ON/OFF ---
+; --- ${hkName}: fill all configured fields ---
 ${hk}::
 {
-    global armed
-
-    if armed {
-        ; Turn OFF
-        armed := false
-        TrayTip("UADRCI", "Autofill OFF", 1)
-        TraySetIcon("Shell32.dll", 4)
-        return
-    }
-
-    ; Turn ON (ARM) — start watching for 7-char case number
-    armed := true
-    TrayTip("UADRCI", "ARMED - type case number (7 chars) to autofill", 1)
-    TraySetIcon("Shell32.dll", 78)
-
     ; Connect to Quick3270
     try {
         sess := ComObject("Quick3270.Application").ActiveSession
     } catch as e {
-        MsgBox("Cannot connect to Quick3270." . Chr(10) . Chr(10) . "Is it running?" . Chr(10) . "Error: " . e.Message, "UADRCI", "Icon!")
-        armed := false
-        TraySetIcon("Shell32.dll", 4)
+        MsgBox("Cannot connect to Quick3270." . Chr(10) . Chr(10) . "Make sure Quick3270 is open and connected to the mainframe." . Chr(10) . Chr(10) . "If this keeps happening, try the Quick3270 native macro" . Chr(10) . "(Tools > Macros) as a fallback." . Chr(10) . Chr(10) . "Error: " . e.Message, "UADRCI", "Icon!")
         return
     }
 
     if !IsObject(sess) {
-        MsgBox("No active Quick3270 session.", "UADRCI", "Icon!")
-        armed := false
-        TraySetIcon("Shell32.dll", 4)
+        MsgBox("No active Quick3270 session found." . Chr(10) . Chr(10) . "Open Quick3270 and connect first, then try again.", "UADRCI", "Icon!")
         return
     }
 
-    ; Poll the CASE field until 7 characters are typed
-    loop {
-        if !armed
-            return
-
-        try {
-            caseVal := Trim(sess.GetText(${caseCoord.row}, ${caseCoord.col}, 7))
-        } catch {
-            caseVal := ""
-        }
-
-        if (StrLen(caseVal) >= 7) {
-            ; Case number is full — run autofill
-            break
-        }
-
-        Sleep(200)  ; check every 200ms
-    }
-
-    if !armed
-        return
-
-    TrayTip("UADRCI", "Filling: " . caseVal, 1)
+    TrayTip("UADRCI", "Filling fields...", 1)
 
     try {
         sess.WaitHostQuiet(500)
 
 ${body}
-        TrayTip("UADRCI", "Autofill complete!", 1)
+        TrayTip("UADRCI", "Done! Fields filled.", 1)
     } catch as e {
-        MsgBox("Error: " . e.Message, "UADRCI", "Icon!")
+        MsgBox("Error filling fields:" . Chr(10) . e.Message . Chr(10) . Chr(10) . "The row/column coordinates might be wrong." . Chr(10) . "Check the Advanced section on the config page.", "UADRCI", "Icon!")
     }
-
-    ; Auto-disarm after filling
-    armed := false
-    TraySetIcon("Shell32.dll", 4)
 }
 
 ; --- Ctrl+Shift+Q: quit ---
@@ -916,6 +902,18 @@ $('submitDisposition').addEventListener('change', saveConfig);
 $('downloadBtn').addEventListener('click', downloadAhk);
 $('copyBtn').addEventListener('click', copyAhk);
 $('resetBtn').addEventListener('click', resetConfig);
+
+// Moving smiley face animation for Josh
+(function() {
+  var smiley = document.getElementById('joshSmiley');
+  if (!smiley) return;
+  var faces = ['\u263A', '\u{1F60A}', '\u{1F604}', '\u{1F609}', '\u{1F60E}'];
+  var i = 0;
+  setInterval(function() {
+    i = (i + 1) % faces.length;
+    smiley.textContent = faces[i];
+  }, 1800);
+})();
 </script>
 </body>
 </html>
