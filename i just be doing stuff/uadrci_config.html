@@ -266,6 +266,11 @@
         <input type="text" id="v_hearTime" placeholder="HHMM">
         <span class="note">r5 c30</span>
       </div>
+      <div class="field">
+        <label>Type</label>
+        <input type="text" id="v_hearType" placeholder="e.g. AR">
+        <span class="note">r5 c61</span>
+      </div>
       <div class="check">
         <input type="checkbox" id="submitLookup" checked>
         <label for="submitLookup">Press Enter after lookup fields to retrieve case data</label>
@@ -349,6 +354,7 @@ const FIELDS = [
   { key: 'caseNum',     label: 'CASE',        row: 4,  col: 8  },
   { key: 'hearDate',    label: 'HEAR DATE',   row: 5,  col: 15 },
   { key: 'hearTime',    label: 'HEAR TIME',   row: 5,  col: 30 },
+  { key: 'hearType',    label: 'TYPE',        row: 5,  col: 61 },
   { key: 'caseAction',  label: 'CASE ACTION', row: 7,  col: 17 },
   { key: 'plea',        label: 'PLEA',        row: 12, col: 17 },
   { key: 'disposition', label: 'DISPOSITION', row: 12, col: 35 },
@@ -356,7 +362,7 @@ const FIELDS = [
   { key: 'fine',        label: 'FINE',        row: 15, col: 7  },
   { key: 'cost',        label: 'COST',        row: 15, col: 26 },
 ];
-const LOOKUP_KEYS = ['caseNum', 'hearDate', 'hearTime'];
+const LOOKUP_KEYS = ['caseNum', 'hearDate', 'hearTime', 'hearType'];
 const DISPO_KEYS  = ['caseAction', 'plea', 'disposition', 'sentence', 'fine', 'cost'];
 const STORAGE_KEY = 'uadrci-config-v1';
 
