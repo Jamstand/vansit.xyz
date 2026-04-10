@@ -826,11 +826,18 @@ TrayTip("UADRCI Autofill", "Ready! Press ${hkName} in Quick3270 to fill fields."
 ; --- ${hkName}: fill all configured fields ---
 ${hk}::
 {
-    ; Connect to Quick3270
+    ; Connect to Quick3270 — keep app reference alive to prevent COM disconnect
     try {
-        sess := ComObject("Quick3270.Application").ActiveSession
+        app := ComObject("Quick3270.Application")
     } catch as e {
         MsgBox("Cannot connect to Quick3270." . Chr(10) . Chr(10) . "Make sure Quick3270 is open and connected to the mainframe." . Chr(10) . Chr(10) . "If this keeps happening, try the Quick3270 native macro" . Chr(10) . "(Tools > Macros) as a fallback." . Chr(10) . Chr(10) . "Error: " . e.Message, "UADRCI", "Icon!")
+        return
+    }
+
+    try {
+        sess := app.ActiveSession
+    } catch as e {
+        MsgBox("Cannot get Quick3270 session." . Chr(10) . Chr(10) . "Error: " . e.Message, "UADRCI", "Icon!")
         return
     }
 
@@ -840,10 +847,9 @@ ${hk}::
     }
 
     TrayTip("UADRCI", "Filling fields...", 1)
+    Sleep(300)
 
     try {
-        sess.WaitHostQuiet(500)
-
 ${body}
         TrayTip("UADRCI", "Done! Fields filled.", 1)
     } catch as e {
