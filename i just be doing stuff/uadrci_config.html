@@ -820,6 +820,16 @@ function buildAhkScript() {
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 
+; Auto-elevate to Administrator (required when Quick3270 runs as admin)
+if !A_IsAdmin {
+    try {
+        Run("*RunAs " . A_ScriptFullPath)
+    } catch {
+        MsgBox("Please right-click the .ahk file and choose 'Run as administrator'." . Chr(10) . Chr(10) . "Quick3270 runs with admin privileges, so this script needs admin too.", "UADRCI", "Icon!")
+    }
+    ExitApp
+}
+
 ; Auto-detected COM method (found on first use)
 global comMode := ""
 
@@ -917,6 +927,9 @@ TrayTip("UADRCI Autofill", "Ready! Press ${hkName} in Quick3270 to fill fields."
 ; --- ${hkName}: fill all configured fields ---
 ${hk}::
 {
+    SoundBeep(1000, 200)  ; Beep so you know the keybind fired
+    TrayTip("UADRCI", "Keybind pressed! Connecting to Quick3270...", 1)
+
     ; Connect to Quick3270 — keep app reference alive to prevent COM disconnect
     try {
         app := ComObject("Quick3270.Application")
