@@ -290,7 +290,7 @@
     <!-- Row 4: CASE / VIOL / NAME -->
     <div class="row">
       <span class="lbl">CASE </span>
-      <input class="field underline" data-name="case" style="width:10ch;" maxlength="10" tabindex="3" id="f_case">
+      <input class="field underline" data-name="case" style="width:7ch;" maxlength="7" tabindex="3" id="f_case">
       <span class="lbl">  VIOL </span>
       <input class="field underline" data-name="viol" style="width:6ch;" maxlength="6" tabindex="4">
       <span class="lbl">     NAME </span>
@@ -739,12 +739,17 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') hideHelp();
 });
 
-// Auto-uppercase all fields
+// Auto-uppercase all fields + auto-trigger on 7-char case number
 document.addEventListener('input', e => {
   if (e.target.classList.contains('field')) {
     const pos = e.target.selectionStart;
     e.target.value = e.target.value.toUpperCase();
     e.target.setSelectionRange(pos, pos);
+
+    // If autofill is armed and case field hits 7 chars, auto-run
+    if (autofillArmed && !autofillRunning && e.target.id === 'f_case' && e.target.value.length >= 7) {
+      runAutofill();
+    }
   }
 });
 
@@ -827,8 +832,9 @@ function toggleAutofill() {
     // ON — ready to fill
     if (btn) { btn.style.background = '#ffaa00'; btn.style.color = '#000'; btn.textContent = 'F6 Autofill: ON'; }
     if (pfBtn) { pfBtn.style.background = '#ffaa00'; pfBtn.style.color = '#000'; pfBtn.innerHTML = '<span class="k">F6</span> ON'; }
-    document.getElementById('msgArea').textContent = 'AUTOFILL ARMED — Press Enter on a field to autofill, or F6 again to turn off';
-    toast('Autofill ON — press Enter to fill');
+    document.getElementById('msgArea').textContent = 'AUTOFILL ARMED — Type 7-char case number to autofill, or F6 again to turn off';
+    toast('Autofill ON — type case number (7 chars) to fill');
+    document.getElementById('f_case').focus();
   } else {
     // OFF
     if (btn) { btn.style.background = '#2a2a00'; btn.style.color = '#ffaa00'; btn.textContent = 'F6 Autofill: OFF'; }
@@ -854,10 +860,15 @@ async function runAutofill() {
 
   document.getElementById('msgArea').textContent = 'MACRO: AUTOFILL IN PROGRESS...';
 
-  // Phase 1: Lookup fields
+  // Use whatever is already in the case field (user typed it to trigger)
+  const caseField = document.getElementById('f_case');
+  const typedCase = caseField.value.trim().toUpperCase();
+
+  // Phase 1: Lookup fields (skip case if already typed)
   const lookupKeys = ['caseNum', 'hearDate', 'hearTime'];
   for (const key of lookupKeys) {
-    if (!autofillArmed) break; // cancelled mid-fill
+    if (!autofillArmed) break;
+    if (key === 'caseNum' && typedCase) continue; // already typed by user
     const val = vals[key];
     if (!val) continue;
     const fieldName = CONFIG_TO_FIELD[key];
@@ -869,9 +880,9 @@ async function runAutofill() {
   }
 
   // Simulate Enter for lookup
-  if (vals.caseNum && autofillArmed) {
+  const caseVal = typedCase || (vals.caseNum || '').toUpperCase();
+  if (caseVal && autofillArmed) {
     await new Promise(r => setTimeout(r, 300));
-    const caseVal = vals.caseNum.toUpperCase();
     const c = SAMPLE_CASES[caseVal];
     if (c) {
       document.querySelector('[data-name="loc"]').value = c.loc;
