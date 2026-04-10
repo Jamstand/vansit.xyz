@@ -816,16 +816,6 @@ function buildAhkScript() {
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 
-; Auto-elevate to Administrator (required when Quick3270 runs as admin)
-if !A_IsAdmin {
-    try {
-        Run("*RunAs " . A_ScriptFullPath)
-    } catch {
-        MsgBox("Please right-click the .ahk file and choose 'Run as administrator'." . Chr(10) . Chr(10) . "Quick3270 runs with admin privileges, so this script needs admin too.", "UADRCI", "Icon!")
-    }
-    ExitApp
-}
-
 ; Auto-detected COM method (found on first use)
 global comMode := ""
 
