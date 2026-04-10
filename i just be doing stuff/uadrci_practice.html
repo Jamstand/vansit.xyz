@@ -255,7 +255,7 @@
   <span class="title">UADRCI PRACTICE EMULATOR</span>
   <div class="btns">
     <button onclick="loadSampleCase()">Load Sample Case</button>
-    <button onclick="runAutofill()" style="background:#2a2a00;color:#ffaa00;border-color:#ffaa00;">F6 Autofill</button>
+    <button id="f6Btn" onclick="toggleAutofill()" style="background:#2a2a00;color:#ffaa00;border-color:#ffaa00;">F6 Autofill: OFF</button>
     <button onclick="clearAll()">Clear</button>
     <button onclick="showHelp()">Help (F1)</button>
   </div>
@@ -492,7 +492,7 @@
   <button class="pfkey" onclick="pfAction('F2')"><span class="k">F2</span> Finish</button>
   <button class="pfkey" onclick="pfAction('F3')"><span class="k">F3</span> Menu</button>
   <button class="pfkey" onclick="pfAction('F4')"><span class="k">F4</span> Refresh</button>
-  <button class="pfkey" onclick="runAutofill()" style="border-color:#ffaa00;color:#ffaa00;"><span class="k">F6</span> Autofill</button>
+  <button class="pfkey" id="f6PfBtn" onclick="toggleAutofill()" style="border-color:#ffaa00;color:#ffaa00;"><span class="k">F6</span> OFF</button>
   <button class="pfkey" onclick="pfAction('F9')"><span class="k">F9</span> Bonds</button>
   <button class="pfkey" onclick="pfAction('F10')"><span class="k">F10</span> Motions</button>
   <button class="pfkey" onclick="pfAction('F11')"><span class="k">F11</span> Consolpt</button>
@@ -719,16 +719,20 @@ document.addEventListener('keydown', e => {
   if (e.key === 'F1')  { e.preventDefault(); pfAction('F1'); }
   if (e.key === 'F3')  { e.preventDefault(); pfAction('F3'); }
   if (e.key === 'F4')  { e.preventDefault(); pfAction('F4'); }
-  if (e.key === 'F6')  { e.preventDefault(); runAutofill(); }
+  if (e.key === 'F6')  { e.preventDefault(); toggleAutofill(); }
   if (e.key === 'F9')  { e.preventDefault(); pfAction('F9'); }
   if (e.key === 'F10') { e.preventDefault(); pfAction('F10'); }
   if (e.key === 'F11') { e.preventDefault(); pfAction('F11'); }
   if (e.key === 'F12') { e.preventDefault(); pfAction('F12'); }
 
-  // Enter on a field = submit lookup
+  // Enter on a field = if autofill armed, run it; otherwise normal lookup
   if (e.key === 'Enter' && e.target.classList.contains('field')) {
     e.preventDefault();
-    pfAction('Enter');
+    if (autofillArmed && !autofillRunning) {
+      runAutofill();
+    } else {
+      pfAction('Enter');
+    }
   }
 
   // Escape closes help
@@ -809,9 +813,33 @@ function typeIntoField(field, text, speed) {
 }
 
 let autofillRunning = false;
+let autofillArmed = false;
+
+function toggleAutofill() {
+  if (autofillRunning) return; // don't toggle while filling
+
+  autofillArmed = !autofillArmed;
+  const btn = document.getElementById('f6Btn');
+  const pfBtn = document.getElementById('f6PfBtn');
+  const banner = document.getElementById('autofillBanner');
+
+  if (autofillArmed) {
+    // ON — ready to fill
+    if (btn) { btn.style.background = '#ffaa00'; btn.style.color = '#000'; btn.textContent = 'F6 Autofill: ON'; }
+    if (pfBtn) { pfBtn.style.background = '#ffaa00'; pfBtn.style.color = '#000'; pfBtn.innerHTML = '<span class="k">F6</span> ON'; }
+    document.getElementById('msgArea').textContent = 'AUTOFILL ARMED — Press Enter on a field to autofill, or F6 again to turn off';
+    toast('Autofill ON — press Enter to fill');
+  } else {
+    // OFF
+    if (btn) { btn.style.background = '#2a2a00'; btn.style.color = '#ffaa00'; btn.textContent = 'F6 Autofill: OFF'; }
+    if (pfBtn) { pfBtn.style.background = ''; pfBtn.style.color = '#ffaa00'; pfBtn.innerHTML = '<span class="k">F6</span> OFF'; }
+    document.getElementById('msgArea').textContent = 'AUTOFILL OFF';
+    toast('Autofill OFF');
+  }
+}
 
 async function runAutofill() {
-  if (autofillRunning) return;
+  if (autofillRunning || !autofillArmed) return;
   autofillRunning = true;
 
   const cfg = getAutofillConfig();
@@ -821,7 +849,7 @@ async function runAutofill() {
   if (isDefault) {
     toast('Using default test values (open Config page to set your own)');
   } else {
-    toast('Running autofill from your saved config...');
+    toast('Running autofill...');
   }
 
   document.getElementById('msgArea').textContent = 'MACRO: AUTOFILL IN PROGRESS...';
@@ -829,6 +857,7 @@ async function runAutofill() {
   // Phase 1: Lookup fields
   const lookupKeys = ['caseNum', 'hearDate', 'hearTime'];
   for (const key of lookupKeys) {
+    if (!autofillArmed) break; // cancelled mid-fill
     const val = vals[key];
     if (!val) continue;
     const fieldName = CONFIG_TO_FIELD[key];
@@ -840,9 +869,8 @@ async function runAutofill() {
   }
 
   // Simulate Enter for lookup
-  if (vals.caseNum) {
+  if (vals.caseNum && autofillArmed) {
     await new Promise(r => setTimeout(r, 300));
-    // Try to load the case (or fake it)
     const caseVal = vals.caseNum.toUpperCase();
     const c = SAMPLE_CASES[caseVal];
     if (c) {
@@ -865,6 +893,7 @@ async function runAutofill() {
   // Phase 2: Disposition fields
   const dispoKeys = ['caseAction', 'plea', 'disposition', 'sentence', 'fine', 'cost'];
   for (const key of dispoKeys) {
+    if (!autofillArmed) break; // cancelled mid-fill
     const val = vals[key];
     if (!val) continue;
     const fieldName = CONFIG_TO_FIELD[key];
@@ -875,17 +904,21 @@ async function runAutofill() {
     await new Promise(r => setTimeout(r, 150));
   }
 
-  // Check if auto-submit is enabled
-  const submitDispo = cfg.submitDisposition;
-  if (submitDispo) {
-    await new Promise(r => setTimeout(r, 400));
-    submitUpdate();
-    document.getElementById('msgArea').textContent = 'MACRO: AUTOFILL + PF12 UPDATE COMPLETE';
+  if (autofillArmed) {
+    const submitDispo = cfg.submitDisposition;
+    if (submitDispo) {
+      await new Promise(r => setTimeout(r, 400));
+      submitUpdate();
+      document.getElementById('msgArea').textContent = 'MACRO: AUTOFILL + PF12 UPDATE COMPLETE';
+    } else {
+      document.getElementById('msgArea').textContent = 'MACRO: AUTOFILL COMPLETE - REVIEW AND PRESS PF12 TO UPDATE';
+    }
+    toast('Autofill complete!');
   } else {
-    document.getElementById('msgArea').textContent = 'MACRO: AUTOFILL COMPLETE - REVIEW AND PRESS PF12 TO UPDATE';
+    document.getElementById('msgArea').textContent = 'AUTOFILL CANCELLED';
+    toast('Autofill cancelled');
   }
 
-  toast('Autofill complete!');
   autofillRunning = false;
 }
 
