@@ -221,6 +221,32 @@
   }
   .toast.show { opacity: 1; transform: translateY(0); }
   .toast.error { background: #3a1a1a; border-color: #ff4444; color: #ff4444; }
+
+  /* Autofill indicator */
+  .autofill-banner {
+    width: 100%;
+    max-width: 820px;
+    background: #1a1a00;
+    border: 1px solid #ffaa00;
+    padding: 8px 14px;
+    font-size: 0.75rem;
+    color: #ffaa00;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .autofill-banner.show { display: flex; }
+  .autofill-banner a {
+    color: #33ff33;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .field.filling {
+    background: rgba(255, 170, 0, 0.12) !important;
+    color: #ffaa00 !important;
+    transition: background 0.2s;
+  }
 </style>
 </head>
 <body>
@@ -229,9 +255,15 @@
   <span class="title">UADRCI PRACTICE EMULATOR</span>
   <div class="btns">
     <button onclick="loadSampleCase()">Load Sample Case</button>
-    <button onclick="clearAll()">Clear (F6 Reset)</button>
+    <button onclick="runAutofill()" style="background:#2a2a00;color:#ffaa00;border-color:#ffaa00;">F6 Autofill</button>
+    <button onclick="clearAll()">Clear</button>
     <button onclick="showHelp()">Help (F1)</button>
   </div>
+</div>
+
+<div class="autofill-banner" id="autofillBanner">
+  <span id="autofillMsg">Press <b>F6</b> to test your macro autofill. Values come from the Config page (saved in your browser).</span>
+  <span><a onclick="openConfigInfo()">Edit values</a></span>
 </div>
 
 <div class="crt">
@@ -460,7 +492,7 @@
   <button class="pfkey" onclick="pfAction('F2')"><span class="k">F2</span> Finish</button>
   <button class="pfkey" onclick="pfAction('F3')"><span class="k">F3</span> Menu</button>
   <button class="pfkey" onclick="pfAction('F4')"><span class="k">F4</span> Refresh</button>
-  <button class="pfkey" onclick="pfAction('F6')"><span class="k">F6</span> Reset</button>
+  <button class="pfkey" onclick="runAutofill()" style="border-color:#ffaa00;color:#ffaa00;"><span class="k">F6</span> Autofill</button>
   <button class="pfkey" onclick="pfAction('F9')"><span class="k">F9</span> Bonds</button>
   <button class="pfkey" onclick="pfAction('F10')"><span class="k">F10</span> Motions</button>
   <button class="pfkey" onclick="pfAction('F11')"><span class="k">F11</span> Consolpt</button>
@@ -480,7 +512,7 @@
       <tr><td>Shift+Tab</td><td>Move to previous field</td></tr>
       <tr><td>Enter</td><td>Submit lookup (loads sample data if case matches)</td></tr>
       <tr><td>F1</td><td>Show this help</td></tr>
-      <tr><td>F6</td><td>Reset / clear all fields</td></tr>
+      <tr><td>F6</td><td>Run autofill macro (uses values from Config page)</td></tr>
       <tr><td>F12</td><td>Simulate UPDATE (validates required fields)</td></tr>
     </table>
     <p style="margin-top:10px;color:#ffaa00;">Click "Load Sample Case" to populate a practice case,
@@ -687,7 +719,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'F1')  { e.preventDefault(); pfAction('F1'); }
   if (e.key === 'F3')  { e.preventDefault(); pfAction('F3'); }
   if (e.key === 'F4')  { e.preventDefault(); pfAction('F4'); }
-  if (e.key === 'F6')  { e.preventDefault(); pfAction('F6'); }
+  if (e.key === 'F6')  { e.preventDefault(); runAutofill(); }
   if (e.key === 'F9')  { e.preventDefault(); pfAction('F9'); }
   if (e.key === 'F10') { e.preventDefault(); pfAction('F10'); }
   if (e.key === 'F11') { e.preventDefault(); pfAction('F11'); }
@@ -711,6 +743,163 @@ document.addEventListener('input', e => {
     e.target.setSelectionRange(pos, pos);
   }
 });
+
+// =====================================================================
+// F6 AUTOFILL — reads values from uadrci_config.html localStorage
+// =====================================================================
+const CONFIG_KEY = 'uadrci-config-v1';
+
+// Default test values if no config page has been saved yet
+const DEFAULT_AUTOFILL = {
+  values: {
+    caseNum: '12345AB',
+    hearDate: '04092026',
+    hearTime: '1330',
+    caseAction: 'D',
+    plea: 'G',
+    disposition: 'G',
+    sentence: 'WH',
+    fine: '277',
+    cost: '116',
+  }
+};
+
+// Map config keys to field data-name attributes
+const CONFIG_TO_FIELD = {
+  caseNum:     'case',
+  hearDate:    'hearDate',
+  hearTime:    'hearTime',
+  caseAction:  'caseAction',
+  plea:        'plea',
+  disposition: 'disposition',
+  sentence:    'sentence',
+  fine:        'fine',
+  cost:        'cost',
+};
+
+function getAutofillConfig() {
+  const raw = localStorage.getItem(CONFIG_KEY);
+  if (raw) {
+    try {
+      const cfg = JSON.parse(raw);
+      // Check if any values are actually filled
+      const hasValues = Object.values(cfg.values || {}).some(v => v && v.trim());
+      if (hasValues) return cfg;
+    } catch (e) {}
+  }
+  return DEFAULT_AUTOFILL;
+}
+
+// Typing animation for a single field
+function typeIntoField(field, text, speed) {
+  return new Promise(resolve => {
+    field.value = '';
+    field.classList.add('filling');
+    let i = 0;
+    const interval = setInterval(() => {
+      field.value += text[i];
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+        field.classList.remove('filling');
+        resolve();
+      }
+    }, speed);
+  });
+}
+
+let autofillRunning = false;
+
+async function runAutofill() {
+  if (autofillRunning) return;
+  autofillRunning = true;
+
+  const cfg = getAutofillConfig();
+  const vals = cfg.values || {};
+  const isDefault = !localStorage.getItem(CONFIG_KEY);
+
+  if (isDefault) {
+    toast('Using default test values (open Config page to set your own)');
+  } else {
+    toast('Running autofill from your saved config...');
+  }
+
+  document.getElementById('msgArea').textContent = 'MACRO: AUTOFILL IN PROGRESS...';
+
+  // Phase 1: Lookup fields
+  const lookupKeys = ['caseNum', 'hearDate', 'hearTime'];
+  for (const key of lookupKeys) {
+    const val = vals[key];
+    if (!val) continue;
+    const fieldName = CONFIG_TO_FIELD[key];
+    const field = document.querySelector('[data-name="' + fieldName + '"]');
+    if (!field) continue;
+    field.focus();
+    await typeIntoField(field, val.toUpperCase(), 60);
+    await new Promise(r => setTimeout(r, 150));
+  }
+
+  // Simulate Enter for lookup
+  if (vals.caseNum) {
+    await new Promise(r => setTimeout(r, 300));
+    // Try to load the case (or fake it)
+    const caseVal = vals.caseNum.toUpperCase();
+    const c = SAMPLE_CASES[caseVal];
+    if (c) {
+      document.querySelector('[data-name="loc"]').value = c.loc;
+      document.querySelector('[data-name="div"]').value = c.div;
+      document.querySelector('[data-name="judgeCode"]').value = c.judgeCode;
+      document.getElementById('d_name').textContent = c.name;
+      document.getElementById('d_judge').textContent = c.judge;
+    } else {
+      document.getElementById('d_name').textContent = 'PRACTICE, USER';
+      document.getElementById('d_judge').textContent = 'HUBBART, GERALD';
+      document.querySelector('[data-name="loc"]').value = '053';
+      document.querySelector('[data-name="judgeCode"]').value = '00023';
+    }
+    caseLoaded = true;
+    document.getElementById('msgArea').textContent = 'MACRO: LOOKUP SUBMITTED... LOADING DISPOSITION';
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  // Phase 2: Disposition fields
+  const dispoKeys = ['caseAction', 'plea', 'disposition', 'sentence', 'fine', 'cost'];
+  for (const key of dispoKeys) {
+    const val = vals[key];
+    if (!val) continue;
+    const fieldName = CONFIG_TO_FIELD[key];
+    const field = document.querySelector('[data-name="' + fieldName + '"]');
+    if (!field) continue;
+    field.focus();
+    await typeIntoField(field, val.toUpperCase(), 70);
+    await new Promise(r => setTimeout(r, 150));
+  }
+
+  // Check if auto-submit is enabled
+  const submitDispo = cfg.submitDisposition;
+  if (submitDispo) {
+    await new Promise(r => setTimeout(r, 400));
+    submitUpdate();
+    document.getElementById('msgArea').textContent = 'MACRO: AUTOFILL + PF12 UPDATE COMPLETE';
+  } else {
+    document.getElementById('msgArea').textContent = 'MACRO: AUTOFILL COMPLETE - REVIEW AND PRESS PF12 TO UPDATE';
+  }
+
+  toast('Autofill complete!');
+  autofillRunning = false;
+}
+
+function openConfigInfo() {
+  const has = !!localStorage.getItem(CONFIG_KEY);
+  if (has) {
+    alert('Your autofill values are saved in this browser from the Config page.\n\nTo change them, open uadrci_config.html and edit the fields.\n\nThe values auto-sync — just press F6 here again after editing.');
+  } else {
+    alert('No custom values found — using defaults.\n\nTo set your own values:\n1. Open uadrci_config.html in this same browser\n2. Fill in the fields you want\n3. Come back here and press F6\n\nBoth pages share the same browser storage, so values sync automatically.');
+  }
+}
+
+// Show the autofill banner on load
+document.getElementById('autofillBanner').classList.add('show');
 
 // Focus case field on load
 document.getElementById('f_case').focus();
