@@ -781,12 +781,11 @@ function buildAhkScript() {
     if (filled.length === 0) return false;
     filled.forEach(k => {
       const c = cfg.coords[k];
-      body += '        sess.SetCursor(' + c.row + ', ' + c.col + ')\n';
-      body += '        sess.SendKeys("' + esc(cfg.values[k]) + '")\n';
+      body += '        FillField(sess, "' + esc(cfg.values[k]) + '", ' + c.row + ', ' + c.col + ')\n';
     });
     if (submit) {
-      body += '        sess.SendKeys("' + submitCode + '")\n';
-      body += '        sess.WaitHostQuiet(2000)\n';
+      body += '        PressKey(sess, "' + submitCode + '")\n';
+      body += '        Sleep(2000)\n';
     }
     body += '\n';
     return true;
@@ -820,6 +819,98 @@ function buildAhkScript() {
 
 #Requires AutoHotkey v2.0
 #SingleInstance Force
+
+; Auto-detected COM method (found on first use)
+global comMode := ""
+
+; Place text at a row/col position — auto-detects which Quick3270 COM method works
+FillField(sess, text, row, col) {
+    global comMode
+
+    ; If we already know which method works, use it
+    if (comMode = "A") {
+        sess.SetCursor(row, col)
+        sess.SendKeys(text)
+        return
+    }
+    if (comMode = "B") {
+        sess.Screen.SetCursor(row, col)
+        sess.Screen.SendKeys(text)
+        return
+    }
+    if (comMode = "C") {
+        sess.Screen.MoveTo(row, col)
+        sess.Screen.SendKeys(text)
+        return
+    }
+    if (comMode = "D") {
+        sess.Screen.PutString(text, row, col)
+        return
+    }
+    if (comMode = "E") {
+        sess.PutString(text, row, col)
+        return
+    }
+    if (comMode = "F") {
+        sess.Screen.Putstring(text, row, col)
+        return
+    }
+
+    ; First call — try each method until one works
+    try {
+        sess.SetCursor(row, col)
+        sess.SendKeys(text)
+        comMode := "A"
+        return
+    } catch {
+    }
+    try {
+        sess.Screen.SetCursor(row, col)
+        sess.Screen.SendKeys(text)
+        comMode := "B"
+        return
+    } catch {
+    }
+    try {
+        sess.Screen.MoveTo(row, col)
+        sess.Screen.SendKeys(text)
+        comMode := "C"
+        return
+    } catch {
+    }
+    try {
+        sess.Screen.PutString(text, row, col)
+        comMode := "D"
+        return
+    } catch {
+    }
+    try {
+        sess.PutString(text, row, col)
+        comMode := "E"
+        return
+    } catch {
+    }
+    try {
+        sess.Screen.Putstring(text, row, col)
+        comMode := "F"
+        return
+    } catch as e {
+        throw Error("No working method found to fill fields." . Chr(10) . "Quick3270 COM may not support external automation." . Chr(10) . "Try the native Quick3270 macro instead (Tools > Macros)." . Chr(10) . Chr(10) . "Last error: " . e.Message)
+    }
+}
+
+; Send a special key (Enter, PF12, etc.)
+PressKey(sess, key) {
+    try {
+        sess.SendKeys(key)
+    } catch {
+        try {
+            sess.Screen.SendKeys(key)
+        } catch as e {
+            throw Error("Cannot send key: " . key . Chr(10) . e.Message)
+        }
+    }
+}
 
 TrayTip("UADRCI Autofill", "Ready! Press ${hkName} in Quick3270 to fill fields.", 2)
 
