@@ -295,8 +295,17 @@
         <span class="note" id="ahkKeyNote">F6</span>
       </div>
       <p style="font-size:0.75rem;color:var(--muted);margin-top:8px;">
-        Click the box above and press any key or combo (e.g. F6, Ctrl+Shift+A, Alt+F5).
-        <br>
+        Click the box and <strong>hold modifiers + press a key</strong>. Examples:
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:0.72rem;color:var(--muted);margin-top:6px;font-family:'IBM Plex Mono',monospace;">
+        <span><span style="color:#ffaa00;">F6</span> — just F6</span>
+        <span><span style="color:#ffaa00;">Ctrl+F5</span> — hold Ctrl, press F5</span>
+        <span><span style="color:#ffaa00;">Ctrl+Shift+A</span> — hold both, press A</span>
+        <span><span style="color:#ffaa00;">Ctrl+Alt+F6</span> — hold both, press F6</span>
+        <span><span style="color:#ffaa00;">Ctrl+Alt+Shift+R</span> — hold all 3, press R</span>
+        <span><span style="color:#ffaa00;">Alt+F8</span> — hold Alt, press F8</span>
+      </div>
+      <p style="font-size:0.72rem;color:var(--muted);margin-top:8px;">
         First press = <strong style="color:var(--accent);">ARM</strong> (watching).
         Type 7-char case number = <strong style="color:var(--accent);">autofill triggers</strong>.
         Press again = <strong style="color:#ff4444;">OFF</strong>.
@@ -400,6 +409,64 @@
       <div class="status" id="status">Auto-saved to your browser</div>
     </section>
   </aside>
+</div>
+
+<!-- SETUP GUIDE -->
+<div style="max-width:1100px;margin:24px auto 0;">
+  <section>
+    <h2>SETUP GUIDE <span class="hint">Step by step</span></h2>
+    <div style="font-size:0.82rem;line-height:1.8;">
+
+      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 1: FILL IN YOUR VALUES (this page)</p>
+      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
+        <li>Set your <strong>keybind</strong> above (click the box, press your combo like Ctrl+Shift+F5)</li>
+        <li>Fill in the <strong>Lookup</strong> fields you use every time (hearing date, time, type)</li>
+        <li>Fill in the <strong>Disposition</strong> fields (plea, disposition, fine, cost, etc.)</li>
+        <li>Check the boxes if you want it to auto-press Enter / PF12</li>
+        <li>Everything saves automatically in your browser</li>
+      </ol>
+
+      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 2: INSTALL AUTOHOTKEY (one time only)</p>
+      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
+        <li>Go to <strong>autohotkey.com</strong></li>
+        <li>Click <strong>Download</strong> &mdash; get <strong>AutoHotkey v2</strong> (not v1)</li>
+        <li>Run the installer, click Next through everything</li>
+        <li>That's it &mdash; no restart needed</li>
+      </ol>
+
+      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 3: DOWNLOAD YOUR SCRIPT</p>
+      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
+        <li>Click the green <strong>DOWNLOAD AHK SCRIPT</strong> button on this page</li>
+        <li>Save the <code>uadrci_autofill.ahk</code> file somewhere (Desktop is fine)</li>
+        <li>If you change any values on this page, download a new script to pick up the changes</li>
+      </ol>
+
+      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 4: RUN THE SCRIPT</p>
+      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
+        <li><strong>Double-click</strong> the <code>.ahk</code> file &mdash; a green <strong>H</strong> icon appears in your system tray (bottom-right near the clock)</li>
+        <li>The script is now running in the background</li>
+        <li>To stop it: right-click the <strong>H</strong> tray icon &rarr; <strong>Exit</strong>, or press <strong>Ctrl+Shift+Q</strong></li>
+      </ol>
+
+      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 5: USE IT IN QUICK3270</p>
+      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
+        <li>Open Quick3270 and navigate to the <strong>UADRCI</strong> screen</li>
+        <li>Press your <strong>keybind</strong> &mdash; tray says <strong>"ARMED"</strong></li>
+        <li>Click into the <strong>CASE</strong> field and type the <strong>7-character case number</strong></li>
+        <li>The moment you type the 7th character, the script <strong>automatically fills</strong> hearing date, time, type, plea, disposition, fine, cost &mdash; everything you configured</li>
+        <li>Review the screen, then press <strong>PF12</strong> to update (or the script presses it if you checked that box)</li>
+        <li>The script <strong>auto-disarms</strong> after filling &mdash; press your keybind again for the next case</li>
+      </ol>
+
+      <p style="color:var(--warn);font-weight:bold;margin-bottom:8px;">TROUBLESHOOTING</p>
+      <ul style="padding-left:22px;color:var(--muted);">
+        <li><strong>"Cannot connect to Quick3270"</strong> &mdash; make sure Quick3270 is open and connected before pressing the keybind</li>
+        <li><strong>Nothing happens when I press the keybind</strong> &mdash; check the system tray for the green H icon. If it's not there, double-click the .ahk file again</li>
+        <li><strong>Fields fill in the wrong spot</strong> &mdash; open the Advanced section on this page and update the row/col coordinates (click each field in Quick3270 and read the bottom-left status bar)</li>
+        <li><strong>Changed values but not working</strong> &mdash; you need to download a NEW .ahk script after changing values, then double-click it (it replaces the old one automatically)</li>
+      </ul>
+    </div>
+  </section>
 </div>
 
 <script>
