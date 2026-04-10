@@ -449,21 +449,47 @@
     <h2>CASE LIST <span class="hint">Batch processing</span></h2>
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
       <span style="font-size:0.85rem;color:var(--accent);font-family:'IBM Plex Mono',monospace;font-weight:bold;" id="caseProgress">0 / 0</span>
-      <span style="font-size:0.75rem;color:var(--muted);">cases</span>
+      <span style="font-size:0.75rem;color:var(--muted);">completed</span>
       <div style="flex:1;height:8px;background:#1a1a1a;border-radius:4px;overflow:hidden;">
         <div id="caseProgressBar" style="width:0%;height:100%;background:var(--accent);border-radius:4px;transition:width 0.3s;"></div>
       </div>
-      <button class="secondary" id="resetProgressBtn" style="font-size:0.75rem;padding:5px 10px;">Reset</button>
+      <button class="secondary" id="resetProgressBtn" style="font-size:0.75rem;padding:5px 10px;">Reset Progress</button>
     </div>
-    <textarea id="caseListArea" rows="8" placeholder="Paste case numbers here, one per line:&#10;amfo33e&#10;am1c6de&#10;akmo6we&#10;&#10;The AHK orchestrator will track which case you're on and auto-advance after each fill."
-      style="width:100%;background:var(--input-bg);color:var(--accent);border:1px solid var(--border);border-radius:4px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:0.85rem;resize:vertical;"></textarea>
-    <div style="display:flex;gap:8px;margin-top:8px;">
-      <button class="secondary" id="importCaseBtn" style="font-size:0.75rem;padding:5px 10px;">Import from file</button>
-      <button class="secondary" id="clearCaseBtn" style="font-size:0.75rem;padding:5px 10px;">Clear list</button>
+
+    <!-- Add cases input -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <input type="text" id="addCaseInput" placeholder="Type a case number and press Enter" style="flex:1;">
+      <button class="secondary" id="addCaseBtn" style="white-space:nowrap;font-size:0.78rem;padding:6px 14px;">+ Add</button>
+      <button class="secondary" id="bulkAddBtn" style="white-space:nowrap;font-size:0.78rem;padding:6px 14px;">Paste List</button>
+    </div>
+
+    <!-- Case tracker list -->
+    <div id="caseTracker" style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:4px;background:var(--input-bg);"></div>
+
+    <!-- Empty state -->
+    <div id="caseEmpty" style="padding:30px 20px;text-align:center;color:var(--muted);font-size:0.82rem;border:1px dashed var(--border);border-radius:4px;">
+      No cases yet. Type a case number above, or click <strong>Paste List</strong> to add multiple at once.
+    </div>
+
+    <!-- Bulk paste modal -->
+    <div id="bulkModal" style="display:none;margin-top:12px;">
+      <textarea id="bulkArea" rows="6" placeholder="Paste case numbers here, one per line:&#10;amfo33e&#10;am1c6de&#10;akmo6we"
+        style="width:100%;background:#000;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:0.85rem;resize:vertical;"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button id="bulkConfirmBtn" style="font-size:0.78rem;padding:6px 14px;">Add All</button>
+        <button class="secondary" id="bulkCancelBtn" style="font-size:0.78rem;padding:6px 14px;">Cancel</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="secondary" id="importCaseBtn" style="font-size:0.72rem;padding:4px 10px;">Import from file</button>
+      <button class="secondary" id="clearCaseBtn" style="font-size:0.72rem;padding:4px 10px;">Clear all</button>
+      <button class="secondary" id="syncProgressBtn" style="font-size:0.72rem;padding:4px 10px;">Sync from AHK</button>
       <span style="flex:1;"></span>
       <span id="caseCount" style="font-size:0.72rem;color:var(--muted);align-self:center;"></span>
     </div>
     <input type="file" id="caseFileInput" accept=".txt,.csv" style="display:none;">
+    <input type="file" id="syncFileInput" accept=".txt" style="display:none;">
   </section>
 </div>
 
@@ -1152,43 +1178,104 @@ function renderTemplates() {
 }
 
 // =====================================================================
-// CASE LIST
+// CASE LIST — Interactive Tracker
 // =====================================================================
-const CASES_KEY = 'uadrci-caselist-v1';
-const PROGRESS_KEY = 'uadrci-progress-v1';
+const CASES_KEY = 'uadrci-cases-v2';
 
-function getCaseList() {
-  const text = $('caseListArea').value.trim();
-  return text ? text.split('\n').map(s => s.trim()).filter(s => s) : [];
+// Each case: { id: string, status: 'pending'|'done'|'skipped' }
+function getCases() {
+  try { return JSON.parse(localStorage.getItem(CASES_KEY)) || []; } catch(e) { return []; }
+}
+function saveCases(cases) {
+  localStorage.setItem(CASES_KEY, JSON.stringify(cases));
+  renderCaseTracker();
 }
 
-function getCaseProgress() {
-  try { return parseInt(localStorage.getItem(PROGRESS_KEY), 10) || 0; } catch(e) { return 0; }
+function addCase(id) {
+  id = id.trim();
+  if (!id) return;
+  const cases = getCases();
+  cases.push({ id: id, status: 'pending' });
+  saveCases(cases);
 }
 
-function setCaseProgress(n) {
-  localStorage.setItem(PROGRESS_KEY, String(n));
-  updateCaseDisplay();
+function addCasesBulk(text) {
+  const lines = text.split('\n').map(s => s.trim()).filter(s => s);
+  if (lines.length === 0) return;
+  const cases = getCases();
+  lines.forEach(id => cases.push({ id: id, status: 'pending' }));
+  saveCases(cases);
 }
 
-function updateCaseDisplay() {
-  const cases = getCaseList();
-  const done = getCaseProgress();
+function toggleCaseStatus(index) {
+  const cases = getCases();
+  if (!cases[index]) return;
+  const c = cases[index];
+  // Cycle: pending → done → skipped → pending
+  if (c.status === 'pending') c.status = 'done';
+  else if (c.status === 'done') c.status = 'skipped';
+  else c.status = 'pending';
+  saveCases(cases);
+}
+
+function removeCase(index) {
+  const cases = getCases();
+  cases.splice(index, 1);
+  saveCases(cases);
+}
+
+function renderCaseTracker() {
+  const cases = getCases();
+  const tracker = $('caseTracker');
+  const empty = $('caseEmpty');
   const total = cases.length;
+  const done = cases.filter(c => c.status === 'done').length;
+  const skipped = cases.filter(c => c.status === 'skipped').length;
+
   $('caseProgress').textContent = done + ' / ' + total;
-  $('caseProgressBar').style.width = total > 0 ? (Math.min(done / total, 1) * 100) + '%' : '0%';
-  $('caseCount').textContent = total > 0 ? total + ' case' + (total !== 1 ? 's' : '') + ' loaded' : '';
+  $('caseProgressBar').style.width = total > 0 ? (done / total * 100) + '%' : '0%';
+  $('caseCount').textContent = total > 0 ?
+    done + ' done' + (skipped ? ', ' + skipped + ' skipped' : '') + ', ' + (total - done - skipped) + ' remaining' : '';
+
+  if (total === 0) {
+    tracker.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  tracker.style.display = 'block';
+  empty.style.display = 'none';
+
+  const statusIcon = s => s === 'done' ? '&#x2705;' : s === 'skipped' ? '&#x23ED;' : '&#x2B1C;';
+  const statusColor = s => s === 'done' ? '#33ff33' : s === 'skipped' ? '#888' : 'var(--text)';
+  const statusLabel = s => s === 'done' ? 'DONE' : s === 'skipped' ? 'SKIP' : '';
+
+  tracker.innerHTML = cases.map((c, i) =>
+    '<div style="display:flex;align-items:center;gap:10px;padding:6px 12px;border-bottom:1px solid var(--border);' +
+    (c.status === 'done' ? 'background:#0a1a0a;' : c.status === 'skipped' ? 'background:#1a1a1a;' : '') +
+    'cursor:pointer;" onclick="toggleCaseStatus(' + i + ')">' +
+    '<span style="font-size:1rem;width:24px;text-align:center;">' + statusIcon(c.status) + '</span>' +
+    '<span style="font-size:0.72rem;color:var(--muted);width:24px;text-align:center;">' + (i + 1) + '</span>' +
+    '<span style="flex:1;font-family:\'IBM Plex Mono\',monospace;font-size:0.85rem;color:' + statusColor(c.status) + ';' +
+    (c.status === 'done' ? 'text-decoration:line-through;opacity:0.6;' : '') +
+    (c.status === 'skipped' ? 'text-decoration:line-through;opacity:0.4;' : '') +
+    '">' + c.id + '</span>' +
+    '<span style="font-size:0.65rem;color:' + statusColor(c.status) + ';width:32px;text-align:center;font-family:\'IBM Plex Mono\',monospace;">' + statusLabel(c.status) + '</span>' +
+    '<button class="secondary" style="font-size:0.6rem;padding:1px 6px;opacity:0.5;" onclick="event.stopPropagation();removeCase(' + i + ')">x</button>' +
+    '</div>'
+  ).join('');
 }
 
-function saveCaseList() {
-  localStorage.setItem(CASES_KEY, $('caseListArea').value);
-  updateCaseDisplay();
+// For AHK: still need a flat list for export
+function getCaseList() {
+  return getCases().filter(c => c.status === 'pending').map(c => c.id);
+}
+
+function getCaseListAll() {
+  return getCases().map(c => c.id);
 }
 
 function loadCaseList() {
-  const saved = localStorage.getItem(CASES_KEY);
-  if (saved) $('caseListArea').value = saved;
-  updateCaseDisplay();
+  renderCaseTracker();
 }
 
 // =====================================================================
@@ -1339,6 +1426,7 @@ global iniPath := iniDir . "\\current_case.ini"
 global donePath := iniDir . "\\done.txt"
 global caseListPath := iniDir . "\\case_list.txt"
 global progressPath := iniDir . "\\progress.txt"
+global completedPath := iniDir . "\\completed.txt"
 
 ; --- Case tracking ---
 global caseList := []
@@ -1503,6 +1591,9 @@ ${hk}::
 
     if FileExist(donePath) {
         try FileDelete(donePath)
+        ; Log completed case number
+        if (caseNum != "")
+            FileAppend(caseNum . "\`n", completedPath)
         processedCount++
         currentCase++
         SaveProgress()
@@ -1606,18 +1697,70 @@ $('resetBtn').addEventListener('click', resetConfig);
 $('saveTemplateBtn').addEventListener('click', saveTemplate);
 
 // Case list
-$('caseListArea').addEventListener('input', () => { saveCaseList(); });
-$('clearCaseBtn').addEventListener('click', () => { $('caseListArea').value = ''; saveCaseList(); setCaseProgress(0); });
-$('resetProgressBtn').addEventListener('click', () => { setCaseProgress(0); });
+$('addCaseInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    addCase($('addCaseInput').value);
+    $('addCaseInput').value = '';
+  }
+});
+$('addCaseBtn').addEventListener('click', () => {
+  addCase($('addCaseInput').value);
+  $('addCaseInput').value = '';
+});
+$('bulkAddBtn').addEventListener('click', () => {
+  $('bulkModal').style.display = $('bulkModal').style.display === 'none' ? 'block' : 'none';
+  $('bulkArea').focus();
+});
+$('bulkConfirmBtn').addEventListener('click', () => {
+  addCasesBulk($('bulkArea').value);
+  $('bulkArea').value = '';
+  $('bulkModal').style.display = 'none';
+  flashStatus('Cases added');
+});
+$('bulkCancelBtn').addEventListener('click', () => {
+  $('bulkModal').style.display = 'none';
+});
+$('clearCaseBtn').addEventListener('click', () => {
+  if (!confirm('Remove all cases from the list?')) return;
+  saveCases([]);
+  flashStatus('Case list cleared', 'warn');
+});
+$('resetProgressBtn').addEventListener('click', () => {
+  const cases = getCases();
+  cases.forEach(c => c.status = 'pending');
+  saveCases(cases);
+  flashStatus('Progress reset');
+});
 $('importCaseBtn').addEventListener('click', () => $('caseFileInput').click());
 $('caseFileInput').addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    $('caseListArea').value = ev.target.result;
-    saveCaseList();
-    flashStatus('Imported ' + getCaseList().length + ' cases');
+    addCasesBulk(ev.target.result);
+    flashStatus('Imported cases from file');
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+$('syncProgressBtn').addEventListener('click', () => $('syncFileInput').click());
+$('syncFileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    // AHK writes completed case numbers to this file, one per line
+    const doneCases = ev.target.result.split('\n').map(s => s.trim().toLowerCase()).filter(s => s);
+    const cases = getCases();
+    let count = 0;
+    cases.forEach(c => {
+      if (doneCases.includes(c.id.toLowerCase()) && c.status === 'pending') {
+        c.status = 'done';
+        count++;
+      }
+    });
+    saveCases(cases);
+    flashStatus('Synced: ' + count + ' cases marked done');
   };
   reader.readAsText(file);
   e.target.value = '';
