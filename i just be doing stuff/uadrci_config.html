@@ -192,6 +192,55 @@
   }
   .status.ok { color: var(--accent); }
 
+  /* Armed/Off indicator */
+  .armed-bar {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto 16px;
+    padding: 14px 20px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+  }
+  .armed-bar.off {
+    background: #1a1a1a;
+    border: 2px solid #333;
+    color: #666;
+  }
+  .armed-bar.on {
+    background: #1a2a00;
+    border: 2px solid #ffaa00;
+    color: #ffaa00;
+    box-shadow: 0 0 20px rgba(255, 170, 0, 0.15);
+  }
+  .armed-bar .dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 10px;
+  }
+  .armed-bar.off .dot { background: #444; }
+  .armed-bar.on .dot { background: #ffaa00; animation: pulse 1.2s infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 170, 0, 0.6); }
+    50% { opacity: 0.7; box-shadow: 0 0 12px 4px rgba(255, 170, 0, 0.3); }
+  }
+  .armed-bar .hint-text {
+    font-size: 0.7rem;
+    font-weight: normal;
+    letter-spacing: 0;
+    color: var(--muted);
+  }
+
   details { margin-top: 6px; }
   details summary {
     cursor: pointer;
@@ -228,6 +277,11 @@
     </ol>
   </div>
 </header>
+
+<div class="armed-bar off" id="armedBar" onclick="toggleArmed()">
+  <span><span class="dot"></span><span id="armedLabel">OFF</span></span>
+  <span class="hint-text" id="armedHint">Click or press your keybind to arm</span>
+</div>
 
 <div class="container">
   <main>
@@ -404,6 +458,25 @@ function keyToAhk(e) {
   return { ahk, display };
 }
 
+let isArmed = false;
+
+function toggleArmed() {
+  isArmed = !isArmed;
+  const bar = $('armedBar');
+  const label = $('armedLabel');
+  const hint = $('armedHint');
+
+  if (isArmed) {
+    bar.className = 'armed-bar on';
+    label.textContent = 'ARMED — waiting for case number';
+    hint.textContent = 'Type 7-char case in Quick3270 to autofill. Click or press keybind to disarm.';
+  } else {
+    bar.className = 'armed-bar off';
+    label.textContent = 'OFF';
+    hint.textContent = 'Click or press your keybind to arm';
+  }
+}
+
 function initHotkeyCapture() {
   const input = $('hotkey');
 
@@ -412,7 +485,7 @@ function initHotkeyCapture() {
     e.stopPropagation();
 
     const result = keyToAhk(e);
-    if (!result) return; // modifier-only press, wait for real key
+    if (!result) return;
 
     currentHotkey = result;
     input.value = result.display;
@@ -420,6 +493,18 @@ function initHotkeyCapture() {
     $('ahkKeyNote').textContent = result.ahk;
     saveConfig();
     input.blur();
+  });
+
+  // Listen for the configured hotkey globally (when not in the hotkey input)
+  document.addEventListener('keydown', e => {
+    if (document.activeElement === input) return; // skip if setting hotkey
+
+    const pressed = keyToAhk(e);
+    if (!pressed) return;
+    if (pressed.ahk === currentHotkey.ahk) {
+      e.preventDefault();
+      toggleArmed();
+    }
   });
 }
 
