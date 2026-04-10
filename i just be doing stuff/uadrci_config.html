@@ -191,6 +191,7 @@
     min-height: 1em;
   }
   .status.ok { color: var(--accent); }
+  .status.warn { color: #ff4444; }
 
   /* Armed/Off indicator */
   .armed-bar {
@@ -731,7 +732,7 @@ function resetConfig() {
   $('submitLookup').checked = true;
   $('submitDisposition').checked = false;
   updatePreview();
-  flashStatus('Reset to defaults');
+  flashStatus('Reset to defaults', 'warn');
 }
 
 function buildCoordsGrid() {
@@ -1079,14 +1080,15 @@ function downloadMac() {
   flashStatus('Downloaded uadrci_fill.mac');
 }
 
-function flashStatus(msg) {
+function flashStatus(msg, type) {
   const el = $('status');
   el.textContent = msg;
-  el.classList.add('ok');
+  el.classList.remove('ok', 'warn');
+  el.classList.add(type === 'warn' ? 'warn' : 'ok');
   clearTimeout(flashStatus._t);
   flashStatus._t = setTimeout(() => {
     el.textContent = 'Auto-saved to your browser';
-    el.classList.remove('ok');
+    el.classList.remove('ok', 'warn');
   }, 2200);
 }
 
@@ -1352,7 +1354,10 @@ LoadCaseList()
 LoadProgress()
 UpdateOverlay()
 
-TrayTip("UADRCI Orchestrator", "Ready! " . totalCases . " cases loaded. Press ${hkName} to fill.", 2)
+; Detect Quick3270 on startup
+FindQuick3270()
+q3msg := q3title ? ("Quick3270: " . q3title) : "Quick3270: not detected (open it first)"
+TrayTip("UADRCI Orchestrator", "Ready! " . totalCases . " cases loaded." . Chr(10) . q3msg . Chr(10) . "Press ${hkName} to fill.", 2)
 
 ; --- Write the INI file with current values ---
 WriteINI(caseNum := "") {
@@ -1402,17 +1407,64 @@ SaveProgress() {
     FileAppend(currentCase . "\`n" . processedCount, progressPath)
 }
 
+; --- Quick3270 window tracking ---
+global q3hwnd := 0
+global q3title := ""
+
+FindQuick3270() {
+    global q3hwnd, q3title
+
+    ; If we already found it and it's still valid, reuse it
+    if (q3hwnd != 0) {
+        try {
+            if WinExist("ahk_id " . q3hwnd) {
+                return true
+            }
+        }
+        q3hwnd := 0
+        q3title := ""
+    }
+
+    ; Search by multiple patterns (Quick3270 window titles vary)
+    patterns := [
+        "Quick3270",
+        "ahk_exe quick3270.exe",
+        "ahk_exe Quick3270.exe",
+        "ahk_exe QUICK3270.EXE",
+        "IBMPRD",
+        "METRO-DADE",
+        "ahk_class Quick3270",
+        "ahk_class Quick3270Class",
+        "ahk_class QWS3270",
+        "S.P.I.R.I.T",
+        "SPIRIT",
+        "UADRCI"
+    ]
+
+    for pattern in patterns {
+        hwnd := WinExist(pattern)
+        if hwnd {
+            q3hwnd := hwnd
+            try q3title := WinGetTitle("ahk_id " . hwnd)
+            return true
+        }
+    }
+
+    return false
+}
+
 ; --- Overlay tooltip ---
 UpdateOverlay() {
-    global currentCase, totalCases, processedCount, caseList
+    global currentCase, totalCases, processedCount, caseList, q3title
     caseName := currentCase <= totalCases ? caseList[currentCase] : "(no more cases)"
-    ToolTip("UADRCI | Case " . currentCase . "/" . totalCases . " | Done: " . processedCount . " | Next: " . caseName, 10, 10)
+    q3status := q3title ? ("Q3270: " . SubStr(q3title, 1, 25)) : "Q3270: not found"
+    ToolTip("UADRCI | Case " . currentCase . "/" . totalCases . " | Done: " . processedCount . " | Next: " . caseName . Chr(10) . q3status, 10, 10)
 }
 
 ; --- ${hkName}: PROCESS CURRENT CASE ---
 ${hk}::
 {
-    global currentCase, totalCases, caseList, processedCount, donePath, macroHotkey
+    global currentCase, totalCases, caseList, processedCount, donePath, macroHotkey, q3hwnd
 
     SoundBeep(800, 100)
 
@@ -1427,17 +1479,17 @@ ${hk}::
     ; Delete old done signal
     try FileDelete(donePath)
 
-    ; Activate Quick3270 and trigger bridge macro
-    q3win := WinExist("Quick3270") || WinExist("ahk_class Quick3270Class") || WinExist("ahk_exe quick3270.exe") || WinExist("IBMPRD")
-    if q3win {
-        WinActivate
-        Sleep(300)
-        Send(macroHotkey)
-    } else {
-        TrayTip("UADRCI", "Quick3270 window not found!", 2)
+    ; Find and activate Quick3270
+    if !FindQuick3270() {
+        TrayTip("UADRCI", "Quick3270 window not found!" . Chr(10) . "Make sure Quick3270 is open.", 2)
         SoundBeep(300, 300)
+        UpdateOverlay()
         return
     }
+
+    WinActivate("ahk_id " . q3hwnd)
+    Sleep(300)
+    Send(macroHotkey)
 
     ; Wait for bridge macro to finish (watches for done.txt)
     waited := 0
