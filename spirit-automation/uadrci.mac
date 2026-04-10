@@ -28,15 +28,15 @@ Sub Main
 
     ' ------ FIELD COORDINATES (verify in Quick3270!) -----------------------
     ' Tip: click the field, look at the bottom-left status bar for row col
-    Const CASE_ROW          = 4  : Const CASE_COL         = 7
-    Const HEAR_DATE_ROW     = 5  : Const HEAR_DATE_COL    = 14
-    Const HEAR_TIME_ROW     = 5  : Const HEAR_TIME_COL    = 32
-    Const CASE_ACTION_ROW   = 7  : Const CASE_ACTION_COL  = 14
-    Const PLEA_ROW          = 12 : Const PLEA_COL         = 7
-    Const DISPOSITION_ROW   = 12 : Const DISPOSITION_COL  = 34
-    Const SENTENCE_ROW      = 12 : Const SENTENCE_COL     = 66
+    Const CASE_ROW          = 4  : Const CASE_COL         = 8
+    Const HEAR_DATE_ROW     = 5  : Const HEAR_DATE_COL    = 15
+    Const HEAR_TIME_ROW     = 5  : Const HEAR_TIME_COL    = 30
+    Const CASE_ACTION_ROW   = 7  : Const CASE_ACTION_COL  = 17
+    Const PLEA_ROW          = 12 : Const PLEA_COL         = 17
+    Const DISPOSITION_ROW   = 12 : Const DISPOSITION_COL  = 35
+    Const SENTENCE_ROW      = 12 : Const SENTENCE_COL     = 77
     Const FINE_ROW          = 15 : Const FINE_COL         = 7
-    Const COST_ROW          = 15 : Const COST_COL         = 30
+    Const COST_ROW          = 15 : Const COST_COL         = 26
     ' -----------------------------------------------------------------------
 
     Dim Sess
