@@ -297,14 +297,21 @@
     <section>
       <h2>HOTKEY <span class="hint">Toggle on/off</span></h2>
       <div class="field">
-        <label>Keybind</label>
+        <label>Fill-all Keybind</label>
         <input type="text" id="hotkey" readonly placeholder="Click here, then press any key combo"
           style="cursor:pointer;text-align:center;color:#ffaa00;font-weight:bold;"
           onclick="this.focus();this.value='Press a key...';this.style.color='var(--muted)';">
         <span class="note" id="ahkKeyNote">F6</span>
       </div>
+      <div class="field">
+        <label>Fill-here Keybind</label>
+        <input type="text" id="hereHotkey" readonly placeholder="Click here, then press any key combo"
+          style="cursor:pointer;text-align:center;color:#66ccff;font-weight:bold;"
+          onclick="this.focus();this.value='Press a key...';this.style.color='var(--muted)';">
+        <span class="note" id="ahkHereKeyNote">F9</span>
+      </div>
       <p style="font-size:0.75rem;color:var(--muted);margin-top:8px;">
-        Click the box and <strong>hold modifiers + press a key</strong>. Examples:
+        Click a box and <strong>hold modifiers + press a key</strong>. Examples:
       </p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:0.72rem;color:var(--muted);margin-top:6px;font-family:'IBM Plex Mono',monospace;">
         <span><span style="color:#ffaa00;">Ctrl</span> — just Ctrl alone</span>
@@ -317,8 +324,10 @@
         <span><span style="color:#ffaa00;">Shift</span> — just Shift alone</span>
       </div>
       <p style="font-size:0.72rem;color:var(--muted);margin-top:8px;">
-        Type your case number first, then press keybind = <strong style="color:var(--accent);">all other fields fill in</strong>.
-        Press again for the next case.
+        <strong style="color:var(--accent);">Fill-all</strong>: type your case number first, then press the fill-all key to fill every field. Press again for the next case.
+      </p>
+      <p style="font-size:0.72rem;color:var(--muted);margin-top:4px;">
+        <strong style="color:#66ccff;">Fill-here</strong>: click any one field in Quick3270, press the fill-here key, and only that field fills. Use this when you only need to update one thing.
       </p>
     </section>
 
@@ -587,7 +596,8 @@ const $ = id => document.getElementById(id);
 // =====================================================================
 // KEY CAPTURE — press any key combo to set the hotkey
 // =====================================================================
-let currentHotkey = { ahk: 'F6', display: 'F6' };
+let currentHotkey     = { ahk: 'F6', display: 'F6' };
+let currentHereHotkey = { ahk: 'F9', display: 'F9' };
 
 // Key name maps
 const AHK_KEY_MAP = {
@@ -665,8 +675,9 @@ function toggleArmed() {
 
 function initHotkeyCapture() {
   const input = $('hotkey');
+  const hereInput = $('hereHotkey');
 
-  // Capture keybind when setting it in the input box
+  // Capture fill-all keybind
   input.addEventListener('keydown', e => {
     e.preventDefault();
     e.stopPropagation();
@@ -681,10 +692,25 @@ function initHotkeyCapture() {
     input.blur();
   });
 
+  // Capture fill-here keybind
+  hereInput.addEventListener('keydown', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    const result = keyToAhk(e);
+    if (!result) return;
+
+    currentHereHotkey = result;
+    hereInput.value = result.display;
+    hereInput.style.color = '#66ccff';
+    $('ahkHereKeyNote').textContent = result.ahk;
+    saveConfig();
+    hereInput.blur();
+  });
+
   // Global listener — toggle armed when keybind is pressed anywhere on page
   document.addEventListener('keydown', e => {
-    // Skip if user is setting the hotkey
-    if (document.activeElement === input) return;
+    // Skip if user is setting either hotkey
+    if (document.activeElement === input || document.activeElement === hereInput) return;
     // Skip if typing in a value field
     if (document.activeElement && document.activeElement.tagName === 'INPUT' && document.activeElement.id !== 'hotkey') {
       // Only intercept if it's NOT a regular character (allow typing in fields)
@@ -713,7 +739,7 @@ function getCoords(key) {
 }
 
 function getConfig() {
-  const cfg = { values: {}, coords: {}, hotkey: currentHotkey.ahk, hotkeyDisplay: currentHotkey.display, submitLookup: $('submitLookup').checked, submitDisposition: $('submitDisposition').checked };
+  const cfg = { values: {}, coords: {}, hotkey: currentHotkey.ahk, hotkeyDisplay: currentHotkey.display, hereHotkey: currentHereHotkey.ahk, hereHotkeyDisplay: currentHereHotkey.display, submitLookup: $('submitLookup').checked, submitDisposition: $('submitDisposition').checked };
   FIELDS.forEach(f => {
     cfg.values[f.key] = $('v_' + f.key).value.trim();
     cfg.coords[f.key] = getCoords(f.key);
@@ -744,6 +770,11 @@ function loadConfig() {
       currentHotkey = { ahk: cfg.hotkey, display: cfg.hotkeyDisplay || cfg.hotkey };
       $('hotkey').value = currentHotkey.display;
       $('ahkKeyNote').textContent = currentHotkey.ahk;
+    }
+    if (cfg.hereHotkey) {
+      currentHereHotkey = { ahk: cfg.hereHotkey, display: cfg.hereHotkeyDisplay || cfg.hereHotkey };
+      $('hereHotkey').value = currentHereHotkey.display;
+      $('ahkHereKeyNote').textContent = currentHereHotkey.ahk;
     }
   } catch (e) {}
 }
@@ -798,8 +829,10 @@ function hotkeyLabel(hk) {
 function updatePreview() {
   const cfg = getConfig();
   const hk = cfg.hotkeyDisplay || hotkeyLabel(cfg.hotkey || 'F6');
+  const hereHk = cfg.hereHotkeyDisplay || hotkeyLabel(cfg.hereHotkey || 'F9');
   const lines = [];
-  lines.push('; ' + hk + ' = fill all fields');
+  lines.push('; ' + hk + ' = fill ALL fields at once');
+  lines.push('; ' + hereHk + ' = fill only the field your cursor is on');
   lines.push('; Type case number first, then press ' + hk + ':');
   lines.push('');
 
@@ -1408,7 +1441,7 @@ function buildHereBridgeMac() {
 "'   1. In Quick3270: Tools > Macros > New Macro\n" +
 "'   2. Paste this script and Save as 'uadrci_bridge_here'\n" +
 "'   3. Assign to Ctrl+F10 (Tools > Customize > Keyboard)\n" +
-"'   4. The AHK orchestrator F9 hotkey will trigger this.\n" +
+"'   4. The AHK orchestrator fill-here hotkey will trigger this.\n" +
 "' =========================================================================\n" +
 "\n" +
 "Sub Main\n" +
@@ -1521,6 +1554,8 @@ function buildOrchestratorAhk() {
   const esc = s => s.replace(/`/g, '``').replace(/"/g, '""');
   const hk = cfg.hotkey || 'F6';
   const hkName = cfg.hotkeyDisplay || hotkeyLabel(hk);
+  const hereHk = cfg.hereHotkey || 'F9';
+  const hereHkName = cfg.hereHotkeyDisplay || hotkeyLabel(hereHk);
 
   // Build the INI content lines
   let iniLines = '';
@@ -1536,7 +1571,7 @@ function buildOrchestratorAhk() {
 ; =========================================================================
 ; Hotkey:  ${hkName} = process current case (fills ALL fields)
 ;          ${hkName} (again within 3s) = REPEAT same case (no advance)
-;          F9  = FILL HERE (fills only the field your cursor is on)
+;          ${hereHkName} = FILL HERE (fills only the field your cursor is on)
 ;          F7  = skip to next case
 ;          F5  = go back one case
 ;          Ctrl+Shift+S = show stats
@@ -1602,9 +1637,9 @@ MsgBox(
     . q3msg . Chr(10) . Chr(10)
     . "${hkName} = fill ALL fields on this case" . Chr(10)
     . "${hkName} (again within 3s) = repeat same case" . Chr(10)
-    . "F9 = FILL HERE (only the field your cursor is on)" . Chr(10)
+    . "${hereHkName} = FILL HERE (only the field your cursor is on)" . Chr(10)
     . "F7 = skip   F5 = back   Ctrl+Shift+Q = quit" . Chr(10) . Chr(10)
-    . "Click OK, then go to Quick3270 and press ${hkName} or F9.",
+    . "Click OK, then go to Quick3270 and press ${hkName} or ${hereHkName}.",
     "UADRCI Orchestrator - Ready"
 )
 
@@ -1828,11 +1863,11 @@ ${hk}::
     UpdateOverlay()
 }
 
-; --- F9: FILL HERE (cursor-aware single-field fill) ---
+; --- ${hereHkName}: FILL HERE (cursor-aware single-field fill) ---
 ; Writes the INI, triggers the "here" bridge macro (Ctrl+F10), which
 ; reads Quick3270's cursor position and fills only the matching field.
 ; Does NOT advance the case list.
-F9::
+${hereHk}::
 {
     global currentCase, totalCases, caseList, donePath, macroHereHotkey, q3hwnd
 
@@ -1851,7 +1886,7 @@ F9::
         SoundBeep(300, 300)
         MsgBox(
             "Quick3270 window not found." . Chr(10) . Chr(10)
-            . "Open Quick3270 first, then try F9 again.",
+            . "Open Quick3270 first, then try ${hereHkName} again.",
             "UADRCI - Fill Here",
             "Icon!"
         )
