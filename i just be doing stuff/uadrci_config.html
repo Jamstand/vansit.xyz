@@ -1398,6 +1398,7 @@ function buildOrchestratorAhk() {
 ; UADRCI Orchestrator - Advanced Automation System
 ; =========================================================================
 ; Hotkey:  ${hkName} = process current case
+;          ${hkName} (again within 3s) = REPEAT same case (no advance)
 ;          F7  = skip to next case
 ;          F5  = go back one case
 ;          Ctrl+Shift+S = show stats
@@ -1433,6 +1434,11 @@ global caseList := []
 global currentCase := 1
 global totalCases := 0
 global processedCount := 0
+
+; --- Repeat tracking (press hotkey again within window to re-run same case) ---
+global lastSuccessTime := 0
+global lastSuccessCase := ""
+global REPEAT_WINDOW_MS := 3000   ; press the hotkey again within 3s to repeat
 
 ; Create data directory
 DirCreate(iniDir)
@@ -1549,17 +1555,28 @@ UpdateOverlay() {
     ToolTip("UADRCI | Case " . currentCase . "/" . totalCases . " | Done: " . processedCount . " | Next: " . caseName . Chr(10) . q3status, 10, 10)
 }
 
-; --- ${hkName}: PROCESS CURRENT CASE ---
+; --- ${hkName}: PROCESS CURRENT CASE (press again within 3s to repeat) ---
 ${hk}::
 {
-    global currentCase, totalCases, caseList, processedCount, donePath, macroHotkey, q3hwnd
+    global currentCase, totalCases, caseList, processedCount, donePath, completedPath, macroHotkey, q3hwnd
+    global lastSuccessTime, lastSuccessCase, REPEAT_WINDOW_MS
 
-    SoundBeep(800, 100)
+    ; Double-press detection: if the last successful run was within the window,
+    ; treat this press as a REPEAT of the same case (don't advance the list).
+    now := A_TickCount
+    isRepeat := (lastSuccessTime > 0 && (now - lastSuccessTime) < REPEAT_WINDOW_MS && lastSuccessCase != "")
 
-    ; Get case number from list (if available)
-    caseNum := ""
-    if (currentCase <= totalCases)
-        caseNum := caseList[currentCase]
+    ; Different beep for repeat vs fresh run so you can hear which mode fired
+    SoundBeep(isRepeat ? 600 : 800, 100)
+
+    ; Pick the case number: repeat = re-use last, otherwise advance through the list
+    if (isRepeat) {
+        caseNum := lastSuccessCase
+    } else {
+        caseNum := ""
+        if (currentCase <= totalCases)
+            caseNum := caseList[currentCase]
+    }
 
     ; Write INI file for the bridge macro to read
     WriteINI(caseNum)
@@ -1591,14 +1608,25 @@ ${hk}::
 
     if FileExist(donePath) {
         try FileDelete(donePath)
-        ; Log completed case number
-        if (caseNum != "")
-            FileAppend(caseNum . "\`n", completedPath)
-        processedCount++
-        currentCase++
-        SaveProgress()
-        SoundBeep(1200, 100)
-        TrayTip("UADRCI", "Case done! " . processedCount . " processed. Next: " . currentCase . "/" . totalCases, 1)
+        ; Remember this successful run so pressing again within window will repeat it
+        lastSuccessTime := A_TickCount
+        lastSuccessCase := caseNum
+
+        if (isRepeat) {
+            ; Don't advance, don't double-log — just confirm the repeat
+            SoundBeep(1000, 100)
+            SoundBeep(1400, 100)
+            TrayTip("UADRCI", "Repeated case " . caseNum . " (no advance)" . Chr(10) . "Press ${hkName} again within 3s to repeat again.", 1)
+        } else {
+            ; Log completed case number and advance to the next one
+            if (caseNum != "")
+                FileAppend(caseNum . "\`n", completedPath)
+            processedCount++
+            currentCase++
+            SaveProgress()
+            SoundBeep(1200, 100)
+            TrayTip("UADRCI", "Case done! " . processedCount . " processed. Next: " . currentCase . "/" . totalCases . Chr(10) . "Press ${hkName} again within 3s to REPEAT this case.", 2)
+        }
     } else {
         TrayTip("UADRCI", "Macro may not have finished. Check Quick3270.", 2)
     }
