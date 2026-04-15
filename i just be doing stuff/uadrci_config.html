@@ -295,23 +295,26 @@
 <div class="container">
   <main>
     <section>
-      <h2>HOTKEY <span class="hint">Toggle on/off</span></h2>
+      <h2>HOTKEYS <span class="hint">click any box, press any key</span></h2>
       <div class="field">
         <label>Fill-all Keybind</label>
-        <input type="text" id="hotkey" readonly placeholder="Click here, then press any key combo"
+        <input type="text" id="hotkey" readonly title="Click, then press any key or combo"
           style="cursor:pointer;text-align:center;color:#ffaa00;font-weight:bold;"
-          onclick="this.focus();this.value='Press a key...';this.style.color='var(--muted)';">
+          onclick="this.focus();this.value='Press any key...';this.style.color='var(--muted)';">
         <span class="note" id="ahkKeyNote">F6</span>
       </div>
       <div class="field">
         <label>Fill-here Keybind</label>
-        <input type="text" id="hereHotkey" readonly placeholder="Click here, then press any key combo"
+        <input type="text" id="hereHotkey" readonly title="Click, then press any key or combo"
           style="cursor:pointer;text-align:center;color:#66ccff;font-weight:bold;"
-          onclick="this.focus();this.value='Press a key...';this.style.color='var(--muted)';">
+          onclick="this.focus();this.value='Press any key...';this.style.color='var(--muted)';">
         <span class="note" id="ahkHereKeyNote">F9</span>
       </div>
+      <p style="font-size:0.75rem;color:var(--accent);margin-top:8px;">
+        <strong>Both boxes are rebindable to ANY key.</strong> Click a box and press whatever key (or combo) you want. It saves immediately.
+      </p>
       <p style="font-size:0.75rem;color:var(--muted);margin-top:8px;">
-        Click a box and <strong>hold modifiers + press a key</strong>. Examples:
+        Examples you can set either box to:
       </p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:0.72rem;color:var(--muted);margin-top:6px;font-family:'IBM Plex Mono',monospace;">
         <span><span style="color:#ffaa00;">Ctrl</span> — just Ctrl alone</span>
@@ -676,6 +679,10 @@ function toggleArmed() {
 function initHotkeyCapture() {
   const input = $('hotkey');
   const hereInput = $('hereHotkey');
+
+  // Show current values immediately so it's obvious both are customizable
+  input.value     = currentHotkey.display;
+  hereInput.value = currentHereHotkey.display;
 
   // Capture fill-all keybind
   input.addEventListener('keydown', e => {
