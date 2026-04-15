@@ -417,8 +417,9 @@
       <h2>KEYSTROKE PREVIEW <span class="hint" id="previewHint">on F6</span></h2>
       <div class="preview" id="preview"></div>
       <div class="actions">
-        <button id="downloadAllBtn" style="background:var(--accent);font-size:0.95rem;">&#x2193; DOWNLOAD ALL (AHK + Macro)</button>
-        <button id="downloadMacBtn" class="secondary">Quick3270 Macro only (.mac)</button>
+        <button id="downloadAllBtn" style="background:var(--accent);font-size:0.95rem;">&#x2193; DOWNLOAD ALL (AHK + both Macros)</button>
+        <button id="downloadMacBtn" class="secondary">Full-case Macro (.mac)</button>
+        <button id="downloadHereMacBtn" class="secondary">Fill-here Macro (.mac)</button>
         <button id="downloadBtn" class="secondary">AHK Script only (.ahk)</button>
         <button class="secondary" id="resetBtn">Reset All Fields</button>
       </div>
@@ -1377,6 +1378,142 @@ fillCode +
 }
 
 // =====================================================================
+// "FILL HERE" BRIDGE MACRO - cursor-aware single-field fill
+// =====================================================================
+// Reads the current cursor position from Quick3270, matches it to the
+// nearest known field on that row, and fills ONLY that one field with
+// the value from current_case.ini.
+function buildHereBridgeMac() {
+  // Build the VBScript that compares the cursor to each field.
+  // Strategy: pick the field whose row matches cursor row AND whose col
+  // is the largest col <= cursor col (so cursor anywhere inside the
+  // field's width still matches it).
+  let matchCode = '';
+  FIELDS.forEach(f => {
+    matchCode += '    If ' + f.row + ' = r And ' + f.col + ' <= c And ' + f.col + ' > matchCol Then\n';
+    matchCode += '        matchKey = "' + f.key + '"\n';
+    matchCode += '        matchRow = ' + f.row + '\n';
+    matchCode += '        matchCol = ' + f.col + '\n';
+    matchCode += '        matchLabel = "' + f.label.replace(/"/g, '""') + '"\n';
+    matchCode += '    End If\n';
+  });
+
+  return "' =========================================================================\n" +
+"' UADRCI Bridge Macro (FILL HERE) - Cursor-aware single-field fill\n" +
+"' =========================================================================\n" +
+"' Reads current cursor row/col, finds the matching UADRCI field,\n" +
+"' and fills ONLY that one field from current_case.ini.\n" +
+"'\n" +
+"' SETUP:\n" +
+"'   1. In Quick3270: Tools > Macros > New Macro\n" +
+"'   2. Paste this script and Save as 'uadrci_bridge_here'\n" +
+"'   3. Assign to Ctrl+F10 (Tools > Customize > Keyboard)\n" +
+"'   4. The AHK orchestrator F9 hotkey will trigger this.\n" +
+"' =========================================================================\n" +
+"\n" +
+"Sub Main\n" +
+"\n" +
+"    Dim Sess\n" +
+"    Set Sess = Application.ActiveSession\n" +
+"    If Sess Is Nothing Then\n" +
+'        MsgBox "No active session.", vbExclamation, "UADRCI Here"\n' +
+"        Exit Sub\n" +
+"    End If\n" +
+"\n" +
+"    ' --- Read cursor position (try multiple Quick3270 API patterns) ---\n" +
+"    Dim r, c\n" +
+"    r = 0 : c = 0\n" +
+"    On Error Resume Next\n" +
+"\n" +
+"    r = Sess.CursorRow\n" +
+"    c = Sess.CursorCol\n" +
+"\n" +
+"    If r = 0 Or Err.Number <> 0 Then\n" +
+"        Err.Clear\n" +
+"        r = Sess.Row\n" +
+"        c = Sess.Col\n" +
+"    End If\n" +
+"\n" +
+"    If r = 0 Or Err.Number <> 0 Then\n" +
+"        Err.Clear\n" +
+"        r = Sess.CurrentRow\n" +
+"        c = Sess.CurrentCol\n" +
+"    End If\n" +
+"\n" +
+"    If r = 0 Or Err.Number <> 0 Then\n" +
+"        Err.Clear\n" +
+"        r = Sess.Screen.CursorRow\n" +
+"        c = Sess.Screen.CursorCol\n" +
+"    End If\n" +
+"\n" +
+"    On Error Goto 0\n" +
+"\n" +
+"    If r = 0 Then\n" +
+'        MsgBox "Cannot read cursor position from Quick3270." & vbCrLf & "None of the known API patterns worked.", vbExclamation, "UADRCI Here"\n' +
+"        Exit Sub\n" +
+"    End If\n" +
+"\n" +
+"    ' --- Read values from INI ---\n" +
+"    Dim fso, shell, filePath\n" +
+"    Set fso = CreateObject(\"Scripting.FileSystemObject\")\n" +
+"    Set shell = CreateObject(\"WScript.Shell\")\n" +
+"    filePath = shell.ExpandEnvironmentStrings(\"%APPDATA%\") & \"\\UADRCI\\current_case.ini\"\n" +
+"\n" +
+"    If Not fso.FileExists(filePath) Then\n" +
+'        MsgBox "No case data found at:" & vbCrLf & filePath, vbExclamation, "UADRCI Here"\n' +
+"        Exit Sub\n" +
+"    End If\n" +
+"\n" +
+"    Dim vals\n" +
+"    Set vals = CreateObject(\"Scripting.Dictionary\")\n" +
+"    Dim f\n" +
+"    Set f = fso.OpenTextFile(filePath, 1)\n" +
+"    Dim ln, parts\n" +
+"    Do While Not f.AtEndOfStream\n" +
+"        ln = f.ReadLine\n" +
+"        If InStr(ln, \"=\") > 0 Then\n" +
+"            parts = Split(ln, \"=\", 2)\n" +
+"            vals(Trim(parts(0))) = Trim(parts(1))\n" +
+"        End If\n" +
+"    Loop\n" +
+"    f.Close\n" +
+"\n" +
+"    ' --- Find matching field (largest col <= cursor col on the same row) ---\n" +
+"    Dim matchKey, matchRow, matchCol, matchLabel\n" +
+"    matchKey = \"\"\n" +
+"    matchRow = 0\n" +
+"    matchCol = -1\n" +
+"    matchLabel = \"\"\n" +
+"\n" +
+matchCode +
+"\n" +
+"    If matchKey = \"\" Then\n" +
+'        MsgBox "Cursor at row " & r & " col " & c & " does not match any known UADRCI field." & vbCrLf & vbCrLf & "Move the cursor onto a field like HEAR DATE, PLEA, FINE, etc. and try again.", vbExclamation, "UADRCI Here"\n' +
+"        Exit Sub\n" +
+"    End If\n" +
+"\n" +
+"    If Not vals.Exists(matchKey) Or vals(matchKey) = \"\" Then\n" +
+'        MsgBox "Field " & matchLabel & " (" & matchKey & ") has no configured value." & vbCrLf & "Go to the config page and fill it in.", vbExclamation, "UADRCI Here"\n' +
+"        Exit Sub\n" +
+"    End If\n" +
+"\n" +
+"    ' --- Fill the single field ---\n" +
+"    Sess.WaitHostQuiet 200\n" +
+"    Sess.SetCursor matchRow, matchCol\n" +
+"    Sess.SendKeys vals(matchKey)\n" +
+"\n" +
+"    ' --- Signal done ---\n" +
+"    Dim donePath\n" +
+"    donePath = shell.ExpandEnvironmentStrings(\"%APPDATA%\") & \"\\UADRCI\\done.txt\"\n" +
+"    Dim sf\n" +
+"    Set sf = fso.CreateTextFile(donePath, True)\n" +
+"    sf.WriteLine \"DONE \" & matchKey\n" +
+"    sf.Close\n" +
+"\n" +
+"End Sub\n";
+}
+
+// =====================================================================
 // ORCHESTRATOR AHK GENERATOR
 // =====================================================================
 function buildOrchestratorAhk() {
@@ -1397,8 +1534,9 @@ function buildOrchestratorAhk() {
   return `; =========================================================================
 ; UADRCI Orchestrator - Advanced Automation System
 ; =========================================================================
-; Hotkey:  ${hkName} = process current case
+; Hotkey:  ${hkName} = process current case (fills ALL fields)
 ;          ${hkName} (again within 3s) = REPEAT same case (no advance)
+;          F9  = FILL HERE (fills only the field your cursor is on)
 ;          F7  = skip to next case
 ;          F5  = go back one case
 ;          Ctrl+Shift+S = show stats
@@ -1421,7 +1559,8 @@ function buildOrchestratorAhk() {
 #SingleInstance Force
 
 ; --- Configuration ---
-global macroHotkey := "^{F8}"   ; Ctrl+F8 triggers the bridge macro in Quick3270
+global macroHotkey     := "^{F8}"    ; Ctrl+F8  triggers the full-case bridge macro
+global macroHereHotkey := "^{F10}"   ; Ctrl+F10 triggers the "fill here" bridge macro
 global iniDir := A_AppData . "\\UADRCI"
 global iniPath := iniDir . "\\current_case.ini"
 global donePath := iniDir . "\\done.txt"
@@ -1461,10 +1600,11 @@ MsgBox(
     . "AHK version: " . A_AhkVersion . Chr(10)
     . "Cases loaded: " . totalCases . Chr(10)
     . q3msg . Chr(10) . Chr(10)
-    . "Hotkey to fill fields: ${hkName}" . Chr(10)
-    . "Press ${hkName} again within 3s to repeat same case" . Chr(10)
+    . "${hkName} = fill ALL fields on this case" . Chr(10)
+    . "${hkName} (again within 3s) = repeat same case" . Chr(10)
+    . "F9 = FILL HERE (only the field your cursor is on)" . Chr(10)
     . "F7 = skip   F5 = back   Ctrl+Shift+Q = quit" . Chr(10) . Chr(10)
-    . "Click OK, then go to Quick3270 and press ${hkName}.",
+    . "Click OK, then go to Quick3270 and press ${hkName} or F9.",
     "UADRCI Orchestrator - Ready"
 )
 
@@ -1688,6 +1828,68 @@ ${hk}::
     UpdateOverlay()
 }
 
+; --- F9: FILL HERE (cursor-aware single-field fill) ---
+; Writes the INI, triggers the "here" bridge macro (Ctrl+F10), which
+; reads Quick3270's cursor position and fills only the matching field.
+; Does NOT advance the case list.
+F9::
+{
+    global currentCase, totalCases, caseList, donePath, macroHereHotkey, q3hwnd
+
+    SoundBeep(1100, 80)
+
+    ; Use the current case number (if one is loaded) so the bridge has
+    ; access to every configured field including caseNum
+    caseNum := ""
+    if (currentCase <= totalCases)
+        caseNum := caseList[currentCase]
+
+    WriteINI(caseNum)
+    try FileDelete(donePath)
+
+    if !FindQuick3270() {
+        SoundBeep(300, 300)
+        MsgBox(
+            "Quick3270 window not found." . Chr(10) . Chr(10)
+            . "Open Quick3270 first, then try F9 again.",
+            "UADRCI - Fill Here",
+            "Icon!"
+        )
+        UpdateOverlay()
+        return
+    }
+
+    WinActivate("ahk_id " . q3hwnd)
+    Sleep(200)
+    Send(macroHereHotkey)
+
+    ; Wait for done signal
+    waited := 0
+    while (waited < 8000) {
+        if FileExist(donePath)
+            break
+        Sleep(150)
+        waited += 150
+    }
+
+    if FileExist(donePath) {
+        try FileDelete(donePath)
+        SoundBeep(1400, 80)
+        TrayTip("UADRCI", "Filled field at cursor.", 1)
+    } else {
+        SoundBeep(250, 300)
+        MsgBox(
+            "Fill Here bridge macro didn't finish." . Chr(10) . Chr(10)
+            . "Make sure the ""uadrci_bridge_here"" macro is loaded in Quick3270" . Chr(10)
+            . "and bound to Ctrl+F10.",
+            "UADRCI - Fill Here timeout",
+            "Icon!"
+        )
+    }
+
+    UpdateOverlay()
+}
+
 ; --- F7: Skip to next case ---
 F7::
 {
@@ -1748,14 +1950,16 @@ function downloadFile(content, filename) {
 function downloadAll() {
   // Download orchestrator AHK
   downloadFile(buildOrchestratorAhk(), 'uadrci_orchestrator.ahk');
-  // Download bridge macro
+  // Download full-case bridge macro
   setTimeout(() => downloadFile(buildBridgeMac(), 'uadrci_bridge.mac'), 300);
+  // Download fill-here bridge macro
+  setTimeout(() => downloadFile(buildHereBridgeMac(), 'uadrci_bridge_here.mac'), 600);
   // Download case list if any
   const cases = getCaseList();
   if (cases.length > 0) {
-    setTimeout(() => downloadFile(cases.join('\n'), 'case_list.txt'), 600);
+    setTimeout(() => downloadFile(cases.join('\n'), 'case_list.txt'), 900);
   }
-  flashStatus('Downloaded orchestrator + bridge macro' + (cases.length > 0 ? ' + case list' : ''));
+  flashStatus('Downloaded orchestrator + both bridge macros' + (cases.length > 0 ? ' + case list' : ''));
 }
 
 // Init
@@ -1771,7 +1975,8 @@ FIELDS.forEach(f => $('v_' + f.key).addEventListener('input', saveConfig));
 $('submitLookup').addEventListener('change', saveConfig);
 $('submitDisposition').addEventListener('change', saveConfig);
 $('downloadAllBtn').addEventListener('click', downloadAll);
-$('downloadMacBtn').addEventListener('click', () => { downloadFile(buildBridgeMac(), 'uadrci_bridge.mac'); flashStatus('Downloaded bridge macro'); });
+$('downloadMacBtn').addEventListener('click', () => { downloadFile(buildBridgeMac(), 'uadrci_bridge.mac'); flashStatus('Downloaded full-case bridge macro'); });
+$('downloadHereMacBtn').addEventListener('click', () => { downloadFile(buildHereBridgeMac(), 'uadrci_bridge_here.mac'); flashStatus('Downloaded fill-here bridge macro'); });
 $('downloadBtn').addEventListener('click', downloadAhk);
 $('resetBtn').addEventListener('click', resetConfig);
 
