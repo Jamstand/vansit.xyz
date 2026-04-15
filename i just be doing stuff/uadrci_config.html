@@ -1440,6 +1440,9 @@ global lastSuccessTime := 0
 global lastSuccessCase := ""
 global REPEAT_WINDOW_MS := 3000   ; press the hotkey again within 3s to repeat
 
+; --- Diagnostic: show MsgBox on very first hotkey press so you KNOW it fired ---
+global firstPress := true
+
 ; Create data directory
 DirCreate(iniDir)
 
@@ -1450,8 +1453,20 @@ UpdateOverlay()
 
 ; Detect Quick3270 on startup
 FindQuick3270()
-q3msg := q3title ? ("Quick3270: " . q3title) : "Quick3270: not detected (open it first)"
-TrayTip("UADRCI Orchestrator", "Ready! " . totalCases . " cases loaded." . Chr(10) . q3msg . Chr(10) . "Press ${hkName} to fill.", 2)
+q3msg := q3title ? ("Quick3270: " . q3title) : "Quick3270: NOT DETECTED (open it first!)"
+
+; LOUD startup popup so you KNOW the script loaded (TrayTips are easy to miss)
+MsgBox(
+    "UADRCI Orchestrator is running!" . Chr(10) . Chr(10)
+    . "AHK version: " . A_AhkVersion . Chr(10)
+    . "Cases loaded: " . totalCases . Chr(10)
+    . q3msg . Chr(10) . Chr(10)
+    . "Hotkey to fill fields: ${hkName}" . Chr(10)
+    . "Press ${hkName} again within 3s to repeat same case" . Chr(10)
+    . "F7 = skip   F5 = back   Ctrl+Shift+Q = quit" . Chr(10) . Chr(10)
+    . "Click OK, then go to Quick3270 and press ${hkName}.",
+    "UADRCI Orchestrator - Ready"
+)
 
 ; --- Write the INI file with current values ---
 WriteINI(caseNum := "") {
@@ -1559,7 +1574,24 @@ UpdateOverlay() {
 ${hk}::
 {
     global currentCase, totalCases, caseList, processedCount, donePath, completedPath, macroHotkey, q3hwnd
-    global lastSuccessTime, lastSuccessCase, REPEAT_WINDOW_MS
+    global lastSuccessTime, lastSuccessCase, REPEAT_WINDOW_MS, firstPress
+
+    ; FIRST-PRESS DIAGNOSTIC: loud confirmation that the hotkey actually fired.
+    ; (Only shows on the first press after the script starts, so it's not annoying.)
+    if (firstPress) {
+        firstPress := false
+        SoundBeep(1500, 200)
+        MsgBox(
+            "Hotkey ${hkName} fired!" . Chr(10) . Chr(10)
+            . "AHK is receiving your keypress correctly." . Chr(10)
+            . "Now I'll try to activate Quick3270 and run the bridge macro." . Chr(10) . Chr(10)
+            . "If the fields don't fill after you click OK:" . Chr(10)
+            . "  - Make sure Quick3270 is open" . Chr(10)
+            . "  - Make sure the bridge macro is loaded in Quick3270" . Chr(10)
+            . "  - Make sure the bridge macro is bound to Ctrl+F8",
+            "UADRCI - Keybind Test"
+        )
+    }
 
     ; Double-press detection: if the last successful run was within the window,
     ; treat this press as a REPEAT of the same case (don't advance the list).
@@ -1586,8 +1618,16 @@ ${hk}::
 
     ; Find and activate Quick3270
     if !FindQuick3270() {
-        TrayTip("UADRCI", "Quick3270 window not found!" . Chr(10) . "Make sure Quick3270 is open.", 2)
         SoundBeep(300, 300)
+        MsgBox(
+            "Quick3270 window not found!" . Chr(10) . Chr(10)
+            . "The orchestrator tried every known window pattern and none matched." . Chr(10)
+            . "Make sure Quick3270 is open and you see the UADRCI screen." . Chr(10) . Chr(10)
+            . "If it IS open, the window title might not match. Open Task Manager," . Chr(10)
+            . "find the Quick3270 process, and tell Josh what the title says.",
+            "UADRCI - Window not found",
+            "Icon!"
+        )
         UpdateOverlay()
         return
     }
@@ -1628,7 +1668,21 @@ ${hk}::
             TrayTip("UADRCI", "Case done! " . processedCount . " processed. Next: " . currentCase . "/" . totalCases . Chr(10) . "Press ${hkName} again within 3s to REPEAT this case.", 2)
         }
     } else {
-        TrayTip("UADRCI", "Macro may not have finished. Check Quick3270.", 2)
+        SoundBeep(250, 400)
+        MsgBox(
+            "Bridge macro did NOT finish within 10 seconds." . Chr(10) . Chr(10)
+            . "This means AHK successfully sent Ctrl+F8 to Quick3270," . Chr(10)
+            . "but the bridge macro never wrote its 'done.txt' signal." . Chr(10) . Chr(10)
+            . "Most likely causes:" . Chr(10)
+            . "  1. Bridge macro is not loaded in Quick3270" . Chr(10)
+            . "     (Tools > Macros > load uadrci_bridge.mac)" . Chr(10)
+            . "  2. Bridge macro is not bound to Ctrl+F8" . Chr(10)
+            . "     (Tools > Customize > Keyboard)" . Chr(10)
+            . "  3. Quick3270 is in a state where macros can't run" . Chr(10)
+            . "     (try clicking on the session window first)",
+            "UADRCI - Bridge macro timeout",
+            "Icon!"
+        )
     }
 
     UpdateOverlay()
