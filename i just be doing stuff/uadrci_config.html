@@ -301,14 +301,14 @@
         <input type="text" id="hotkey" readonly title="Click, then press any key or combo"
           style="cursor:pointer;text-align:center;color:#ffaa00;font-weight:bold;"
           onclick="this.focus();this.value='Press any key...';this.style.color='var(--muted)';">
-        <span class="note" id="ahkKeyNote">F6</span>
+        <span class="note" id="ahkKeyNote">^u</span>
       </div>
       <div class="field">
         <label>Fill-here Keybind</label>
         <input type="text" id="hereHotkey" readonly title="Click, then press any key or combo"
           style="cursor:pointer;text-align:center;color:#66ccff;font-weight:bold;"
           onclick="this.focus();this.value='Press any key...';this.style.color='var(--muted)';">
-        <span class="note" id="ahkHereKeyNote">F9</span>
+        <span class="note" id="ahkHereKeyNote">^j</span>
       </div>
       <p style="font-size:0.75rem;color:var(--accent);margin-top:8px;">
         <strong>Both boxes are rebindable to ANY key.</strong> Click a box and press whatever key (or combo) you want. It saves immediately.
@@ -426,13 +426,14 @@
 
   <aside>
     <section>
-      <h2>KEYSTROKE PREVIEW <span class="hint" id="previewHint">on F6</span></h2>
+      <h2>KEYSTROKE PREVIEW <span class="hint" id="previewHint">on Ctrl+U</span></h2>
       <div class="preview" id="preview"></div>
       <div class="actions">
         <button id="downloadAllBtn" style="background:var(--accent);font-size:0.95rem;">&#x2193; DOWNLOAD ALL (AHK + both Macros)</button>
         <button id="downloadMacBtn" class="secondary">Full-case Macro (.mac)</button>
         <button id="downloadHereMacBtn" class="secondary">Fill-here Macro (.mac)</button>
         <button id="downloadBtn" class="secondary">AHK Script only (.ahk)</button>
+        <button id="downloadTestBtn" class="secondary" title="Downloads a tiny AHK script that ONLY tests whether your hotkey fires — no Quick3270, no macros. Use this first if nothing happens when you press the keybind.">&#x1F50D; Download Hotkey Test Script</button>
         <button class="secondary" id="resetBtn">Reset All Fields</button>
       </div>
       <div class="status" id="status">Auto-saved to your browser</div>
@@ -564,7 +565,11 @@
         <ul style="padding-left:22px;color:var(--text);line-height:2.2;">
           <li><strong>"Cannot connect to Quick3270"</strong><br><span style="color:var(--muted);">Make sure Quick3270 is open AND connected to the mainframe before pressing the keybind. The script can't fill fields if Quick3270 isn't running.</span></li>
           <li><strong>Nothing happens when I press the keybind</strong><br><span style="color:var(--muted);">Look for the green <strong>H</strong> icon in your system tray (bottom-right by the clock). If it's not there, double-click the .ahk file again. If Windows asks how to open it, pick AutoHotkey.</span></li>
-          <li><strong>I see the green H but the keybind still does nothing</strong><br><span style="color:var(--muted);">Try right-clicking the green H &rarr; Exit, then double-click the .ahk file again. Some keybinds (like plain F6) might conflict with Quick3270 &mdash; try a different combo like Ctrl+F6.</span></li>
+          <li><strong>I see the green H but the keybind still does nothing</strong><br><span style="color:var(--muted);">
+            <strong>Plain F-keys (F1&ndash;F12) conflict with Quick3270</strong> &mdash; those are PF keys that the terminal intercepts before AHK ever sees them. Use a modifier combo instead (Ctrl+U, Ctrl+J, Alt+G, etc.). The default is already Ctrl+U.<br>
+            To diagnose: click <strong>&#x1F50D; Download Hotkey Test Script</strong> above and run it. If pressing your keybind STILL does nothing (no beep, no popup), the keystroke is being captured by another program.<br>
+            You can also check <code>%APPDATA%\UADRCI\debug.txt</code> for a timestamped log of every hotkey press and what happened.
+          </span></li>
           <li><strong>The fields fill in the wrong spot</strong><br><span style="color:var(--muted);">The row/column numbers might be off. On this page, open the "Advanced" section and update the coordinates. To find them: in Quick3270, click a field and look at the bottom-left of the window &mdash; it shows the row and column numbers.</span></li>
           <li><strong>I changed values but it's still using the old ones</strong><br><span style="color:var(--muted);">You need to download a NEW .ahk script every time you change values on this page. Click the green button again, then double-click the new file (it replaces the old script automatically).</span></li>
           <li><strong>AutoHotkey doesn't work at all on my computer</strong><br><span style="color:var(--muted);">Try the Quick3270 native macro instead &mdash; it doesn't need AutoHotkey. In Quick3270 go to <strong>Tools &rarr; Macros &rarr; New Macro</strong>, paste the code from <strong>uadrci.mac</strong>, and save. Then run it from <strong>Tools &rarr; Macros &rarr; Run</strong>. It uses popup boxes instead of auto-filling, but it still saves time.</span></li>
@@ -599,8 +604,8 @@ const $ = id => document.getElementById(id);
 // =====================================================================
 // KEY CAPTURE — press any key combo to set the hotkey
 // =====================================================================
-let currentHotkey     = { ahk: 'F6', display: 'F6' };
-let currentHereHotkey = { ahk: 'F9', display: 'F9' };
+let currentHotkey     = { ahk: '^u', display: 'Ctrl+U' };
+let currentHereHotkey = { ahk: '^j', display: 'Ctrl+J' };
 
 // Key name maps
 const AHK_KEY_MAP = {
@@ -663,7 +668,7 @@ function toggleArmed() {
   const bar = $('armedBar');
   const label = $('armedLabel');
   const hint = $('armedHint');
-  const hkDisplay = currentHotkey.display || 'F6';
+  const hkDisplay = currentHotkey.display || '^u';
 
   if (isArmed) {
     bar.className = 'armed-bar on';
@@ -835,8 +840,8 @@ function hotkeyLabel(hk) {
 
 function updatePreview() {
   const cfg = getConfig();
-  const hk = cfg.hotkeyDisplay || hotkeyLabel(cfg.hotkey || 'F6');
-  const hereHk = cfg.hereHotkeyDisplay || hotkeyLabel(cfg.hereHotkey || 'F9');
+  const hk = cfg.hotkeyDisplay || hotkeyLabel(cfg.hotkey || '^u');
+  const hereHk = cfg.hereHotkeyDisplay || hotkeyLabel(cfg.hereHotkey || '^j');
   const lines = [];
   lines.push('; ' + hk + ' = fill ALL fields at once');
   lines.push('; ' + hereHk + ' = fill only the field your cursor is on');
@@ -893,7 +898,7 @@ function buildAhkScript() {
     body = '        MsgBox("No values configured. Go to the config page and fill in your values, then download a new script.", "UADRCI", "Icon!")\n        return\n';
   }
 
-  const hk = cfg.hotkey || 'F6';
+  const hk = cfg.hotkey || '^u';
   const hkName = cfg.hotkeyDisplay || hotkeyLabel(hk);
 
   return `; =========================================================================
@@ -1559,9 +1564,9 @@ matchCode +
 function buildOrchestratorAhk() {
   const cfg = getConfig();
   const esc = s => s.replace(/`/g, '``').replace(/"/g, '""');
-  const hk = cfg.hotkey || 'F6';
+  const hk = cfg.hotkey || '^u';
   const hkName = cfg.hotkeyDisplay || hotkeyLabel(hk);
-  const hereHk = cfg.hereHotkey || 'F9';
+  const hereHk = cfg.hereHotkey || '^j';
   const hereHkName = cfg.hereHotkeyDisplay || hotkeyLabel(hereHk);
 
   // Build the INI content lines
@@ -1599,6 +1604,7 @@ function buildOrchestratorAhk() {
 
 #Requires AutoHotkey v2.0
 #SingleInstance Force
+#UseHook true   ; force low-level keyboard hook so AHK intercepts keys before Quick3270
 
 ; --- Configuration ---
 global macroHotkey     := "^{F8}"    ; Ctrl+F8  triggers the full-case bridge macro
@@ -1626,6 +1632,14 @@ global firstPress := true
 
 ; Create data directory
 DirCreate(iniDir)
+
+; Debug log — writes timestamped lines to %APPDATA%\\UADRCI\\debug.txt
+DebugLog(msg) {
+    global iniDir
+    try FileAppend(FormatTime(, "HH:mm:ss") . " | " . msg . "\`n", iniDir . "\\debug.txt")
+}
+
+DebugLog("=== UADRCI STARTED === AHK " . A_AhkVersion . " | Admin: " . (A_IsAdmin ? "YES" : "NO"))
 
 ; Load case list
 LoadCaseList()
@@ -1758,6 +1772,8 @@ ${hk}::
     global currentCase, totalCases, caseList, processedCount, donePath, completedPath, macroHotkey, q3hwnd
     global lastSuccessTime, lastSuccessCase, REPEAT_WINDOW_MS, firstPress
 
+    DebugLog("HOTKEY ${hkName} pressed | case " . currentCase . "/" . totalCases)
+
     ; FIRST-PRESS DIAGNOSTIC: loud confirmation that the hotkey actually fired.
     ; (Only shows on the first press after the script starts, so it's not annoying.)
     if (firstPress) {
@@ -1794,12 +1810,14 @@ ${hk}::
 
     ; Write INI file for the bridge macro to read
     WriteINI(caseNum)
+    DebugLog("INI written for case: " . caseNum)
 
     ; Delete old done signal
     try FileDelete(donePath)
 
     ; Find and activate Quick3270
     if !FindQuick3270() {
+        DebugLog("ERROR: Quick3270 window not found")
         SoundBeep(300, 300)
         MsgBox(
             "Quick3270 window not found!" . Chr(10) . Chr(10)
@@ -1814,9 +1832,11 @@ ${hk}::
         return
     }
 
+    DebugLog("Quick3270 found: " . q3title . " (hwnd " . q3hwnd . ")")
     WinActivate("ahk_id " . q3hwnd)
     Sleep(300)
     Send(macroHotkey)
+    DebugLog("Sent " . macroHotkey . " to Quick3270, waiting for done.txt...")
 
     ; Wait for bridge macro to finish (watches for done.txt)
     waited := 0
@@ -1830,6 +1850,7 @@ ${hk}::
 
     if FileExist(donePath) {
         try FileDelete(donePath)
+        DebugLog("SUCCESS: done.txt received for case " . caseNum)
         ; Remember this successful run so pressing again within window will repeat it
         lastSuccessTime := A_TickCount
         lastSuccessCase := caseNum
@@ -1850,6 +1871,7 @@ ${hk}::
             TrayTip("UADRCI", "Case done! " . processedCount . " processed. Next: " . currentCase . "/" . totalCases . Chr(10) . "Press ${hkName} again within 3s to REPEAT this case.", 2)
         }
     } else {
+        DebugLog("TIMEOUT: bridge macro did not write done.txt within 10s")
         SoundBeep(250, 400)
         MsgBox(
             "Bridge macro did NOT finish within 10 seconds." . Chr(10) . Chr(10)
@@ -1989,6 +2011,29 @@ function downloadFile(content, filename) {
   URL.revokeObjectURL(url);
 }
 
+function buildTestAhk() {
+  const hk = currentHotkey.ahk || '^u';
+  const hkName = currentHotkey.display || 'Ctrl+U';
+  return (
+    '; UADRCI Hotkey Test Script\n' +
+    '; Run this script first to confirm AHK is receiving your keypress.\n' +
+    '; If pressing ' + hkName + ' does NOT produce a beep + popup, your hotkey\n' +
+    '; is being captured by another program (like Quick3270) before AHK sees it.\n' +
+    '#Requires AutoHotkey v2.0\n' +
+    '#SingleInstance Force\n' +
+    '#UseHook true\n' +
+    '\n' +
+    'SoundBeep(880, 150)\n' +
+    'MsgBox("Test script loaded. Press ' + hkName + ' to verify the hotkey fires.", "UADRCI - Hotkey Test")\n' +
+    '\n' +
+    hk + '::\n' +
+    '{\n' +
+    '    SoundBeep(1500, 200)\n' +
+    '    MsgBox("' + hkName + ' fired!\\n\\nAHK is receiving your keypress correctly.\\nYou can close this test script and use the real one.", "UADRCI - Hotkey Test OK")\n' +
+    '}\n'
+  );
+}
+
 function downloadAll() {
   // Download orchestrator AHK
   downloadFile(buildOrchestratorAhk(), 'uadrci_orchestrator.ahk');
@@ -2020,6 +2065,7 @@ $('downloadAllBtn').addEventListener('click', downloadAll);
 $('downloadMacBtn').addEventListener('click', () => { downloadFile(buildBridgeMac(), 'uadrci_bridge.mac'); flashStatus('Downloaded full-case bridge macro'); });
 $('downloadHereMacBtn').addEventListener('click', () => { downloadFile(buildHereBridgeMac(), 'uadrci_bridge_here.mac'); flashStatus('Downloaded fill-here bridge macro'); });
 $('downloadBtn').addEventListener('click', downloadAhk);
+$('downloadTestBtn').addEventListener('click', () => { downloadFile(buildTestAhk(), 'uadrci_test.ahk'); flashStatus('Downloaded hotkey test script — run it first to confirm your keybind works'); });
 $('resetBtn').addEventListener('click', resetConfig);
 
 // Templates
