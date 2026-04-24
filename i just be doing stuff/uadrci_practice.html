@@ -527,7 +527,7 @@
 <script>
 // Sample cases for practice
 const SAMPLE_CASES = {
-  '12345AB': {
+  'amfo33e': {
     name: 'RODRIGUEZ, MARIA L',
     judge: 'HUBBART, GERALD',
     judgeCode: '00023',
@@ -536,7 +536,7 @@ const SAMPLE_CASES = {
     hearDate: '04092026',
     hearTime: '1330',
   },
-  '67890CD': {
+  'am1c6de': {
     name: 'JOHNSON, MARCUS T',
     judge: 'FERNANDEZ, ROSA',
     judgeCode: '00047',
@@ -545,7 +545,7 @@ const SAMPLE_CASES = {
     hearDate: '04102026',
     hearTime: '0900',
   },
-  '11223EF': {
+  'akmo6we': {
     name: 'SMITH, DAVID A',
     judge: 'CHANG, WILLIAM',
     judgeCode: '00012',
@@ -645,9 +645,9 @@ function submitLookup() {
   } else {
     document.getElementById('d_name').textContent = '';
     document.getElementById('d_judge').textContent = '';
-    document.getElementById('msgArea').textContent = 'CASE NOT FOUND - TRY: 12345AB, 67890CD, or 11223EF';
+    document.getElementById('msgArea').textContent = 'CASE NOT FOUND - TRY: amfo33e, am1c6de, or akmo6we';
     caseLoaded = false;
-    toast('Case not found. Try: 12345AB, 67890CD, 11223EF', true);
+    toast('Case not found. Try: amfo33e, am1c6de, akmo6we', true);
   }
 }
 
@@ -761,7 +761,7 @@ const CONFIG_KEY = 'uadrci-config-v1';
 // Default test values if no config page has been saved yet
 const DEFAULT_AUTOFILL = {
   values: {
-    caseNum: '12345AB',
+    caseNum: 'amfo33e',
     hearDate: '04092026',
     hearTime: '1330',
     caseAction: 'D',

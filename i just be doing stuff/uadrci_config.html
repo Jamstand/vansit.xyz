@@ -191,6 +191,7 @@
     min-height: 1em;
   }
   .status.ok { color: var(--accent); }
+  .status.warn { color: #ff4444; }
 
   /* Armed/Off indicator */
   .armed-bar {
@@ -234,6 +235,14 @@
     0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 170, 0, 0.6); }
     50% { opacity: 0.7; box-shadow: 0 0 12px 4px rgba(255, 170, 0, 0.3); }
   }
+  @keyframes smileyWiggle {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    20% { transform: translateX(6px) rotate(12deg); }
+    40% { transform: translateX(-4px) rotate(-8deg); }
+    60% { transform: translateX(5px) rotate(6deg); }
+    80% { transform: translateX(-3px) rotate(-4deg); }
+  }
+  #joshSmiley { animation: smileyWiggle 1.5s ease-in-out infinite; cursor: default; }
   .armed-bar .hint-text {
     font-size: 0.7rem;
     font-weight: normal;
@@ -273,7 +282,7 @@
       <li>Edit the fields below (they auto-save in your browser)</li>
       <li>Click <strong>Download AHK Script</strong> &mdash; requires <a href="https://www.autohotkey.com/" target="_blank" rel="noopener">AutoHotkey v2</a></li>
       <li>Double-click the downloaded <code>.ahk</code> file to load it</li>
-      <li>In Quick3270, press your keybind to ARM, then type the 7-char case number — it autofills the rest</li>
+      <li>In Quick3270, type the case number, then press your keybind — it fills in all the other fields</li>
     </ol>
   </div>
 </header>
@@ -286,16 +295,26 @@
 <div class="container">
   <main>
     <section>
-      <h2>HOTKEY <span class="hint">Toggle on/off</span></h2>
+      <h2>HOTKEYS <span class="hint">click any box, press any key</span></h2>
       <div class="field">
-        <label>Keybind</label>
-        <input type="text" id="hotkey" readonly placeholder="Click here, then press any key combo"
+        <label>Fill-all Keybind</label>
+        <input type="text" id="hotkey" readonly title="Click, then press any key or combo"
           style="cursor:pointer;text-align:center;color:#ffaa00;font-weight:bold;"
-          onclick="this.focus();this.value='Press a key...';this.style.color='var(--muted)';">
-        <span class="note" id="ahkKeyNote">F6</span>
+          onclick="this.focus();this.value='Press any key...';this.style.color='var(--muted)';">
+        <span class="note" id="ahkKeyNote">^u</span>
       </div>
+      <div class="field">
+        <label>Fill-here Keybind</label>
+        <input type="text" id="hereHotkey" readonly title="Click, then press any key or combo"
+          style="cursor:pointer;text-align:center;color:#66ccff;font-weight:bold;"
+          onclick="this.focus();this.value='Press any key...';this.style.color='var(--muted)';">
+        <span class="note" id="ahkHereKeyNote">^j</span>
+      </div>
+      <p style="font-size:0.75rem;color:var(--accent);margin-top:8px;">
+        <strong>Both boxes are rebindable to ANY key.</strong> Click a box and press whatever key (or combo) you want. It saves immediately.
+      </p>
       <p style="font-size:0.75rem;color:var(--muted);margin-top:8px;">
-        Click the box and <strong>hold modifiers + press a key</strong>. Examples:
+        Examples you can set either box to:
       </p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:0.72rem;color:var(--muted);margin-top:6px;font-family:'IBM Plex Mono',monospace;">
         <span><span style="color:#ffaa00;">Ctrl</span> — just Ctrl alone</span>
@@ -308,9 +327,10 @@
         <span><span style="color:#ffaa00;">Shift</span> — just Shift alone</span>
       </div>
       <p style="font-size:0.72rem;color:var(--muted);margin-top:8px;">
-        First press = <strong style="color:var(--accent);">ARM</strong> (watching).
-        Type 7-char case number = <strong style="color:var(--accent);">autofill triggers</strong>.
-        Press again = <strong style="color:#ff4444;">OFF</strong>.
+        <strong style="color:var(--accent);">Fill-all</strong>: type your case number first, then press the fill-all key to fill every field. Press again for the next case.
+      </p>
+      <p style="font-size:0.72rem;color:var(--muted);margin-top:4px;">
+        <strong style="color:#66ccff;">Fill-here</strong>: click any one field in Quick3270, press the fill-here key, and only that field fills. Use this when you only need to update one thing.
       </p>
     </section>
 
@@ -318,7 +338,7 @@
       <h2>LOOKUP PHASE <span class="hint">Enter submits</span></h2>
       <div class="field">
         <label>Case Number</label>
-        <input type="text" id="v_caseNum" placeholder="e.g. 12345AB">
+        <input type="text" id="v_caseNum" placeholder="e.g. amfo33e">
         <span class="note">r4 c8</span>
       </div>
       <div class="field">
@@ -406,16 +426,86 @@
 
   <aside>
     <section>
-      <h2>KEYSTROKE PREVIEW <span class="hint" id="previewHint">on F6</span></h2>
+      <h2>KEYSTROKE PREVIEW <span class="hint" id="previewHint">on Ctrl+U</span></h2>
       <div class="preview" id="preview"></div>
       <div class="actions">
-        <button id="downloadBtn">&#x2193; DOWNLOAD AHK SCRIPT</button>
-        <button class="secondary" id="copyBtn">Copy AHK to Clipboard</button>
+        <button id="downloadAllBtn" style="background:var(--accent);font-size:0.95rem;">&#x2193; DOWNLOAD ALL (AHK + both Macros)</button>
+        <button id="downloadMacBtn" class="secondary">Full-case Macro (.mac)</button>
+        <button id="downloadHereMacBtn" class="secondary">Fill-here Macro (.mac)</button>
+        <button id="downloadBtn" class="secondary">AHK Script only (.ahk)</button>
+        <button id="downloadSimpleBtn" class="secondary" style="background:#2b4a2b;border-color:#4caf50;" title="Simple mode: one hotkey fills all fields and presses F12. Generates uadrci_simple.ahk + uadrci_simple.mac. Edit DATA_MODE at top of the .ahk to switch between hardcoded / prompt / file.">&#x26A1; SIMPLE (one-button + F12)</button>
+        <button id="downloadTestBtn" class="secondary" title="Downloads a tiny AHK script that ONLY tests whether your hotkey fires — no Quick3270, no macros. Use this first if nothing happens when you press the keybind.">&#x1F50D; Download Hotkey Test Script</button>
         <button class="secondary" id="resetBtn">Reset All Fields</button>
       </div>
       <div class="status" id="status">Auto-saved to your browser</div>
     </section>
   </aside>
+</div>
+
+<!-- TEMPLATES -->
+<div style="max-width:1100px;margin:20px auto 0;">
+  <section>
+    <h2>TEMPLATES <span class="hint">Save &amp; load presets</span></h2>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
+      <input type="text" id="templateName" placeholder="Template name (e.g. Guilty Standard)" style="flex:1;">
+      <button id="saveTemplateBtn" style="white-space:nowrap;">Save Current</button>
+    </div>
+    <div id="templateList" style="font-size:0.82rem;color:var(--muted);"></div>
+    <p style="font-size:0.72rem;color:var(--muted);margin-top:10px;">
+      Save different configurations for different case types. Click a template name to load it.
+      All field values + checkboxes are saved. Coordinates stay the same.
+    </p>
+  </section>
+</div>
+
+<!-- CASE LIST -->
+<div style="max-width:1100px;margin:20px auto 0;">
+  <section>
+    <h2>CASE LIST <span class="hint">Batch processing</span></h2>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+      <span style="font-size:0.85rem;color:var(--accent);font-family:'IBM Plex Mono',monospace;font-weight:bold;" id="caseProgress">0 / 0</span>
+      <span style="font-size:0.75rem;color:var(--muted);">completed</span>
+      <div style="flex:1;height:8px;background:#1a1a1a;border-radius:4px;overflow:hidden;">
+        <div id="caseProgressBar" style="width:0%;height:100%;background:var(--accent);border-radius:4px;transition:width 0.3s;"></div>
+      </div>
+      <button class="secondary" id="resetProgressBtn" style="font-size:0.75rem;padding:5px 10px;">Reset Progress</button>
+    </div>
+
+    <!-- Add cases input -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <input type="text" id="addCaseInput" placeholder="Type a case number and press Enter" style="flex:1;">
+      <button class="secondary" id="addCaseBtn" style="white-space:nowrap;font-size:0.78rem;padding:6px 14px;">+ Add</button>
+      <button class="secondary" id="bulkAddBtn" style="white-space:nowrap;font-size:0.78rem;padding:6px 14px;">Paste List</button>
+    </div>
+
+    <!-- Case tracker list -->
+    <div id="caseTracker" style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:4px;background:var(--input-bg);"></div>
+
+    <!-- Empty state -->
+    <div id="caseEmpty" style="padding:30px 20px;text-align:center;color:var(--muted);font-size:0.82rem;border:1px dashed var(--border);border-radius:4px;">
+      No cases yet. Type a case number above, or click <strong>Paste List</strong> to add multiple at once.
+    </div>
+
+    <!-- Bulk paste modal -->
+    <div id="bulkModal" style="display:none;margin-top:12px;">
+      <textarea id="bulkArea" rows="6" placeholder="Paste case numbers here, one per line:&#10;amfo33e&#10;am1c6de&#10;akmo6we"
+        style="width:100%;background:#000;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:0.85rem;resize:vertical;"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button id="bulkConfirmBtn" style="font-size:0.78rem;padding:6px 14px;">Add All</button>
+        <button class="secondary" id="bulkCancelBtn" style="font-size:0.78rem;padding:6px 14px;">Cancel</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="secondary" id="importCaseBtn" style="font-size:0.72rem;padding:4px 10px;">Import from file</button>
+      <button class="secondary" id="clearCaseBtn" style="font-size:0.72rem;padding:4px 10px;">Clear all</button>
+      <button class="secondary" id="syncProgressBtn" style="font-size:0.72rem;padding:4px 10px;">Sync from AHK</button>
+      <span style="flex:1;"></span>
+      <span id="caseCount" style="font-size:0.72rem;color:var(--muted);align-self:center;"></span>
+    </div>
+    <input type="file" id="caseFileInput" accept=".txt,.csv" style="display:none;">
+    <input type="file" id="syncFileInput" accept=".txt" style="display:none;">
+  </section>
 </div>
 
 <!-- SETUP GUIDE -->
@@ -424,55 +514,69 @@
     <h2>SETUP GUIDE <span class="hint">Step by step</span></h2>
     <div style="font-size:0.82rem;line-height:1.8;">
 
-      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 1: FILL IN YOUR VALUES (this page)</p>
-      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
-        <li>Set your <strong>keybind</strong> above (click the box, press your combo like Ctrl+Shift+F5)</li>
-        <li>Fill in the <strong>Lookup</strong> fields you use every time (hearing date, time, type)</li>
-        <li>Fill in the <strong>Disposition</strong> fields (plea, disposition, fine, cost, etc.)</li>
-        <li>Check the boxes if you want it to auto-press Enter / PF12</li>
-        <li>Everything saves automatically in your browser</li>
-      </ol>
+      <div style="background:#0d1117;border:2px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:20px;">
+        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 1 &mdash; Configure Your Values</p>
+        <ol style="padding-left:22px;margin-bottom:0;color:var(--text);line-height:2;">
+          <li><strong>Pick your keybind</strong> above (F6, Ctrl+F5, whatever you prefer)</li>
+          <li><strong>Fill in the Lookup + Disposition fields</strong> with the values you use most</li>
+          <li>Optionally <strong>save as a template</strong> (e.g. "Guilty Standard") so you can switch between case types</li>
+          <li>Paste your <strong>case numbers</strong> into the Case List section for batch tracking</li>
+        </ol>
+      </div>
 
-      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 2: INSTALL AUTOHOTKEY (one time only)</p>
-      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
-        <li>Go to <strong>autohotkey.com</strong></li>
-        <li>Click <strong>Download</strong> &mdash; get <strong>AutoHotkey v2</strong> (not v1)</li>
-        <li>Run the installer, click Next through everything</li>
-        <li>That's it &mdash; no restart needed</li>
-      </ol>
+      <div style="background:#0d1117;border:2px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:20px;">
+        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 2 &mdash; Install AutoHotkey v2 (One Time Only)</p>
+        <ol style="padding-left:22px;margin-bottom:0;color:var(--text);line-height:2;">
+          <li>Go to <strong>autohotkey.com</strong> and download <strong>AutoHotkey v2</strong> (not v1)</li>
+          <li>Run the installer &mdash; click Next through everything, then Finish</li>
+        </ol>
+      </div>
 
-      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 3: DOWNLOAD YOUR SCRIPT</p>
-      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
-        <li>Click the green <strong>DOWNLOAD AHK SCRIPT</strong> button on this page</li>
-        <li>Save the <code>uadrci_autofill.ahk</code> file somewhere (Desktop is fine)</li>
-        <li>If you change any values on this page, download a new script to pick up the changes</li>
-      </ol>
+      <div style="background:#0d1117;border:2px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:20px;">
+        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 3 &mdash; Download &amp; Set Up</p>
+        <ol style="padding-left:22px;margin-bottom:0;color:var(--text);line-height:2;">
+          <li>Click <strong>DOWNLOAD ALL</strong> &mdash; you'll get 2-3 files:
+            <ul style="margin:4px 0;">
+              <li><strong>uadrci_orchestrator.ahk</strong> &mdash; the brain (runs on your desktop)</li>
+              <li><strong>uadrci_bridge.mac</strong> &mdash; the hands (runs inside Quick3270)</li>
+              <li><strong>case_list.txt</strong> &mdash; your case numbers (if you entered any)</li>
+            </ul>
+          </li>
+          <li>Open <strong>uadrci_bridge.mac</strong> in Notepad &rarr; <strong>Ctrl+A, Ctrl+C</strong></li>
+          <li>In Quick3270: <strong>Tools &rarr; Macros &rarr; New Macro</strong> &rarr; <strong>Ctrl+V</strong> &rarr; Save as <strong>uadrci_bridge</strong></li>
+          <li><strong>Assign a hotkey</strong>: Tools &rarr; Customize &rarr; Keyboard &rarr; find your macro &rarr; assign <strong>Ctrl+F8</strong></li>
+          <li>Copy <strong>case_list.txt</strong> to <strong>%APPDATA%\UADRCI\</strong> folder (the AHK creates this folder automatically)</li>
+        </ol>
+      </div>
 
-      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 4: RUN THE SCRIPT</p>
-      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
-        <li><strong>Double-click</strong> the <code>.ahk</code> file &mdash; a green <strong>H</strong> icon appears in your system tray (bottom-right near the clock)</li>
-        <li>The script is now running in the background</li>
-        <li>To stop it: right-click the <strong>H</strong> tray icon &rarr; <strong>Exit</strong>, or press <strong>Ctrl+Shift+Q</strong></li>
-      </ol>
+      <div style="background:#0d1117;border:2px solid var(--accent);border-radius:8px;padding:20px 24px;margin-bottom:20px;">
+        <p style="color:var(--accent);font-size:1rem;font-weight:bold;margin-bottom:12px;">STEP 4 &mdash; Run It!</p>
+        <ol style="padding-left:22px;margin-bottom:0;color:var(--text);line-height:2;">
+          <li><strong>Double-click</strong> <strong>uadrci_orchestrator.ahk</strong> &mdash; a tooltip shows "Case 1/45" (or however many you loaded)</li>
+          <li>Go to the <strong>UADRCI screen</strong> in Quick3270</li>
+          <li>Press your <strong>keybind</strong> &mdash; the orchestrator writes the case data, triggers the bridge macro, and all fields fill in</li>
+          <li>It <strong>auto-advances</strong> to the next case. Press the keybind again for the next one</li>
+          <li>Use <strong>F7</strong> to skip a case, <strong>F5</strong> to go back, <strong>Ctrl+Shift+S</strong> for stats</li>
+        </ol>
+        <p style="margin-top:10px;color:var(--muted);font-size:0.78rem;">The orchestrator <strong>remembers your progress</strong> even if you close and reopen it.</p>
+      </div>
 
-      <p style="color:var(--accent);font-weight:bold;margin-bottom:8px;">STEP 5: USE IT IN QUICK3270</p>
-      <ol style="padding-left:22px;margin-bottom:16px;color:var(--text);">
-        <li>Open Quick3270 and navigate to the <strong>UADRCI</strong> screen</li>
-        <li>Press your <strong>keybind</strong> &mdash; tray says <strong>"ARMED"</strong></li>
-        <li>Click into the <strong>CASE</strong> field and type the <strong>7-character case number</strong></li>
-        <li>The moment you type the 7th character, the script <strong>automatically fills</strong> hearing date, time, type, plea, disposition, fine, cost &mdash; everything you configured</li>
-        <li>Review the screen, then press <strong>PF12</strong> to update (or the script presses it if you checked that box)</li>
-        <li>The script <strong>auto-disarms</strong> after filling &mdash; press your keybind again for the next case</li>
-      </ol>
-
-      <p style="color:var(--warn);font-weight:bold;margin-bottom:8px;">TROUBLESHOOTING</p>
-      <ul style="padding-left:22px;color:var(--muted);">
-        <li><strong>"Cannot connect to Quick3270"</strong> &mdash; make sure Quick3270 is open and connected before pressing the keybind</li>
-        <li><strong>Nothing happens when I press the keybind</strong> &mdash; check the system tray for the green H icon. If it's not there, double-click the .ahk file again</li>
-        <li><strong>Fields fill in the wrong spot</strong> &mdash; open the Advanced section on this page and update the row/col coordinates (click each field in Quick3270 and read the bottom-left status bar)</li>
-        <li><strong>Changed values but not working</strong> &mdash; you need to download a NEW .ahk script after changing values, then double-click it (it replaces the old one automatically)</li>
-        <li style="margin-top:10px;color:var(--warn);"><strong>Last resort</strong> &mdash; contact Josh</li>
-      </ul>
+      <div style="background:#1a1111;border:2px solid #ff6644;border-radius:8px;padding:20px 24px;">
+        <p style="color:#ff6644;font-size:1rem;font-weight:bold;margin-bottom:12px;">TROUBLESHOOTING</p>
+        <ul style="padding-left:22px;color:var(--text);line-height:2.2;">
+          <li><strong>"Cannot connect to Quick3270"</strong><br><span style="color:var(--muted);">Make sure Quick3270 is open AND connected to the mainframe before pressing the keybind. The script can't fill fields if Quick3270 isn't running.</span></li>
+          <li><strong>Nothing happens when I press the keybind</strong><br><span style="color:var(--muted);">Look for the green <strong>H</strong> icon in your system tray (bottom-right by the clock). If it's not there, double-click the .ahk file again. If Windows asks how to open it, pick AutoHotkey.</span></li>
+          <li><strong>I see the green H but the keybind still does nothing</strong><br><span style="color:var(--muted);">
+            <strong>Plain F-keys (F1&ndash;F12) conflict with Quick3270</strong> &mdash; those are PF keys that the terminal intercepts before AHK ever sees them. Use a modifier combo instead (Ctrl+U, Ctrl+J, Alt+G, etc.). The default is already Ctrl+U.<br>
+            To diagnose: click <strong>&#x1F50D; Download Hotkey Test Script</strong> above and run it. If pressing your keybind STILL does nothing (no beep, no popup), the keystroke is being captured by another program.<br>
+            You can also check <code>%APPDATA%\UADRCI\debug.txt</code> for a timestamped log of every hotkey press and what happened.
+          </span></li>
+          <li><strong>The fields fill in the wrong spot</strong><br><span style="color:var(--muted);">The row/column numbers might be off. On this page, open the "Advanced" section and update the coordinates. To find them: in Quick3270, click a field and look at the bottom-left of the window &mdash; it shows the row and column numbers.</span></li>
+          <li><strong>I changed values but it's still using the old ones</strong><br><span style="color:var(--muted);">You need to download a NEW .ahk script every time you change values on this page. Click the green button again, then double-click the new file (it replaces the old script automatically).</span></li>
+          <li><strong>AutoHotkey doesn't work at all on my computer</strong><br><span style="color:var(--muted);">Try the Quick3270 native macro instead &mdash; it doesn't need AutoHotkey. In Quick3270 go to <strong>Tools &rarr; Macros &rarr; New Macro</strong>, paste the code from <strong>uadrci.mac</strong>, and save. Then run it from <strong>Tools &rarr; Macros &rarr; Run</strong>. It uses popup boxes instead of auto-filling, but it still saves time.</span></li>
+          <li style="margin-top:12px;"><strong style="color:var(--warn);">Last resort</strong> &mdash; <span style="color:var(--warn);">contact Josh</span> <span id="joshSmiley" style="display:inline-block;font-size:1.2rem;">&#x263A;</span></li>
+        </ul>
+      </div>
     </div>
   </section>
 </div>
@@ -501,7 +605,8 @@ const $ = id => document.getElementById(id);
 // =====================================================================
 // KEY CAPTURE — press any key combo to set the hotkey
 // =====================================================================
-let currentHotkey = { ahk: 'F6', display: 'F6' };
+let currentHotkey     = { ahk: '^u', display: 'Ctrl+U' };
+let currentHereHotkey = { ahk: '^j', display: 'Ctrl+J' };
 
 // Key name maps
 const AHK_KEY_MAP = {
@@ -564,7 +669,7 @@ function toggleArmed() {
   const bar = $('armedBar');
   const label = $('armedLabel');
   const hint = $('armedHint');
-  const hkDisplay = currentHotkey.display || 'F6';
+  const hkDisplay = currentHotkey.display || '^u';
 
   if (isArmed) {
     bar.className = 'armed-bar on';
@@ -579,8 +684,13 @@ function toggleArmed() {
 
 function initHotkeyCapture() {
   const input = $('hotkey');
+  const hereInput = $('hereHotkey');
 
-  // Capture keybind when setting it in the input box
+  // Show current values immediately so it's obvious both are customizable
+  input.value     = currentHotkey.display;
+  hereInput.value = currentHereHotkey.display;
+
+  // Capture fill-all keybind
   input.addEventListener('keydown', e => {
     e.preventDefault();
     e.stopPropagation();
@@ -595,10 +705,25 @@ function initHotkeyCapture() {
     input.blur();
   });
 
+  // Capture fill-here keybind
+  hereInput.addEventListener('keydown', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    const result = keyToAhk(e);
+    if (!result) return;
+
+    currentHereHotkey = result;
+    hereInput.value = result.display;
+    hereInput.style.color = '#66ccff';
+    $('ahkHereKeyNote').textContent = result.ahk;
+    saveConfig();
+    hereInput.blur();
+  });
+
   // Global listener — toggle armed when keybind is pressed anywhere on page
   document.addEventListener('keydown', e => {
-    // Skip if user is setting the hotkey
-    if (document.activeElement === input) return;
+    // Skip if user is setting either hotkey
+    if (document.activeElement === input || document.activeElement === hereInput) return;
     // Skip if typing in a value field
     if (document.activeElement && document.activeElement.tagName === 'INPUT' && document.activeElement.id !== 'hotkey') {
       // Only intercept if it's NOT a regular character (allow typing in fields)
@@ -627,7 +752,7 @@ function getCoords(key) {
 }
 
 function getConfig() {
-  const cfg = { values: {}, coords: {}, hotkey: currentHotkey.ahk, hotkeyDisplay: currentHotkey.display, submitLookup: $('submitLookup').checked, submitDisposition: $('submitDisposition').checked };
+  const cfg = { values: {}, coords: {}, hotkey: currentHotkey.ahk, hotkeyDisplay: currentHotkey.display, hereHotkey: currentHereHotkey.ahk, hereHotkeyDisplay: currentHereHotkey.display, submitLookup: $('submitLookup').checked, submitDisposition: $('submitDisposition').checked };
   FIELDS.forEach(f => {
     cfg.values[f.key] = $('v_' + f.key).value.trim();
     cfg.coords[f.key] = getCoords(f.key);
@@ -659,6 +784,11 @@ function loadConfig() {
       $('hotkey').value = currentHotkey.display;
       $('ahkKeyNote').textContent = currentHotkey.ahk;
     }
+    if (cfg.hereHotkey) {
+      currentHereHotkey = { ahk: cfg.hereHotkey, display: cfg.hereHotkeyDisplay || cfg.hereHotkey };
+      $('hereHotkey').value = currentHereHotkey.display;
+      $('ahkHereKeyNote').textContent = currentHereHotkey.ahk;
+    }
   } catch (e) {}
 }
 
@@ -673,7 +803,7 @@ function resetConfig() {
   $('submitLookup').checked = true;
   $('submitDisposition').checked = false;
   updatePreview();
-  flashStatus('Reset to defaults');
+  flashStatus('Reset to defaults', 'warn');
 }
 
 function buildCoordsGrid() {
@@ -711,10 +841,12 @@ function hotkeyLabel(hk) {
 
 function updatePreview() {
   const cfg = getConfig();
-  const hk = cfg.hotkeyDisplay || hotkeyLabel(cfg.hotkey || 'F6');
+  const hk = cfg.hotkeyDisplay || hotkeyLabel(cfg.hotkey || '^u');
+  const hereHk = cfg.hereHotkeyDisplay || hotkeyLabel(cfg.hereHotkey || '^j');
   const lines = [];
-  lines.push('; ' + hk + ' = ARM (toggle ON/OFF)');
-  lines.push('; When armed, type 7-char case number to trigger:');
+  lines.push('; ' + hk + ' = fill ALL fields at once');
+  lines.push('; ' + hereHk + ' = fill only the field your cursor is on');
+  lines.push('; Type case number first, then press ' + hk + ':');
   lines.push('');
 
   let any = false;
@@ -750,12 +882,11 @@ function buildAhkScript() {
     if (filled.length === 0) return false;
     filled.forEach(k => {
       const c = cfg.coords[k];
-      body += '        sess.SetCursor(' + c.row + ', ' + c.col + ')\n';
-      body += '        sess.SendKeys("' + esc(cfg.values[k]) + '")\n';
+      body += '        FillField(sess, "' + esc(cfg.values[k]) + '", ' + c.row + ', ' + c.col + ')\n';
     });
     if (submit) {
-      body += '        sess.SendKeys("' + submitCode + '")\n';
-      body += '        sess.WaitHostQuiet(2000)\n';
+      body += '        PressKey(sess, "' + submitCode + '")\n';
+      body += '        Sleep(2000)\n';
     }
     body += '\n';
     return true;
@@ -765,104 +896,160 @@ function buildAhkScript() {
   append(DISPO_KEYS,  cfg.submitDisposition, '<PF12>');
 
   if (!body.trim()) {
-    body = '        MsgBox("No values configured. Edit uadrci_config.html and regenerate.", "UADRCI", "Icon!")\n        return\n';
+    body = '        MsgBox("No values configured. Go to the config page and fill in your values, then download a new script.", "UADRCI", "Icon!")\n        return\n';
   }
 
-  const hk = cfg.hotkey || 'F6';
+  const hk = cfg.hotkey || '^u';
   const hkName = cfg.hotkeyDisplay || hotkeyLabel(hk);
-  const caseCoord = cfg.coords.caseNum || {row: 4, col: 8};
 
   return `; =========================================================================
 ; UADRCI Autofill - Generated by UADRCI Macro Configurator
 ; =========================================================================
-; Hotkey:  ${hkName}  (toggle ON / OFF)
+; Hotkey:  ${hkName}
 ;
-; 1. Install AutoHotkey v2:  https://www.autohotkey.com/
-; 2. Double-click this file to load it (tray icon appears)
-; 3. In Quick3270, navigate to the UADRCI screen
-; 4. Press ${hkName} to ARM
-; 5. Type the 7-character case number — autofill triggers automatically
-; 6. Press ${hkName} again to turn OFF
+; HOW TO USE:
+;   1. Install AutoHotkey v2:  https://www.autohotkey.com/
+;   2. Double-click this file to load it (green H appears in system tray)
+;   3. In Quick3270, go to the UADRCI screen
+;   4. Type your case number in the CASE field (7 characters)
+;   5. Press ${hkName} — all other fields fill automatically
+;   6. Repeat for each case
 ;
-; Ctrl+Shift+Q  = quit this script
+;   Ctrl+Shift+Q = quit this script
 ; =========================================================================
 
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 
-armed := false
+; Auto-detected COM method (found on first use)
+global comMode := ""
 
-; --- ${hkName}: toggle autofill ON/OFF ---
-${hk}::
-{
-    global armed
+; Place text at a row/col position — auto-detects which Quick3270 COM method works
+FillField(sess, text, row, col) {
+    global comMode
 
-    if armed {
-        ; Turn OFF
-        armed := false
-        TrayTip("UADRCI", "Autofill OFF", 1)
-        TraySetIcon("Shell32.dll", 4)
+    ; If we already know which method works, use it
+    if (comMode = "A") {
+        sess.SetCursor(row, col)
+        sess.SendKeys(text)
+        return
+    }
+    if (comMode = "B") {
+        sess.Screen.SetCursor(row, col)
+        sess.Screen.SendKeys(text)
+        return
+    }
+    if (comMode = "C") {
+        sess.Screen.MoveTo(row, col)
+        sess.Screen.SendKeys(text)
+        return
+    }
+    if (comMode = "D") {
+        sess.Screen.PutString(text, row, col)
+        return
+    }
+    if (comMode = "E") {
+        sess.PutString(text, row, col)
+        return
+    }
+    if (comMode = "F") {
+        sess.Screen.Putstring(text, row, col)
         return
     }
 
-    ; Turn ON (ARM) — start watching for 7-char case number
-    armed := true
-    TrayTip("UADRCI", "ARMED - type case number (7 chars) to autofill", 1)
-    TraySetIcon("Shell32.dll", 78)
-
-    ; Connect to Quick3270
+    ; First call — try each method until one works
     try {
-        sess := ComObject("Quick3270.Application").ActiveSession
+        sess.SetCursor(row, col)
+        sess.SendKeys(text)
+        comMode := "A"
+        return
+    } catch {
+    }
+    try {
+        sess.Screen.SetCursor(row, col)
+        sess.Screen.SendKeys(text)
+        comMode := "B"
+        return
+    } catch {
+    }
+    try {
+        sess.Screen.MoveTo(row, col)
+        sess.Screen.SendKeys(text)
+        comMode := "C"
+        return
+    } catch {
+    }
+    try {
+        sess.Screen.PutString(text, row, col)
+        comMode := "D"
+        return
+    } catch {
+    }
+    try {
+        sess.PutString(text, row, col)
+        comMode := "E"
+        return
+    } catch {
+    }
+    try {
+        sess.Screen.Putstring(text, row, col)
+        comMode := "F"
+        return
     } catch as e {
-        MsgBox("Cannot connect to Quick3270." . Chr(10) . Chr(10) . "Is it running?" . Chr(10) . "Error: " . e.Message, "UADRCI", "Icon!")
-        armed := false
-        TraySetIcon("Shell32.dll", 4)
+        throw Error("No working method found to fill fields." . Chr(10) . "Quick3270 COM may not support external automation." . Chr(10) . "Try the native Quick3270 macro instead (Tools > Macros)." . Chr(10) . Chr(10) . "Last error: " . e.Message)
+    }
+}
+
+; Send a special key (Enter, PF12, etc.)
+PressKey(sess, key) {
+    try {
+        sess.SendKeys(key)
+    } catch {
+        try {
+            sess.Screen.SendKeys(key)
+        } catch as e {
+            throw Error("Cannot send key: " . key . Chr(10) . e.Message)
+        }
+    }
+}
+
+TrayTip("UADRCI Autofill", "Ready! Press ${hkName} in Quick3270 to fill fields.", 2)
+
+; --- ${hkName}: fill all configured fields ---
+${hk}::
+{
+    SoundBeep(1000, 200)  ; Beep so you know the keybind fired
+    TrayTip("UADRCI", "Keybind pressed! Connecting to Quick3270...", 1)
+
+    ; Connect to Quick3270 — keep app reference alive to prevent COM disconnect
+    try {
+        app := ComObject("Quick3270.Application")
+    } catch as e {
+        MsgBox("Cannot connect to Quick3270." . Chr(10) . Chr(10) . "Make sure Quick3270 is open and connected to the mainframe." . Chr(10) . Chr(10) . "If this keeps happening, try the Quick3270 native macro" . Chr(10) . "(Tools > Macros) as a fallback." . Chr(10) . Chr(10) . "Error: " . e.Message, "UADRCI", "Icon!")
+        return
+    }
+
+    try {
+        sess := app.ActiveSession
+    } catch as e {
+        MsgBox("Cannot get Quick3270 session." . Chr(10) . Chr(10) . "Error: " . e.Message, "UADRCI", "Icon!")
         return
     }
 
     if !IsObject(sess) {
-        MsgBox("No active Quick3270 session.", "UADRCI", "Icon!")
-        armed := false
-        TraySetIcon("Shell32.dll", 4)
+        MsgBox("No active Quick3270 session found." . Chr(10) . Chr(10) . "Open Quick3270 and connect first, then try again.", "UADRCI", "Icon!")
         return
     }
 
-    ; Poll the CASE field until 7 characters are typed
-    loop {
-        if !armed
-            return
-
-        try {
-            caseVal := Trim(sess.GetText(${caseCoord.row}, ${caseCoord.col}, 7))
-        } catch {
-            caseVal := ""
-        }
-
-        if (StrLen(caseVal) >= 7) {
-            ; Case number is full — run autofill
-            break
-        }
-
-        Sleep(200)  ; check every 200ms
-    }
-
-    if !armed
-        return
-
-    TrayTip("UADRCI", "Filling: " . caseVal, 1)
+    TrayTip("UADRCI", "Filling fields...", 1)
+    Sleep(300)
 
     try {
-        sess.WaitHostQuiet(500)
-
 ${body}
-        TrayTip("UADRCI", "Autofill complete!", 1)
+        TrayTip("UADRCI", "Done! Fields filled.", 1)
     } catch as e {
-        MsgBox("Error: " . e.Message, "UADRCI", "Icon!")
+        MsgBox("Error filling fields:" . Chr(10) . e.Message . Chr(10) . Chr(10) . "The row/column coordinates might be wrong." . Chr(10) . "Check the Advanced section on the config page.", "UADRCI", "Icon!")
     }
-
-    ; Auto-disarm after filling
-    armed := false
-    TraySetIcon("Shell32.dll", 4)
 }
 
 ; --- Ctrl+Shift+Q: quit ---
@@ -892,30 +1079,1293 @@ function copyAhk() {
   );
 }
 
-function flashStatus(msg) {
+function buildMacScript() {
+  const cfg = getConfig();
+  const esc = s => s.replace(/"/g, '""');
+  let body = '';
+
+  const append = (keys, submit, submitLabel) => {
+    const filled = keys.filter(k => cfg.values[k]);
+    if (filled.length === 0) return;
+    filled.forEach(k => {
+      const c = cfg.coords[k];
+      body += '    Sess.SetCursor ' + c.row + ', ' + c.col + '\n';
+      body += '    Sess.SendKeys "' + esc(cfg.values[k]) + '"\n';
+    });
+    if (submit) {
+      body += '    Sess.SendKeys "' + submitLabel + '"\n';
+      body += '    Sess.WaitHostQuiet 2000\n';
+    }
+    body += '\n';
+  };
+
+  append(LOOKUP_KEYS, cfg.submitLookup,      '<Enter>');
+  append(DISPO_KEYS,  cfg.submitDisposition, '<PF12>');
+
+  if (!body.trim()) {
+    body = '    MsgBox "No values configured. Edit the config page and re-download.", vbExclamation, "UADRCI"\n    Exit Sub\n';
+  }
+
+  return "' =========================================================================\n" +
+"' UADRCI Autofill Macro - Generated by UADRCI Macro Configurator\n" +
+"' =========================================================================\n" +
+"' This runs INSIDE Quick3270 - no external software needed.\n" +
+"'\n" +
+"' TO USE:\n" +
+"'   1. In Quick3270: Tools > Macros > New Macro\n" +
+"'   2. Paste this entire script\n" +
+"'   3. Save it (give it a name like 'uadrci_fill')\n" +
+"'   4. Navigate to the UADRCI screen, type your case number\n" +
+"'   5. Tools > Macros > Run (or press your assigned hotkey)\n" +
+"'\n" +
+"' TIP: Assign it to a toolbar button or hotkey:\n" +
+"'   Tools > Customize > Keyboard > pick a key > assign this macro\n" +
+"' =========================================================================\n" +
+"\n" +
+"Sub Main\n" +
+"\n" +
+"    Dim Sess\n" +
+"    Set Sess = Application.ActiveSession\n" +
+"\n" +
+"    If Sess Is Nothing Then\n" +
+'        MsgBox "No active session.", vbExclamation, "UADRCI"\n' +
+"        Exit Sub\n" +
+"    End If\n" +
+"\n" +
+"    Sess.WaitHostQuiet 500\n" +
+"\n" +
+body +
+"\n" +
+"End Sub\n";
+}
+
+function downloadMac() {
+  const script = buildMacScript();
+  const blob = new Blob([script], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'uadrci_fill.mac';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  flashStatus('Downloaded uadrci_fill.mac');
+}
+
+function flashStatus(msg, type) {
   const el = $('status');
   el.textContent = msg;
-  el.classList.add('ok');
+  el.classList.remove('ok', 'warn');
+  el.classList.add(type === 'warn' ? 'warn' : 'ok');
   clearTimeout(flashStatus._t);
   flashStatus._t = setTimeout(() => {
     el.textContent = 'Auto-saved to your browser';
-    el.classList.remove('ok');
+    el.classList.remove('ok', 'warn');
   }, 2200);
+}
+
+// =====================================================================
+// TEMPLATES
+// =====================================================================
+const TEMPLATES_KEY = 'uadrci-templates-v1';
+
+function getTemplates() {
+  try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY)) || {}; } catch(e) { return {}; }
+}
+
+function saveTemplate() {
+  const name = $('templateName').value.trim();
+  if (!name) { alert('Enter a template name first.'); return; }
+  const cfg = getConfig();
+  const templates = getTemplates();
+  templates[name] = { values: cfg.values, submitLookup: cfg.submitLookup, submitDisposition: cfg.submitDisposition };
+  localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
+  $('templateName').value = '';
+  renderTemplates();
+  flashStatus('Template "' + name + '" saved');
+}
+
+function loadTemplate(name) {
+  const templates = getTemplates();
+  const t = templates[name];
+  if (!t) return;
+  FIELDS.forEach(f => {
+    if (t.values && t.values[f.key] !== undefined) $('v_' + f.key).value = t.values[f.key];
+  });
+  if ('submitLookup' in t) $('submitLookup').checked = t.submitLookup !== false;
+  if ('submitDisposition' in t) $('submitDisposition').checked = !!t.submitDisposition;
+  saveConfig();
+  flashStatus('Loaded "' + name + '"');
+}
+
+function deleteTemplate(name) {
+  if (!confirm('Delete template "' + name + '"?')) return;
+  const templates = getTemplates();
+  delete templates[name];
+  localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
+  renderTemplates();
+}
+
+function renderTemplates() {
+  const list = $('templateList');
+  const templates = getTemplates();
+  const names = Object.keys(templates);
+  if (names.length === 0) {
+    list.innerHTML = '<span style="color:var(--muted);font-size:0.78rem;">No templates saved yet. Fill in your values above and click Save Current.</span>';
+    return;
+  }
+  list.innerHTML = names.map(n =>
+    '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;margin-bottom:4px;background:var(--input-bg);border-radius:4px;cursor:pointer;" onclick="loadTemplate(\'' + n.replace(/'/g, "\\'") + '\')">' +
+    '<span style="color:var(--accent);flex:1;font-family:\'IBM Plex Mono\',monospace;">' + n + '</span>' +
+    '<span style="color:var(--muted);font-size:0.7rem;">' + Object.values(templates[n].values || {}).filter(v => v).length + ' fields</span>' +
+    '<button class="secondary" style="font-size:0.65rem;padding:2px 8px;" onclick="event.stopPropagation();deleteTemplate(\'' + n.replace(/'/g, "\\'") + '\')">x</button>' +
+    '</div>'
+  ).join('');
+}
+
+// =====================================================================
+// CASE LIST — Interactive Tracker
+// =====================================================================
+const CASES_KEY = 'uadrci-cases-v2';
+
+// Each case: { id: string, status: 'pending'|'done'|'skipped' }
+function getCases() {
+  try { return JSON.parse(localStorage.getItem(CASES_KEY)) || []; } catch(e) { return []; }
+}
+function saveCases(cases) {
+  localStorage.setItem(CASES_KEY, JSON.stringify(cases));
+  renderCaseTracker();
+}
+
+function addCase(id) {
+  id = id.trim();
+  if (!id) return;
+  const cases = getCases();
+  cases.push({ id: id, status: 'pending' });
+  saveCases(cases);
+}
+
+function addCasesBulk(text) {
+  const lines = text.split('\n').map(s => s.trim()).filter(s => s);
+  if (lines.length === 0) return;
+  const cases = getCases();
+  lines.forEach(id => cases.push({ id: id, status: 'pending' }));
+  saveCases(cases);
+}
+
+function toggleCaseStatus(index) {
+  const cases = getCases();
+  if (!cases[index]) return;
+  const c = cases[index];
+  // Cycle: pending → done → skipped → pending
+  if (c.status === 'pending') c.status = 'done';
+  else if (c.status === 'done') c.status = 'skipped';
+  else c.status = 'pending';
+  saveCases(cases);
+}
+
+function removeCase(index) {
+  const cases = getCases();
+  cases.splice(index, 1);
+  saveCases(cases);
+}
+
+function renderCaseTracker() {
+  const cases = getCases();
+  const tracker = $('caseTracker');
+  const empty = $('caseEmpty');
+  const total = cases.length;
+  const done = cases.filter(c => c.status === 'done').length;
+  const skipped = cases.filter(c => c.status === 'skipped').length;
+
+  $('caseProgress').textContent = done + ' / ' + total;
+  $('caseProgressBar').style.width = total > 0 ? (done / total * 100) + '%' : '0%';
+  $('caseCount').textContent = total > 0 ?
+    done + ' done' + (skipped ? ', ' + skipped + ' skipped' : '') + ', ' + (total - done - skipped) + ' remaining' : '';
+
+  if (total === 0) {
+    tracker.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  tracker.style.display = 'block';
+  empty.style.display = 'none';
+
+  const statusIcon = s => s === 'done' ? '&#x2705;' : s === 'skipped' ? '&#x23ED;' : '&#x2B1C;';
+  const statusColor = s => s === 'done' ? '#33ff33' : s === 'skipped' ? '#888' : 'var(--text)';
+  const statusLabel = s => s === 'done' ? 'DONE' : s === 'skipped' ? 'SKIP' : '';
+
+  tracker.innerHTML = cases.map((c, i) =>
+    '<div style="display:flex;align-items:center;gap:10px;padding:6px 12px;border-bottom:1px solid var(--border);' +
+    (c.status === 'done' ? 'background:#0a1a0a;' : c.status === 'skipped' ? 'background:#1a1a1a;' : '') +
+    'cursor:pointer;" onclick="toggleCaseStatus(' + i + ')">' +
+    '<span style="font-size:1rem;width:24px;text-align:center;">' + statusIcon(c.status) + '</span>' +
+    '<span style="font-size:0.72rem;color:var(--muted);width:24px;text-align:center;">' + (i + 1) + '</span>' +
+    '<span style="flex:1;font-family:\'IBM Plex Mono\',monospace;font-size:0.85rem;color:' + statusColor(c.status) + ';' +
+    (c.status === 'done' ? 'text-decoration:line-through;opacity:0.6;' : '') +
+    (c.status === 'skipped' ? 'text-decoration:line-through;opacity:0.4;' : '') +
+    '">' + c.id + '</span>' +
+    '<span style="font-size:0.65rem;color:' + statusColor(c.status) + ';width:32px;text-align:center;font-family:\'IBM Plex Mono\',monospace;">' + statusLabel(c.status) + '</span>' +
+    '<button class="secondary" style="font-size:0.6rem;padding:1px 6px;opacity:0.5;" onclick="event.stopPropagation();removeCase(' + i + ')">x</button>' +
+    '</div>'
+  ).join('');
+}
+
+// For AHK: still need a flat list for export
+function getCaseList() {
+  return getCases().filter(c => c.status === 'pending').map(c => c.id);
+}
+
+function getCaseListAll() {
+  return getCases().map(c => c.id);
+}
+
+function loadCaseList() {
+  renderCaseTracker();
+}
+
+// =====================================================================
+// BRIDGE MACRO GENERATOR (reads values from INI file at runtime)
+// =====================================================================
+function buildBridgeMac() {
+  const cfg = getConfig();
+  let fillCode = '';
+
+  const addField = (key, label) => {
+    const c = cfg.coords[key];
+    if (!c) return;
+    fillCode += "    If vals.Exists(\"" + key + "\") And vals(\"" + key + "\") <> \"\" Then\n";
+    fillCode += "        Sess.SetCursor " + c.row + ", " + c.col + "\n";
+    fillCode += "        Sess.SendKeys vals(\"" + key + "\")\n";
+    fillCode += "    End If\n\n";
+  };
+
+  // Lookup fields
+  LOOKUP_KEYS.forEach(k => addField(k, FIELDS.find(f => f.key === k).label));
+  fillCode += "    ' Submit lookup\n";
+  fillCode += "    If vals.Exists(\"submitLookup\") And vals(\"submitLookup\") = \"1\" Then\n";
+  fillCode += "        Sess.SendKeys \"<Enter>\"\n";
+  fillCode += "        Sess.WaitHostQuiet 2000\n";
+  fillCode += "    End If\n\n";
+
+  // Disposition fields
+  DISPO_KEYS.forEach(k => addField(k, FIELDS.find(f => f.key === k).label));
+  fillCode += "    ' Submit disposition\n";
+  fillCode += "    If vals.Exists(\"submitDisposition\") And vals(\"submitDisposition\") = \"1\" Then\n";
+  fillCode += "        Sess.SendKeys \"<PF12>\"\n";
+  fillCode += "        Sess.WaitHostQuiet 2000\n";
+  fillCode += "    End If\n";
+
+  return "' =========================================================================\n" +
+"' UADRCI Bridge Macro - Reads values from file, fills fields\n" +
+"' =========================================================================\n" +
+"' This macro reads field values from %APPDATA%\\UADRCI\\current_case.ini\n" +
+"' and fills them into the UADRCI screen. It is triggered by the AHK\n" +
+"' orchestrator, which writes the INI file before calling this macro.\n" +
+"'\n" +
+"' SETUP:\n" +
+"'   1. In Quick3270: Tools > Macros > New Macro\n" +
+"'   2. Paste this script and Save as 'uadrci_bridge'\n" +
+"'   3. Assign a hotkey: Tools > Customize > Keyboard\n" +
+"'      Pick a key like Ctrl+F8 and assign it to this macro\n" +
+"'   4. The AHK orchestrator will press that hotkey to trigger this\n" +
+"' =========================================================================\n" +
+"\n" +
+"Sub Main\n" +
+"\n" +
+"    Dim Sess\n" +
+"    Set Sess = Application.ActiveSession\n" +
+"    If Sess Is Nothing Then\n" +
+'        MsgBox "No active session.", vbExclamation, "UADRCI"\n' +
+"        Exit Sub\n" +
+"    End If\n" +
+"\n" +
+"    ' --- Read values from INI file ---\n" +
+"    Dim fso, shell, filePath\n" +
+"    Set fso = CreateObject(\"Scripting.FileSystemObject\")\n" +
+"    Set shell = CreateObject(\"WScript.Shell\")\n" +
+"    filePath = shell.ExpandEnvironmentStrings(\"%APPDATA%\") & \"\\UADRCI\\current_case.ini\"\n" +
+"\n" +
+"    If Not fso.FileExists(filePath) Then\n" +
+'        MsgBox "No case data found at:" & vbCrLf & filePath & vbCrLf & vbCrLf & "Make sure the AHK orchestrator is running.", vbExclamation, "UADRCI"\n' +
+"        Exit Sub\n" +
+"    End If\n" +
+"\n" +
+"    Dim vals\n" +
+"    Set vals = CreateObject(\"Scripting.Dictionary\")\n" +
+"    Dim f\n" +
+"    Set f = fso.OpenTextFile(filePath, 1)\n" +
+"    Dim ln\n" +
+"    Do While Not f.AtEndOfStream\n" +
+"        ln = f.ReadLine\n" +
+"        If InStr(ln, \"=\") > 0 Then\n" +
+"            Dim parts\n" +
+"            parts = Split(ln, \"=\", 2)\n" +
+"            vals(Trim(parts(0))) = Trim(parts(1))\n" +
+"        End If\n" +
+"    Loop\n" +
+"    f.Close\n" +
+"\n" +
+"    Sess.WaitHostQuiet 500\n" +
+"\n" +
+"    ' --- Fill fields ---\n" +
+fillCode +
+"\n" +
+"    ' --- Signal completion ---\n" +
+"    Dim donePath\n" +
+"    donePath = shell.ExpandEnvironmentStrings(\"%APPDATA%\") & \"\\UADRCI\\done.txt\"\n" +
+"    Dim sf\n" +
+"    Set sf = fso.CreateTextFile(donePath, True)\n" +
+"    sf.WriteLine \"DONE\"\n" +
+"    sf.Close\n" +
+"\n" +
+"End Sub\n";
+}
+
+// =====================================================================
+// "FILL HERE" BRIDGE MACRO - cursor-aware single-field fill
+// =====================================================================
+// Reads the current cursor position from Quick3270, matches it to the
+// nearest known field on that row, and fills ONLY that one field with
+// the value from current_case.ini.
+function buildHereBridgeMac() {
+  // Build the VBScript that compares the cursor to each field.
+  // Strategy: pick the field whose row matches cursor row AND whose col
+  // is the largest col <= cursor col (so cursor anywhere inside the
+  // field's width still matches it).
+  let matchCode = '';
+  FIELDS.forEach(f => {
+    matchCode += '    If ' + f.row + ' = r And ' + f.col + ' <= c And ' + f.col + ' > matchCol Then\n';
+    matchCode += '        matchKey = "' + f.key + '"\n';
+    matchCode += '        matchRow = ' + f.row + '\n';
+    matchCode += '        matchCol = ' + f.col + '\n';
+    matchCode += '        matchLabel = "' + f.label.replace(/"/g, '""') + '"\n';
+    matchCode += '    End If\n';
+  });
+
+  return "' =========================================================================\n" +
+"' UADRCI Bridge Macro (FILL HERE) - Cursor-aware single-field fill\n" +
+"' =========================================================================\n" +
+"' Reads current cursor row/col, finds the matching UADRCI field,\n" +
+"' and fills ONLY that one field from current_case.ini.\n" +
+"'\n" +
+"' SETUP:\n" +
+"'   1. In Quick3270: Tools > Macros > New Macro\n" +
+"'   2. Paste this script and Save as 'uadrci_bridge_here'\n" +
+"'   3. Assign to Ctrl+F10 (Tools > Customize > Keyboard)\n" +
+"'   4. The AHK orchestrator fill-here hotkey will trigger this.\n" +
+"' =========================================================================\n" +
+"\n" +
+"Sub Main\n" +
+"\n" +
+"    Dim Sess\n" +
+"    Set Sess = Application.ActiveSession\n" +
+"    If Sess Is Nothing Then\n" +
+'        MsgBox "No active session.", vbExclamation, "UADRCI Here"\n' +
+"        Exit Sub\n" +
+"    End If\n" +
+"\n" +
+"    ' --- Read cursor position (try multiple Quick3270 API patterns) ---\n" +
+"    Dim r, c\n" +
+"    r = 0 : c = 0\n" +
+"    On Error Resume Next\n" +
+"\n" +
+"    r = Sess.CursorRow\n" +
+"    c = Sess.CursorCol\n" +
+"\n" +
+"    If r = 0 Or Err.Number <> 0 Then\n" +
+"        Err.Clear\n" +
+"        r = Sess.Row\n" +
+"        c = Sess.Col\n" +
+"    End If\n" +
+"\n" +
+"    If r = 0 Or Err.Number <> 0 Then\n" +
+"        Err.Clear\n" +
+"        r = Sess.CurrentRow\n" +
+"        c = Sess.CurrentCol\n" +
+"    End If\n" +
+"\n" +
+"    If r = 0 Or Err.Number <> 0 Then\n" +
+"        Err.Clear\n" +
+"        r = Sess.Screen.CursorRow\n" +
+"        c = Sess.Screen.CursorCol\n" +
+"    End If\n" +
+"\n" +
+"    On Error Goto 0\n" +
+"\n" +
+"    If r = 0 Then\n" +
+'        MsgBox "Cannot read cursor position from Quick3270." & vbCrLf & "None of the known API patterns worked.", vbExclamation, "UADRCI Here"\n' +
+"        Exit Sub\n" +
+"    End If\n" +
+"\n" +
+"    ' --- Read values from INI ---\n" +
+"    Dim fso, shell, filePath\n" +
+"    Set fso = CreateObject(\"Scripting.FileSystemObject\")\n" +
+"    Set shell = CreateObject(\"WScript.Shell\")\n" +
+"    filePath = shell.ExpandEnvironmentStrings(\"%APPDATA%\") & \"\\UADRCI\\current_case.ini\"\n" +
+"\n" +
+"    If Not fso.FileExists(filePath) Then\n" +
+'        MsgBox "No case data found at:" & vbCrLf & filePath, vbExclamation, "UADRCI Here"\n' +
+"        Exit Sub\n" +
+"    End If\n" +
+"\n" +
+"    Dim vals\n" +
+"    Set vals = CreateObject(\"Scripting.Dictionary\")\n" +
+"    Dim f\n" +
+"    Set f = fso.OpenTextFile(filePath, 1)\n" +
+"    Dim ln, parts\n" +
+"    Do While Not f.AtEndOfStream\n" +
+"        ln = f.ReadLine\n" +
+"        If InStr(ln, \"=\") > 0 Then\n" +
+"            parts = Split(ln, \"=\", 2)\n" +
+"            vals(Trim(parts(0))) = Trim(parts(1))\n" +
+"        End If\n" +
+"    Loop\n" +
+"    f.Close\n" +
+"\n" +
+"    ' --- Find matching field (largest col <= cursor col on the same row) ---\n" +
+"    Dim matchKey, matchRow, matchCol, matchLabel\n" +
+"    matchKey = \"\"\n" +
+"    matchRow = 0\n" +
+"    matchCol = -1\n" +
+"    matchLabel = \"\"\n" +
+"\n" +
+matchCode +
+"\n" +
+"    If matchKey = \"\" Then\n" +
+'        MsgBox "Cursor at row " & r & " col " & c & " does not match any known UADRCI field." & vbCrLf & vbCrLf & "Move the cursor onto a field like HEAR DATE, PLEA, FINE, etc. and try again.", vbExclamation, "UADRCI Here"\n' +
+"        Exit Sub\n" +
+"    End If\n" +
+"\n" +
+"    If Not vals.Exists(matchKey) Or vals(matchKey) = \"\" Then\n" +
+'        MsgBox "Field " & matchLabel & " (" & matchKey & ") has no configured value." & vbCrLf & "Go to the config page and fill it in.", vbExclamation, "UADRCI Here"\n' +
+"        Exit Sub\n" +
+"    End If\n" +
+"\n" +
+"    ' --- Fill the single field ---\n" +
+"    Sess.WaitHostQuiet 200\n" +
+"    Sess.SetCursor matchRow, matchCol\n" +
+"    Sess.SendKeys vals(matchKey)\n" +
+"\n" +
+"    ' --- Signal done ---\n" +
+"    Dim donePath\n" +
+"    donePath = shell.ExpandEnvironmentStrings(\"%APPDATA%\") & \"\\UADRCI\\done.txt\"\n" +
+"    Dim sf\n" +
+"    Set sf = fso.CreateTextFile(donePath, True)\n" +
+"    sf.WriteLine \"DONE \" & matchKey\n" +
+"    sf.Close\n" +
+"\n" +
+"End Sub\n";
+}
+
+// =====================================================================
+// ORCHESTRATOR AHK GENERATOR
+// =====================================================================
+function buildOrchestratorAhk() {
+  const cfg = getConfig();
+  const esc = s => s.replace(/`/g, '``').replace(/"/g, '""');
+  const hk = cfg.hotkey || '^u';
+  const hkName = cfg.hotkeyDisplay || hotkeyLabel(hk);
+  const hereHk = cfg.hereHotkey || '^j';
+  const hereHkName = cfg.hereHotkeyDisplay || hotkeyLabel(hereHk);
+
+  // Build the INI content lines
+  let iniLines = '';
+  FIELDS.forEach(f => {
+    const val = cfg.values[f.key] || '';
+    if (val) iniLines += '    content .= "' + f.key + '=' + esc(val) + '`n"\n';
+  });
+  iniLines += '    content .= "submitLookup=' + (cfg.submitLookup ? '1' : '0') + '`n"\n';
+  iniLines += '    content .= "submitDisposition=' + (cfg.submitDisposition ? '1' : '0') + '`n"\n';
+
+  return `; =========================================================================
+; UADRCI Orchestrator - Advanced Automation System
+; =========================================================================
+; Hotkey:  ${hkName} = process current case (fills ALL fields)
+;          ${hkName} (again within 3s) = REPEAT same case (no advance)
+;          ${hereHkName} = FILL HERE (fills only the field your cursor is on)
+;          F7  = skip to next case
+;          F5  = go back one case
+;          Ctrl+Shift+S = show stats
+;          Ctrl+Shift+Q = quit
+;
+; HOW IT WORKS:
+;   1. Writes field values to %APPDATA%\\UADRCI\\current_case.ini
+;   2. Activates Quick3270 and triggers the bridge macro (Ctrl+F8)
+;   3. The bridge macro reads the file and fills the fields
+;   4. Advances to the next case in the list
+;
+; SETUP:
+;   1. Load the bridge macro into Quick3270 (Tools > Macros > New Macro)
+;   2. Assign it to Ctrl+F8 (Tools > Customize > Keyboard)
+;   3. Double-click this script to start
+;   4. Press ${hkName} on the UADRCI screen to fill fields
+; =========================================================================
+
+#Requires AutoHotkey v2.0
+#SingleInstance Force
+#UseHook true   ; force low-level keyboard hook so AHK intercepts keys before Quick3270
+
+; --- Configuration ---
+global macroHotkey     := "^{F8}"    ; Ctrl+F8  triggers the full-case bridge macro
+global macroHereHotkey := "^{F10}"   ; Ctrl+F10 triggers the "fill here" bridge macro
+global iniDir := A_AppData . "\\UADRCI"
+global iniPath := iniDir . "\\current_case.ini"
+global donePath := iniDir . "\\done.txt"
+global caseListPath := iniDir . "\\case_list.txt"
+global progressPath := iniDir . "\\progress.txt"
+global completedPath := iniDir . "\\completed.txt"
+
+; --- Case tracking ---
+global caseList := []
+global currentCase := 1
+global totalCases := 0
+global processedCount := 0
+
+; --- Repeat tracking (press hotkey again within window to re-run same case) ---
+global lastSuccessTime := 0
+global lastSuccessCase := ""
+global REPEAT_WINDOW_MS := 3000   ; press the hotkey again within 3s to repeat
+
+; --- Diagnostic: show MsgBox on very first hotkey press so you KNOW it fired ---
+global firstPress := true
+
+; Create data directory
+DirCreate(iniDir)
+
+; Debug log — writes timestamped lines to %APPDATA%\\UADRCI\\debug.txt
+DebugLog(msg) {
+    global iniDir
+    try FileAppend(FormatTime(, "HH:mm:ss") . " | " . msg . "\`n", iniDir . "\\debug.txt")
+}
+
+DebugLog("=== UADRCI STARTED === AHK " . A_AhkVersion . " | Admin: " . (A_IsAdmin ? "YES" : "NO"))
+
+; Load case list
+LoadCaseList()
+LoadProgress()
+UpdateOverlay()
+
+; Detect Quick3270 on startup
+FindQuick3270()
+q3msg := q3title ? ("Quick3270: " . q3title) : "Quick3270: NOT DETECTED (open it first!)"
+
+; LOUD startup popup so you KNOW the script loaded (TrayTips are easy to miss)
+MsgBox(
+    "UADRCI Orchestrator is running!" . Chr(10) . Chr(10)
+    . "AHK version: " . A_AhkVersion . Chr(10)
+    . "Cases loaded: " . totalCases . Chr(10)
+    . q3msg . Chr(10) . Chr(10)
+    . "${hkName} = fill ALL fields on this case" . Chr(10)
+    . "${hkName} (again within 3s) = repeat same case" . Chr(10)
+    . "${hereHkName} = FILL HERE (only the field your cursor is on)" . Chr(10)
+    . "F7 = skip   F5 = back   Ctrl+Shift+Q = quit" . Chr(10) . Chr(10)
+    . "Click OK, then go to Quick3270 and press ${hkName} or ${hereHkName}.",
+    "UADRCI Orchestrator - Ready"
+)
+
+; --- Write the INI file with current values ---
+WriteINI(caseNum := "") {
+    global iniDir, iniPath
+    DirCreate(iniDir)
+    content := ""
+    if (caseNum != "")
+        content .= "caseNum=" . caseNum . "\`n"
+${iniLines}
+    try FileDelete(iniPath)
+    FileAppend(content, iniPath)
+}
+
+; --- Load case list from file ---
+LoadCaseList() {
+    global caseList, totalCases, caseListPath
+    caseList := []
+    if FileExist(caseListPath) {
+        content := FileRead(caseListPath)
+        for line in StrSplit(content, "\`n", "\`r") {
+            trimmed := Trim(line)
+            if (trimmed != "")
+                caseList.Push(trimmed)
+        }
+    }
+    totalCases := caseList.Length
+}
+
+; --- Progress persistence ---
+LoadProgress() {
+    global currentCase, processedCount, progressPath
+    if FileExist(progressPath) {
+        try {
+            content := FileRead(progressPath)
+            parts := StrSplit(content, "\`n", "\`r")
+            if parts.Length >= 1
+                currentCase := Integer(parts[1])
+            if parts.Length >= 2
+                processedCount := Integer(parts[2])
+        }
+    }
+}
+
+SaveProgress() {
+    global currentCase, processedCount, progressPath
+    try FileDelete(progressPath)
+    FileAppend(currentCase . "\`n" . processedCount, progressPath)
+}
+
+; --- Quick3270 window tracking ---
+global q3hwnd := 0
+global q3title := ""
+
+FindQuick3270() {
+    global q3hwnd, q3title
+
+    ; If we already found it and it's still valid, reuse it
+    if (q3hwnd != 0) {
+        try {
+            if WinExist("ahk_id " . q3hwnd) {
+                return true
+            }
+        }
+        q3hwnd := 0
+        q3title := ""
+    }
+
+    ; Search by multiple patterns (Quick3270 window titles vary)
+    patterns := [
+        "Quick3270",
+        "ahk_exe quick3270.exe",
+        "ahk_exe Quick3270.exe",
+        "ahk_exe QUICK3270.EXE",
+        "IBMPRD",
+        "METRO-DADE",
+        "ahk_class Quick3270",
+        "ahk_class Quick3270Class",
+        "ahk_class QWS3270",
+        "S.P.I.R.I.T",
+        "SPIRIT",
+        "UADRCI"
+    ]
+
+    for pattern in patterns {
+        hwnd := WinExist(pattern)
+        if hwnd {
+            q3hwnd := hwnd
+            try q3title := WinGetTitle("ahk_id " . hwnd)
+            return true
+        }
+    }
+
+    return false
+}
+
+; --- Overlay tooltip ---
+UpdateOverlay() {
+    global currentCase, totalCases, processedCount, caseList, q3title
+    caseName := currentCase <= totalCases ? caseList[currentCase] : "(no more cases)"
+    q3status := q3title ? ("Q3270: " . SubStr(q3title, 1, 25)) : "Q3270: not found"
+    ToolTip("UADRCI | Case " . currentCase . "/" . totalCases . " | Done: " . processedCount . " | Next: " . caseName . Chr(10) . q3status, 10, 10)
+}
+
+; --- ${hkName}: PROCESS CURRENT CASE (press again within 3s to repeat) ---
+${hk}::
+{
+    global currentCase, totalCases, caseList, processedCount, donePath, completedPath, macroHotkey, q3hwnd
+    global lastSuccessTime, lastSuccessCase, REPEAT_WINDOW_MS, firstPress
+
+    DebugLog("HOTKEY ${hkName} pressed | case " . currentCase . "/" . totalCases)
+
+    ; FIRST-PRESS DIAGNOSTIC: loud confirmation that the hotkey actually fired.
+    ; (Only shows on the first press after the script starts, so it's not annoying.)
+    if (firstPress) {
+        firstPress := false
+        SoundBeep(1500, 200)
+        MsgBox(
+            "Hotkey ${hkName} fired!" . Chr(10) . Chr(10)
+            . "AHK is receiving your keypress correctly." . Chr(10)
+            . "Now I'll try to activate Quick3270 and run the bridge macro." . Chr(10) . Chr(10)
+            . "If the fields don't fill after you click OK:" . Chr(10)
+            . "  - Make sure Quick3270 is open" . Chr(10)
+            . "  - Make sure the bridge macro is loaded in Quick3270" . Chr(10)
+            . "  - Make sure the bridge macro is bound to Ctrl+F8",
+            "UADRCI - Keybind Test"
+        )
+    }
+
+    ; Double-press detection: if the last successful run was within the window,
+    ; treat this press as a REPEAT of the same case (don't advance the list).
+    now := A_TickCount
+    isRepeat := (lastSuccessTime > 0 && (now - lastSuccessTime) < REPEAT_WINDOW_MS && lastSuccessCase != "")
+
+    ; Different beep for repeat vs fresh run so you can hear which mode fired
+    SoundBeep(isRepeat ? 600 : 800, 100)
+
+    ; Pick the case number: repeat = re-use last, otherwise advance through the list
+    if (isRepeat) {
+        caseNum := lastSuccessCase
+    } else {
+        caseNum := ""
+        if (currentCase <= totalCases)
+            caseNum := caseList[currentCase]
+    }
+
+    ; Write INI file for the bridge macro to read
+    WriteINI(caseNum)
+    DebugLog("INI written for case: " . caseNum)
+
+    ; Delete old done signal
+    try FileDelete(donePath)
+
+    ; Find and activate Quick3270
+    if !FindQuick3270() {
+        DebugLog("ERROR: Quick3270 window not found")
+        SoundBeep(300, 300)
+        MsgBox(
+            "Quick3270 window not found!" . Chr(10) . Chr(10)
+            . "The orchestrator tried every known window pattern and none matched." . Chr(10)
+            . "Make sure Quick3270 is open and you see the UADRCI screen." . Chr(10) . Chr(10)
+            . "If it IS open, the window title might not match. Open Task Manager," . Chr(10)
+            . "find the Quick3270 process, and tell Josh what the title says.",
+            "UADRCI - Window not found",
+            "Icon!"
+        )
+        UpdateOverlay()
+        return
+    }
+
+    DebugLog("Quick3270 found: " . q3title . " (hwnd " . q3hwnd . ")")
+    WinActivate("ahk_id " . q3hwnd)
+    Sleep(300)
+    Send(macroHotkey)
+    DebugLog("Sent " . macroHotkey . " to Quick3270, waiting for done.txt...")
+
+    ; Wait for bridge macro to finish (watches for done.txt)
+    waited := 0
+    while (waited < 10000) {
+        if FileExist(donePath) {
+            break
+        }
+        Sleep(200)
+        waited += 200
+    }
+
+    if FileExist(donePath) {
+        try FileDelete(donePath)
+        DebugLog("SUCCESS: done.txt received for case " . caseNum)
+        ; Remember this successful run so pressing again within window will repeat it
+        lastSuccessTime := A_TickCount
+        lastSuccessCase := caseNum
+
+        if (isRepeat) {
+            ; Don't advance, don't double-log — just confirm the repeat
+            SoundBeep(1000, 100)
+            SoundBeep(1400, 100)
+            TrayTip("UADRCI", "Repeated case " . caseNum . " (no advance)" . Chr(10) . "Press ${hkName} again within 3s to repeat again.", 1)
+        } else {
+            ; Log completed case number and advance to the next one
+            if (caseNum != "")
+                FileAppend(caseNum . "\`n", completedPath)
+            processedCount++
+            currentCase++
+            SaveProgress()
+            SoundBeep(1200, 100)
+            TrayTip("UADRCI", "Case done! " . processedCount . " processed. Next: " . currentCase . "/" . totalCases . Chr(10) . "Press ${hkName} again within 3s to REPEAT this case.", 2)
+        }
+    } else {
+        DebugLog("TIMEOUT: bridge macro did not write done.txt within 10s")
+        SoundBeep(250, 400)
+        MsgBox(
+            "Bridge macro did NOT finish within 10 seconds." . Chr(10) . Chr(10)
+            . "This means AHK successfully sent Ctrl+F8 to Quick3270," . Chr(10)
+            . "but the bridge macro never wrote its 'done.txt' signal." . Chr(10) . Chr(10)
+            . "Most likely causes:" . Chr(10)
+            . "  1. Bridge macro is not loaded in Quick3270" . Chr(10)
+            . "     (Tools > Macros > load uadrci_bridge.mac)" . Chr(10)
+            . "  2. Bridge macro is not bound to Ctrl+F8" . Chr(10)
+            . "     (Tools > Customize > Keyboard)" . Chr(10)
+            . "  3. Quick3270 is in a state where macros can't run" . Chr(10)
+            . "     (try clicking on the session window first)",
+            "UADRCI - Bridge macro timeout",
+            "Icon!"
+        )
+    }
+
+    UpdateOverlay()
+}
+
+; --- ${hereHkName}: FILL HERE (cursor-aware single-field fill) ---
+; Writes the INI, triggers the "here" bridge macro (Ctrl+F10), which
+; reads Quick3270's cursor position and fills only the matching field.
+; Does NOT advance the case list.
+${hereHk}::
+{
+    global currentCase, totalCases, caseList, donePath, macroHereHotkey, q3hwnd
+
+    SoundBeep(1100, 80)
+
+    ; Use the current case number (if one is loaded) so the bridge has
+    ; access to every configured field including caseNum
+    caseNum := ""
+    if (currentCase <= totalCases)
+        caseNum := caseList[currentCase]
+
+    WriteINI(caseNum)
+    try FileDelete(donePath)
+
+    if !FindQuick3270() {
+        SoundBeep(300, 300)
+        MsgBox(
+            "Quick3270 window not found." . Chr(10) . Chr(10)
+            . "Open Quick3270 first, then try ${hereHkName} again.",
+            "UADRCI - Fill Here",
+            "Icon!"
+        )
+        UpdateOverlay()
+        return
+    }
+
+    WinActivate("ahk_id " . q3hwnd)
+    Sleep(200)
+    Send(macroHereHotkey)
+
+    ; Wait for done signal
+    waited := 0
+    while (waited < 8000) {
+        if FileExist(donePath)
+            break
+        Sleep(150)
+        waited += 150
+    }
+
+    if FileExist(donePath) {
+        try FileDelete(donePath)
+        SoundBeep(1400, 80)
+        TrayTip("UADRCI", "Filled field at cursor.", 1)
+    } else {
+        SoundBeep(250, 300)
+        MsgBox(
+            "Fill Here bridge macro didn't finish." . Chr(10) . Chr(10)
+            . "Make sure the ""uadrci_bridge_here"" macro is loaded in Quick3270" . Chr(10)
+            . "and bound to Ctrl+F10.",
+            "UADRCI - Fill Here timeout",
+            "Icon!"
+        )
+    }
+
+    UpdateOverlay()
+}
+
+; --- F7: Skip to next case ---
+F7::
+{
+    global currentCase, totalCases
+    if (currentCase <= totalCases)
+        currentCase++
+    SaveProgress()
+    UpdateOverlay()
+    TrayTip("UADRCI", "Skipped to case " . currentCase . "/" . totalCases, 1)
+}
+
+; --- F5: Go back one case ---
+F5::
+{
+    global currentCase
+    if (currentCase > 1)
+        currentCase--
+    SaveProgress()
+    UpdateOverlay()
+    TrayTip("UADRCI", "Back to case " . currentCase, 1)
+}
+
+; --- Ctrl+Shift+S: Show stats ---
+^+s::
+{
+    global currentCase, totalCases, processedCount
+    remaining := totalCases - currentCase + 1
+    if remaining < 0
+        remaining := 0
+    MsgBox("UADRCI Stats" . Chr(10) . Chr(10) . "Total cases: " . totalCases . Chr(10) . "Processed: " . processedCount . Chr(10) . "Current: " . currentCase . Chr(10) . "Remaining: " . remaining, "UADRCI Orchestrator")
+}
+
+; --- Ctrl+Shift+Q: Quit ---
+^+q::
+{
+    SaveProgress()
+    ToolTip()
+    ExitApp
+}
+`;
+}
+
+// =====================================================================
+// DOWNLOAD FUNCTIONS
+// =====================================================================
+function downloadFile(content, filename) {
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function buildTestAhk() {
+  const hk = currentHotkey.ahk || '^u';
+  const hkName = currentHotkey.display || 'Ctrl+U';
+  return (
+    '; UADRCI Hotkey Test Script\n' +
+    '; Run this script first to confirm AHK is receiving your keypress.\n' +
+    '; If pressing ' + hkName + ' does NOT produce a beep + popup, your hotkey\n' +
+    '; is being captured by another program (like Quick3270) before AHK sees it.\n' +
+    '#Requires AutoHotkey v2.0\n' +
+    '#SingleInstance Force\n' +
+    '#UseHook true\n' +
+    '\n' +
+    'SoundBeep(880, 150)\n' +
+    'MsgBox("Test script loaded. Press ' + hkName + ' to verify the hotkey fires.", "UADRCI - Hotkey Test")\n' +
+    '\n' +
+    hk + '::\n' +
+    '{\n' +
+    '    SoundBeep(1500, 200)\n' +
+    '    MsgBox("' + hkName + ' fired!\\n\\nAHK is receiving your keypress correctly.\\nYou can close this test script and use the real one.", "UADRCI - Hotkey Test OK")\n' +
+    '}\n'
+  );
+}
+
+// =====================================================================
+// SIMPLE MODE — one button fills everything and sends F12
+// Generates a small AHK + Quick3270 macro pair with a DATA_MODE switch
+// =====================================================================
+function buildSimpleAhk() {
+  const cfg = getConfig();
+  const esc = s => String(s).replace(/`/g, '``').replace(/"/g, '""');
+  const hk = cfg.hotkey || '^u';
+  const hkName = cfg.hotkeyDisplay || hotkeyLabel(hk);
+
+  // Build the INI body (everything EXCEPT caseNum — that's set per mode below)
+  let iniLines = '';
+  FIELDS.forEach(f => {
+    if (f.key === 'caseNum') return;
+    const val = cfg.values[f.key] || '';
+    if (val) iniLines += '    content .= "' + f.key + '=' + esc(val) + '`n"\n';
+  });
+
+  return (
+    '; =========================================================================\n' +
+    '; UADRCI SIMPLE — one hotkey fills all fields and fires F12\n' +
+    '; =========================================================================\n' +
+    '; Edit DATA_MODE below to pick how the case number is supplied:\n' +
+    ';   "hardcoded" — uses the value baked in below (CASE_HARDCODED)\n' +
+    ';   "prompt"    — pops an InputBox each time asking for the case number\n' +
+    ';   "file"      — reads the next line of case_list.txt, advances progress\n' +
+    ';\n' +
+    '; SETUP:\n' +
+    ';   1. Load uadrci_simple.mac into Quick3270, bind it to Ctrl+F8\n' +
+    ';   2. Double-click this .ahk file to run\n' +
+    ';   3. Press ' + hkName + ' anywhere — fields fill, F12 submits.\n' +
+    '; =========================================================================\n' +
+    '\n' +
+    '#Requires AutoHotkey v2.0\n' +
+    '#SingleInstance Force\n' +
+    '#UseHook true\n' +
+    '\n' +
+    '; --- Settings (edit these) ---\n' +
+    'global DATA_MODE      := "hardcoded"   ; "hardcoded" | "prompt" | "file"\n' +
+    'global CASE_HARDCODED := "' + esc(cfg.values.caseNum || '') + '"\n' +
+    '\n' +
+    '; --- Paths ---\n' +
+    'global iniDir       := A_AppData . "\\UADRCI"\n' +
+    'global iniPath      := iniDir . "\\simple.ini"\n' +
+    'global caseListPath := iniDir . "\\case_list.txt"\n' +
+    'global progressPath := iniDir . "\\progress.txt"\n' +
+    'global debugPath    := iniDir . "\\debug_simple.txt"\n' +
+    '\n' +
+    'DirCreate(iniDir)\n' +
+    '\n' +
+    'DebugLog(msg) {\n' +
+    '    global debugPath\n' +
+    '    try FileAppend(FormatTime(, "HH:mm:ss") . " | " . msg . "`n", debugPath)\n' +
+    '}\n' +
+    '\n' +
+    'DebugLog("=== SIMPLE STARTED === mode=" . DATA_MODE)\n' +
+    '\n' +
+    'WriteINI(caseNum) {\n' +
+    '    global iniPath\n' +
+    '    content := ""\n' +
+    '    if (caseNum != "")\n' +
+    '        content .= "caseNum=" . caseNum . "`n"\n' +
+    iniLines +
+    '    try FileDelete(iniPath)\n' +
+    '    FileAppend(content, iniPath)\n' +
+    '}\n' +
+    '\n' +
+    'GetNextCaseFromFile() {\n' +
+    '    global caseListPath, progressPath\n' +
+    '    if !FileExist(caseListPath)\n' +
+    '        return ""\n' +
+    '    lines := StrSplit(FileRead(caseListPath), "`n", "`r")\n' +
+    '    idx := 1\n' +
+    '    if FileExist(progressPath)\n' +
+    '        idx := Integer(Trim(FileRead(progressPath))) + 1\n' +
+    '    if (idx < 1 || idx > lines.Length)\n' +
+    '        return ""\n' +
+    '    try FileDelete(progressPath)\n' +
+    '    FileAppend(String(idx), progressPath)\n' +
+    '    return Trim(lines[idx])\n' +
+    '}\n' +
+    '\n' +
+    'FindQuick3270() {\n' +
+    '    patterns := ["Quick3270", "ahk_exe Quick3270.exe", "ahk_exe quick3270.exe", "ahk_class Quick3270", "ahk_class QWS3270", "UADRCI", "SPIRIT"]\n' +
+    '    for pattern in patterns {\n' +
+    '        hwnd := WinExist(pattern)\n' +
+    '        if hwnd\n' +
+    '            return hwnd\n' +
+    '    }\n' +
+    '    return 0\n' +
+    '}\n' +
+    '\n' +
+    hk + '::\n' +
+    '{\n' +
+    '    SoundBeep(800, 100)\n' +
+    '    DebugLog("HOTKEY pressed, mode=" . DATA_MODE)\n' +
+    '\n' +
+    '    caseNum := ""\n' +
+    '    if (DATA_MODE = "hardcoded") {\n' +
+    '        caseNum := CASE_HARDCODED\n' +
+    '    } else if (DATA_MODE = "prompt") {\n' +
+    '        ib := InputBox("Enter case number:", "UADRCI Simple", "w300 h120")\n' +
+    '        if (ib.Result != "OK") {\n' +
+    '            DebugLog("prompt cancelled")\n' +
+    '            return\n' +
+    '        }\n' +
+    '        caseNum := Trim(ib.Value)\n' +
+    '    } else if (DATA_MODE = "file") {\n' +
+    '        caseNum := GetNextCaseFromFile()\n' +
+    '        if (caseNum = "") {\n' +
+    '            SoundBeep(300, 300)\n' +
+    '            MsgBox("No more cases in case_list.txt (or file missing).", "UADRCI Simple")\n' +
+    '            DebugLog("ERROR: no case from file")\n' +
+    '            return\n' +
+    '        }\n' +
+    '    }\n' +
+    '\n' +
+    '    WriteINI(caseNum)\n' +
+    '    DebugLog("INI written, case=" . caseNum)\n' +
+    '\n' +
+    '    hwnd := FindQuick3270()\n' +
+    '    if !hwnd {\n' +
+    '        SoundBeep(300, 300)\n' +
+    '        MsgBox("Quick3270 window not found. Open it first.", "UADRCI Simple")\n' +
+    '        DebugLog("ERROR: Quick3270 not found")\n' +
+    '        return\n' +
+    '    }\n' +
+    '    WinActivate("ahk_id " . hwnd)\n' +
+    '    Sleep(200)\n' +
+    '    Send("^{F8}")\n' +
+    '    DebugLog("sent ^{F8} to Quick3270")\n' +
+    '}\n'
+  );
+}
+
+function buildSimpleMac() {
+  const cfg = getConfig();
+  const esc = s => String(s).replace(/"/g, '""');
+
+  let fillCode = '';
+  FIELDS.forEach(f => {
+    const c = cfg.coords[f.key];
+    if (!c) return;
+    fillCode += '    If vals.Exists("' + f.key + '") And vals("' + f.key + '") <> "" Then\n';
+    fillCode += '        Sess.SetCursor ' + c.row + ', ' + c.col + '\n';
+    fillCode += '        Sess.SendKeys vals("' + f.key + '")\n';
+    fillCode += '    End If\n\n';
+  });
+
+  return (
+    "' =========================================================================\n" +
+    "' UADRCI SIMPLE Bridge Macro — fills fields, then sends PF12\n" +
+    "' =========================================================================\n" +
+    "' Triggered by the paired uadrci_simple.ahk script via Ctrl+F8.\n" +
+    "' Reads %APPDATA%\\UADRCI\\simple.ini, fills every configured field,\n" +
+    "' and unconditionally sends <PF12> at the end.\n" +
+    "'\n" +
+    "' SETUP:\n" +
+    "'   1. Quick3270 -> Tools -> Macros -> New Macro -> paste this -> Save as 'uadrci_simple'\n" +
+    "'   2. Quick3270 -> Tools -> Customize -> Keyboard -> bind Ctrl+F8 to this macro\n" +
+    "' =========================================================================\n" +
+    "\n" +
+    "Sub Main\n" +
+    "\n" +
+    "    Dim Sess\n" +
+    "    Set Sess = Application.ActiveSession\n" +
+    "    If Sess Is Nothing Then\n" +
+    '        MsgBox "No active session.", vbExclamation, "UADRCI Simple"\n' +
+    "        Exit Sub\n" +
+    "    End If\n" +
+    "\n" +
+    "    Dim fso, shell, filePath\n" +
+    "    Set fso = CreateObject(\"Scripting.FileSystemObject\")\n" +
+    "    Set shell = CreateObject(\"WScript.Shell\")\n" +
+    "    filePath = shell.ExpandEnvironmentStrings(\"%APPDATA%\") & \"\\UADRCI\\simple.ini\"\n" +
+    "\n" +
+    "    If Not fso.FileExists(filePath) Then\n" +
+    '        MsgBox "No case data at:" & vbCrLf & filePath & vbCrLf & vbCrLf & "Is uadrci_simple.ahk running?", vbExclamation, "UADRCI Simple"\n' +
+    "        Exit Sub\n" +
+    "    End If\n" +
+    "\n" +
+    "    Dim vals : Set vals = CreateObject(\"Scripting.Dictionary\")\n" +
+    "    Dim f : Set f = fso.OpenTextFile(filePath, 1)\n" +
+    "    Dim ln\n" +
+    "    Do While Not f.AtEndOfStream\n" +
+    "        ln = f.ReadLine\n" +
+    "        If InStr(ln, \"=\") > 0 Then\n" +
+    "            Dim parts : parts = Split(ln, \"=\", 2)\n" +
+    "            vals(Trim(parts(0))) = Trim(parts(1))\n" +
+    "        End If\n" +
+    "    Loop\n" +
+    "    f.Close\n" +
+    "\n" +
+    "    Sess.WaitHostQuiet 500\n" +
+    "\n" +
+    "    ' --- Fill fields ---\n" +
+    fillCode +
+    "    ' --- Submit (F12) ---\n" +
+    "    Sess.SendKeys \"<PF12>\"\n" +
+    "    Sess.WaitHostQuiet 2000\n" +
+    "\n" +
+    "End Sub\n"
+  );
+}
+
+function downloadSimple() {
+  downloadFile(buildSimpleAhk(), 'uadrci_simple.ahk');
+  setTimeout(() => downloadFile(buildSimpleMac(), 'uadrci_simple.mac'), 300);
+  flashStatus('Downloaded uadrci_simple.ahk + uadrci_simple.mac');
+}
+
+
+function downloadAll() {
+  // Download orchestrator AHK
+  downloadFile(buildOrchestratorAhk(), 'uadrci_orchestrator.ahk');
+  // Download full-case bridge macro
+  setTimeout(() => downloadFile(buildBridgeMac(), 'uadrci_bridge.mac'), 300);
+  // Download fill-here bridge macro
+  setTimeout(() => downloadFile(buildHereBridgeMac(), 'uadrci_bridge_here.mac'), 600);
+  // Download case list if any
+  const cases = getCaseList();
+  if (cases.length > 0) {
+    setTimeout(() => downloadFile(cases.join('\n'), 'case_list.txt'), 900);
+  }
+  flashStatus('Downloaded orchestrator + both bridge macros' + (cases.length > 0 ? ' + case list' : ''));
 }
 
 // Init
 buildCoordsGrid();
 initHotkeyCapture();
 loadConfig();
+loadCaseList();
+renderTemplates();
 updatePreview();
 
 // Bind events
 FIELDS.forEach(f => $('v_' + f.key).addEventListener('input', saveConfig));
 $('submitLookup').addEventListener('change', saveConfig);
 $('submitDisposition').addEventListener('change', saveConfig);
+$('downloadAllBtn').addEventListener('click', downloadAll);
+$('downloadMacBtn').addEventListener('click', () => { downloadFile(buildBridgeMac(), 'uadrci_bridge.mac'); flashStatus('Downloaded full-case bridge macro'); });
+$('downloadHereMacBtn').addEventListener('click', () => { downloadFile(buildHereBridgeMac(), 'uadrci_bridge_here.mac'); flashStatus('Downloaded fill-here bridge macro'); });
 $('downloadBtn').addEventListener('click', downloadAhk);
-$('copyBtn').addEventListener('click', copyAhk);
+$('downloadTestBtn').addEventListener('click', () => { downloadFile(buildTestAhk(), 'uadrci_test.ahk'); flashStatus('Downloaded hotkey test script — run it first to confirm your keybind works'); });
+$('downloadSimpleBtn').addEventListener('click', downloadSimple);
 $('resetBtn').addEventListener('click', resetConfig);
+
+// Templates
+$('saveTemplateBtn').addEventListener('click', saveTemplate);
+
+// Case list
+$('addCaseInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    addCase($('addCaseInput').value);
+    $('addCaseInput').value = '';
+  }
+});
+$('addCaseBtn').addEventListener('click', () => {
+  addCase($('addCaseInput').value);
+  $('addCaseInput').value = '';
+});
+$('bulkAddBtn').addEventListener('click', () => {
+  $('bulkModal').style.display = $('bulkModal').style.display === 'none' ? 'block' : 'none';
+  $('bulkArea').focus();
+});
+$('bulkConfirmBtn').addEventListener('click', () => {
+  addCasesBulk($('bulkArea').value);
+  $('bulkArea').value = '';
+  $('bulkModal').style.display = 'none';
+  flashStatus('Cases added');
+});
+$('bulkCancelBtn').addEventListener('click', () => {
+  $('bulkModal').style.display = 'none';
+});
+$('clearCaseBtn').addEventListener('click', () => {
+  if (!confirm('Remove all cases from the list?')) return;
+  saveCases([]);
+  flashStatus('Case list cleared', 'warn');
+});
+$('resetProgressBtn').addEventListener('click', () => {
+  const cases = getCases();
+  cases.forEach(c => c.status = 'pending');
+  saveCases(cases);
+  flashStatus('Progress reset');
+});
+$('importCaseBtn').addEventListener('click', () => $('caseFileInput').click());
+$('caseFileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    addCasesBulk(ev.target.result);
+    flashStatus('Imported cases from file');
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+$('syncProgressBtn').addEventListener('click', () => $('syncFileInput').click());
+$('syncFileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    // AHK writes completed case numbers to this file, one per line
+    const doneCases = ev.target.result.split('\n').map(s => s.trim().toLowerCase()).filter(s => s);
+    const cases = getCases();
+    let count = 0;
+    cases.forEach(c => {
+      if (doneCases.includes(c.id.toLowerCase()) && c.status === 'pending') {
+        c.status = 'done';
+        count++;
+      }
+    });
+    saveCases(cases);
+    flashStatus('Synced: ' + count + ' cases marked done');
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// Moving smiley face animation for Josh
+(function() {
+  var smiley = document.getElementById('joshSmiley');
+  if (!smiley) return;
+  var faces = ['\u263A', '\u{1F60A}', '\u{1F604}', '\u{1F609}', '\u{1F60E}'];
+  var i = 0;
+  setInterval(function() {
+    i = (i + 1) % faces.length;
+    smiley.textContent = faces[i];
+  }, 1800);
+})();
 </script>
 </body>
 </html>
