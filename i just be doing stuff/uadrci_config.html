@@ -433,6 +433,7 @@
         <button id="downloadMacBtn" class="secondary">Full-case Macro (.mac)</button>
         <button id="downloadHereMacBtn" class="secondary">Fill-here Macro (.mac)</button>
         <button id="downloadBtn" class="secondary">AHK Script only (.ahk)</button>
+        <button id="downloadSimpleBtn" class="secondary" style="background:#2b4a2b;border-color:#4caf50;" title="Simple mode: one hotkey fills all fields and presses F12. Generates uadrci_simple.ahk + uadrci_simple.mac. Edit DATA_MODE at top of the .ahk to switch between hardcoded / prompt / file.">&#x26A1; SIMPLE (one-button + F12)</button>
         <button id="downloadTestBtn" class="secondary" title="Downloads a tiny AHK script that ONLY tests whether your hotkey fires — no Quick3270, no macros. Use this first if nothing happens when you press the keybind.">&#x1F50D; Download Hotkey Test Script</button>
         <button class="secondary" id="resetBtn">Reset All Fields</button>
       </div>
@@ -2034,6 +2035,218 @@ function buildTestAhk() {
   );
 }
 
+// =====================================================================
+// SIMPLE MODE — one button fills everything and sends F12
+// Generates a small AHK + Quick3270 macro pair with a DATA_MODE switch
+// =====================================================================
+function buildSimpleAhk() {
+  const cfg = getConfig();
+  const esc = s => String(s).replace(/`/g, '``').replace(/"/g, '""');
+  const hk = cfg.hotkey || '^u';
+  const hkName = cfg.hotkeyDisplay || hotkeyLabel(hk);
+
+  // Build the INI body (everything EXCEPT caseNum — that's set per mode below)
+  let iniLines = '';
+  FIELDS.forEach(f => {
+    if (f.key === 'caseNum') return;
+    const val = cfg.values[f.key] || '';
+    if (val) iniLines += '    content .= "' + f.key + '=' + esc(val) + '`n"\n';
+  });
+
+  return (
+    '; =========================================================================\n' +
+    '; UADRCI SIMPLE — one hotkey fills all fields and fires F12\n' +
+    '; =========================================================================\n' +
+    '; Edit DATA_MODE below to pick how the case number is supplied:\n' +
+    ';   "hardcoded" — uses the value baked in below (CASE_HARDCODED)\n' +
+    ';   "prompt"    — pops an InputBox each time asking for the case number\n' +
+    ';   "file"      — reads the next line of case_list.txt, advances progress\n' +
+    ';\n' +
+    '; SETUP:\n' +
+    ';   1. Load uadrci_simple.mac into Quick3270, bind it to Ctrl+F8\n' +
+    ';   2. Double-click this .ahk file to run\n' +
+    ';   3. Press ' + hkName + ' anywhere — fields fill, F12 submits.\n' +
+    '; =========================================================================\n' +
+    '\n' +
+    '#Requires AutoHotkey v2.0\n' +
+    '#SingleInstance Force\n' +
+    '#UseHook true\n' +
+    '\n' +
+    '; --- Settings (edit these) ---\n' +
+    'global DATA_MODE      := "hardcoded"   ; "hardcoded" | "prompt" | "file"\n' +
+    'global CASE_HARDCODED := "' + esc(cfg.values.caseNum || '') + '"\n' +
+    '\n' +
+    '; --- Paths ---\n' +
+    'global iniDir       := A_AppData . "\\UADRCI"\n' +
+    'global iniPath      := iniDir . "\\simple.ini"\n' +
+    'global caseListPath := iniDir . "\\case_list.txt"\n' +
+    'global progressPath := iniDir . "\\progress.txt"\n' +
+    'global debugPath    := iniDir . "\\debug_simple.txt"\n' +
+    '\n' +
+    'DirCreate(iniDir)\n' +
+    '\n' +
+    'DebugLog(msg) {\n' +
+    '    global debugPath\n' +
+    '    try FileAppend(FormatTime(, "HH:mm:ss") . " | " . msg . "`n", debugPath)\n' +
+    '}\n' +
+    '\n' +
+    'DebugLog("=== SIMPLE STARTED === mode=" . DATA_MODE)\n' +
+    '\n' +
+    'WriteINI(caseNum) {\n' +
+    '    global iniPath\n' +
+    '    content := ""\n' +
+    '    if (caseNum != "")\n' +
+    '        content .= "caseNum=" . caseNum . "`n"\n' +
+    iniLines +
+    '    try FileDelete(iniPath)\n' +
+    '    FileAppend(content, iniPath)\n' +
+    '}\n' +
+    '\n' +
+    'GetNextCaseFromFile() {\n' +
+    '    global caseListPath, progressPath\n' +
+    '    if !FileExist(caseListPath)\n' +
+    '        return ""\n' +
+    '    lines := StrSplit(FileRead(caseListPath), "`n", "`r")\n' +
+    '    idx := 1\n' +
+    '    if FileExist(progressPath)\n' +
+    '        idx := Integer(Trim(FileRead(progressPath))) + 1\n' +
+    '    if (idx < 1 || idx > lines.Length)\n' +
+    '        return ""\n' +
+    '    try FileDelete(progressPath)\n' +
+    '    FileAppend(String(idx), progressPath)\n' +
+    '    return Trim(lines[idx])\n' +
+    '}\n' +
+    '\n' +
+    'FindQuick3270() {\n' +
+    '    patterns := ["Quick3270", "ahk_exe Quick3270.exe", "ahk_exe quick3270.exe", "ahk_class Quick3270", "ahk_class QWS3270", "UADRCI", "SPIRIT"]\n' +
+    '    for pattern in patterns {\n' +
+    '        hwnd := WinExist(pattern)\n' +
+    '        if hwnd\n' +
+    '            return hwnd\n' +
+    '    }\n' +
+    '    return 0\n' +
+    '}\n' +
+    '\n' +
+    hk + '::\n' +
+    '{\n' +
+    '    SoundBeep(800, 100)\n' +
+    '    DebugLog("HOTKEY pressed, mode=" . DATA_MODE)\n' +
+    '\n' +
+    '    caseNum := ""\n' +
+    '    if (DATA_MODE = "hardcoded") {\n' +
+    '        caseNum := CASE_HARDCODED\n' +
+    '    } else if (DATA_MODE = "prompt") {\n' +
+    '        ib := InputBox("Enter case number:", "UADRCI Simple", "w300 h120")\n' +
+    '        if (ib.Result != "OK") {\n' +
+    '            DebugLog("prompt cancelled")\n' +
+    '            return\n' +
+    '        }\n' +
+    '        caseNum := Trim(ib.Value)\n' +
+    '    } else if (DATA_MODE = "file") {\n' +
+    '        caseNum := GetNextCaseFromFile()\n' +
+    '        if (caseNum = "") {\n' +
+    '            SoundBeep(300, 300)\n' +
+    '            MsgBox("No more cases in case_list.txt (or file missing).", "UADRCI Simple")\n' +
+    '            DebugLog("ERROR: no case from file")\n' +
+    '            return\n' +
+    '        }\n' +
+    '    }\n' +
+    '\n' +
+    '    WriteINI(caseNum)\n' +
+    '    DebugLog("INI written, case=" . caseNum)\n' +
+    '\n' +
+    '    hwnd := FindQuick3270()\n' +
+    '    if !hwnd {\n' +
+    '        SoundBeep(300, 300)\n' +
+    '        MsgBox("Quick3270 window not found. Open it first.", "UADRCI Simple")\n' +
+    '        DebugLog("ERROR: Quick3270 not found")\n' +
+    '        return\n' +
+    '    }\n' +
+    '    WinActivate("ahk_id " . hwnd)\n' +
+    '    Sleep(200)\n' +
+    '    Send("^{F8}")\n' +
+    '    DebugLog("sent ^{F8} to Quick3270")\n' +
+    '}\n'
+  );
+}
+
+function buildSimpleMac() {
+  const cfg = getConfig();
+  const esc = s => String(s).replace(/"/g, '""');
+
+  let fillCode = '';
+  FIELDS.forEach(f => {
+    const c = cfg.coords[f.key];
+    if (!c) return;
+    fillCode += '    If vals.Exists("' + f.key + '") And vals("' + f.key + '") <> "" Then\n';
+    fillCode += '        Sess.SetCursor ' + c.row + ', ' + c.col + '\n';
+    fillCode += '        Sess.SendKeys vals("' + f.key + '")\n';
+    fillCode += '    End If\n\n';
+  });
+
+  return (
+    "' =========================================================================\n" +
+    "' UADRCI SIMPLE Bridge Macro — fills fields, then sends PF12\n" +
+    "' =========================================================================\n" +
+    "' Triggered by the paired uadrci_simple.ahk script via Ctrl+F8.\n" +
+    "' Reads %APPDATA%\\UADRCI\\simple.ini, fills every configured field,\n" +
+    "' and unconditionally sends <PF12> at the end.\n" +
+    "'\n" +
+    "' SETUP:\n" +
+    "'   1. Quick3270 -> Tools -> Macros -> New Macro -> paste this -> Save as 'uadrci_simple'\n" +
+    "'   2. Quick3270 -> Tools -> Customize -> Keyboard -> bind Ctrl+F8 to this macro\n" +
+    "' =========================================================================\n" +
+    "\n" +
+    "Sub Main\n" +
+    "\n" +
+    "    Dim Sess\n" +
+    "    Set Sess = Application.ActiveSession\n" +
+    "    If Sess Is Nothing Then\n" +
+    '        MsgBox "No active session.", vbExclamation, "UADRCI Simple"\n' +
+    "        Exit Sub\n" +
+    "    End If\n" +
+    "\n" +
+    "    Dim fso, shell, filePath\n" +
+    "    Set fso = CreateObject(\"Scripting.FileSystemObject\")\n" +
+    "    Set shell = CreateObject(\"WScript.Shell\")\n" +
+    "    filePath = shell.ExpandEnvironmentStrings(\"%APPDATA%\") & \"\\UADRCI\\simple.ini\"\n" +
+    "\n" +
+    "    If Not fso.FileExists(filePath) Then\n" +
+    '        MsgBox "No case data at:" & vbCrLf & filePath & vbCrLf & vbCrLf & "Is uadrci_simple.ahk running?", vbExclamation, "UADRCI Simple"\n' +
+    "        Exit Sub\n" +
+    "    End If\n" +
+    "\n" +
+    "    Dim vals : Set vals = CreateObject(\"Scripting.Dictionary\")\n" +
+    "    Dim f : Set f = fso.OpenTextFile(filePath, 1)\n" +
+    "    Dim ln\n" +
+    "    Do While Not f.AtEndOfStream\n" +
+    "        ln = f.ReadLine\n" +
+    "        If InStr(ln, \"=\") > 0 Then\n" +
+    "            Dim parts : parts = Split(ln, \"=\", 2)\n" +
+    "            vals(Trim(parts(0))) = Trim(parts(1))\n" +
+    "        End If\n" +
+    "    Loop\n" +
+    "    f.Close\n" +
+    "\n" +
+    "    Sess.WaitHostQuiet 500\n" +
+    "\n" +
+    "    ' --- Fill fields ---\n" +
+    fillCode +
+    "    ' --- Submit (F12) ---\n" +
+    "    Sess.SendKeys \"<PF12>\"\n" +
+    "    Sess.WaitHostQuiet 2000\n" +
+    "\n" +
+    "End Sub\n"
+  );
+}
+
+function downloadSimple() {
+  downloadFile(buildSimpleAhk(), 'uadrci_simple.ahk');
+  setTimeout(() => downloadFile(buildSimpleMac(), 'uadrci_simple.mac'), 300);
+  flashStatus('Downloaded uadrci_simple.ahk + uadrci_simple.mac');
+}
+
+
 function downloadAll() {
   // Download orchestrator AHK
   downloadFile(buildOrchestratorAhk(), 'uadrci_orchestrator.ahk');
@@ -2066,6 +2279,7 @@ $('downloadMacBtn').addEventListener('click', () => { downloadFile(buildBridgeMa
 $('downloadHereMacBtn').addEventListener('click', () => { downloadFile(buildHereBridgeMac(), 'uadrci_bridge_here.mac'); flashStatus('Downloaded fill-here bridge macro'); });
 $('downloadBtn').addEventListener('click', downloadAhk);
 $('downloadTestBtn').addEventListener('click', () => { downloadFile(buildTestAhk(), 'uadrci_test.ahk'); flashStatus('Downloaded hotkey test script — run it first to confirm your keybind works'); });
+$('downloadSimpleBtn').addEventListener('click', downloadSimple);
 $('resetBtn').addEventListener('click', resetConfig);
 
 // Templates
