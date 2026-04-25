@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UADRCI Simple — One Button + F12</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --muted: #8b949e;
+    --accent: #4caf50;
+    --accent-dim: #388e3c;
+    --warn: #f0c674;
+    --input-bg: #0a0e14;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, 'Segoe UI', Tahoma, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 {
+    font-size: 1.5rem;
+    color: var(--accent);
+    margin: 0 0 6px;
+    font-family: 'IBM Plex Mono', 'Courier New', monospace;
+    letter-spacing: 1px;
+  }
+  .subtitle { color: var(--muted); font-size: 0.9rem; margin: 0 0 18px; }
+  .nav-link {
+    display: inline-block;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.78rem;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 12px;
+  }
+  .nav-link:hover { color: var(--accent); border-color: var(--accent); }
+  section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  section h2 {
+    font-size: 1rem;
+    color: var(--accent);
+    margin: 0 0 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+  .field {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .field label {
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  input[type="text"] {
+    background: var(--input-bg);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+  input::placeholder { color: #3a4048; }
+  input:focus {
+    outline: none;
+    border-color: var(--accent-dim);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+  }
+  .modes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .mode {
+    background: var(--input-bg);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.1s;
+  }
+  .mode:hover { border-color: var(--accent-dim); }
+  .mode.active { border-color: var(--accent); background: rgba(76, 175, 80, 0.08); }
+  .mode .mode-title {
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .mode .mode-desc { color: var(--muted); font-size: 0.72rem; }
+  button {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 14px 18px;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+    width: 100%;
+  }
+  button:hover { opacity: 0.88; }
+  button:active { transform: scale(0.98); }
+  .status {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 10px;
+    min-height: 16px;
+  }
+  .status.ok { color: var(--accent); }
+  .steps {
+    background: var(--input-bg);
+    border: 1px dashed var(--border);
+    border-radius: 5px;
+    padding: 12px 16px;
+    font-size: 0.8rem;
+    margin-top: 12px;
+  }
+  .steps ol { margin: 6px 0 0; padding-left: 22px; }
+  .steps li { margin-bottom: 4px; }
+  .steps strong { color: var(--accent); }
+  kbd {
+    background: #000;
+    border: 1px solid #555;
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <a href="uadrci_config.html" class="nav-link">&larr; Switch to FULL config (advanced)</a>
+
+  <h1>&gt;_ UADRCI SIMPLE</h1>
+  <p class="subtitle">One hotkey fills every field, then presses F12. That's it.</p>
+
+  <section>
+    <h2>1. PICK MODE</h2>
+    <div class="modes">
+      <div class="mode active" data-mode="hardcoded">
+        <div class="mode-title">HARDCODED</div>
+        <div class="mode-desc">Same case # every press</div>
+      </div>
+      <div class="mode" data-mode="prompt">
+        <div class="mode-title">PROMPT</div>
+        <div class="mode-desc">Asks for case # each time</div>
+      </div>
+      <div class="mode" data-mode="file">
+        <div class="mode-title">FILE</div>
+        <div class="mode-desc">Next case from list.txt</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. HOTKEY</h2>
+    <div class="field">
+      <label>Press a key</label>
+      <input type="text" id="hotkey" readonly value="Ctrl+U"
+        style="cursor:pointer;text-align:center;color:#ffaa00;font-weight:bold;"
+        onclick="this.value='Press any key...';this.style.color='var(--muted)';">
+    </div>
+    <p style="font-size:0.75rem;color:var(--muted);margin:6px 0 0;">
+      Avoid plain F-keys (F1&ndash;F12) &mdash; Quick3270 grabs them as PF keys. Use a modifier combo like <kbd>Ctrl+U</kbd>.
+    </p>
+  </section>
+
+  <section>
+    <h2>3. FIELD VALUES</h2>
+    <div class="field">
+      <label>Case Number</label>
+      <input type="text" id="v_caseNum" placeholder="e.g. amfo33e">
+    </div>
+    <div class="field">
+      <label>Hearing Date</label>
+      <input type="text" id="v_hearDate" placeholder="MMDDYYYY">
+    </div>
+    <div class="field">
+      <label>Hearing Time</label>
+      <input type="text" id="v_hearTime" placeholder="HHMM">
+    </div>
+    <div class="field">
+      <label>Type</label>
+      <input type="text" id="v_hearType" placeholder="e.g. AR">
+    </div>
+    <div class="field">
+      <label>Case Action</label>
+      <input type="text" id="v_caseAction">
+    </div>
+    <div class="field">
+      <label>Continuance</label>
+      <input type="text" id="v_continuance">
+    </div>
+    <div class="field">
+      <label>Plea</label>
+      <input type="text" id="v_plea" placeholder="G / N / NC">
+    </div>
+    <div class="field">
+      <label>Disposition</label>
+      <input type="text" id="v_disposition">
+    </div>
+    <div class="field">
+      <label>Sentence</label>
+      <input type="text" id="v_sentence">
+    </div>
+    <div class="field">
+      <label>Fine</label>
+      <input type="text" id="v_fine">
+    </div>
+    <div class="field">
+      <label>Cost</label>
+      <input type="text" id="v_cost">
+    </div>
+  </section>
+
+  <section>
+    <h2>4. DOWNLOAD</h2>
+    <button id="downloadBtn">&#x26A1; DOWNLOAD (.ahk + .mac)</button>
+    <div class="status" id="status">Auto-saved to your browser</div>
+
+    <div class="steps">
+      <strong>WHAT TO DO WITH THE FILES</strong>
+      <ol>
+        <li>Open <code>uadrci_simple.mac</code> in Quick3270 (<strong>Tools &rarr; Macros &rarr; New Macro</strong>) and bind it to <kbd>Ctrl+F8</kbd></li>
+        <li>Double-click <code>uadrci_simple.ahk</code> &mdash; needs <a href="https://www.autohotkey.com/" target="_blank" rel="noopener" style="color:var(--accent);">AutoHotkey v2</a></li>
+        <li>Press your hotkey on the UADRCI screen &mdash; fields fill, F12 fires.</li>
+      </ol>
+    </div>
+  </section>
+</div>
+
+<script>
+const FIELDS = [
+  { key: 'caseNum',     row: 4,  col: 8  },
+  { key: 'hearDate',    row: 5,  col: 15 },
+  { key: 'hearTime',    row: 5,  col: 30 },
+  { key: 'hearType',    row: 5,  col: 61 },
+  { key: 'caseAction',  row: 7,  col: 17 },
+  { key: 'continuance', row: 7,  col: 56 },
+  { key: 'plea',        row: 12, col: 17 },
+  { key: 'disposition', row: 12, col: 35 },
+  { key: 'sentence',    row: 12, col: 77 },
+  { key: 'fine',        row: 15, col: 7  },
+  { key: 'cost',        row: 15, col: 26 },
+];
+const STORAGE_KEY = 'uadrci-simple-v1';
+const $ = id => document.getElementById(id);
+
+let dataMode = 'hardcoded';
+let hotkey = { ahk: '^u', display: 'Ctrl+U' };
+
+// --- Mode picker ---
+document.querySelectorAll('.mode').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.mode').forEach(m => m.classList.remove('active'));
+    el.classList.add('active');
+    dataMode = el.dataset.mode;
+    save();
+  });
+});
+
+// --- Hotkey capture ---
+const hkBox = $('hotkey');
+hkBox.addEventListener('keydown', e => {
+  if (!hkBox.matches(':focus')) return;
+  e.preventDefault();
+  const parts = [];
+  const ahkParts = [];
+  if (e.ctrlKey)  { parts.push('Ctrl');  ahkParts.push('^'); }
+  if (e.altKey)   { parts.push('Alt');   ahkParts.push('!'); }
+  if (e.shiftKey) { parts.push('Shift'); ahkParts.push('+'); }
+  let k = e.key;
+  if (['Control','Alt','Shift','Meta'].includes(k)) {
+    if (parts.length === 0) return;
+    hotkey = { ahk: ahkParts.join(''), display: parts.join('+') };
+  } else {
+    let kn = k;
+    if (kn.length === 1) kn = kn.toLowerCase();
+    if (kn === ' ') kn = 'Space';
+    parts.push(kn.toUpperCase().length === 1 ? kn.toUpperCase() : kn);
+    hotkey = {
+      ahk: ahkParts.join('') + (kn.length === 1 ? kn : '{' + kn + '}'),
+      display: parts.join('+')
+    };
+  }
+  hkBox.value = hotkey.display;
+  hkBox.style.color = '#ffaa00';
+  hkBox.blur();
+  save();
+});
+hkBox.addEventListener('blur', () => {
+  if (hkBox.value === 'Press any key...') {
+    hkBox.value = hotkey.display;
+    hkBox.style.color = '#ffaa00';
+  }
+});
+
+// --- Save / load to localStorage ---
+function getValues() {
+  const out = {};
+  FIELDS.forEach(f => out[f.key] = $('v_' + f.key).value.trim());
+  return out;
+}
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    values: getValues(), mode: dataMode, hotkey
+  }));
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const c = JSON.parse(raw);
+    if (c.values) FIELDS.forEach(f => { if (c.values[f.key]) $('v_' + f.key).value = c.values[f.key]; });
+    if (c.mode) {
+      dataMode = c.mode;
+      document.querySelectorAll('.mode').forEach(m => m.classList.toggle('active', m.dataset.mode === c.mode));
+    }
+    if (c.hotkey) {
+      hotkey = c.hotkey;
+      hkBox.value = hotkey.display;
+    }
+  } catch (e) {}
+}
+FIELDS.forEach(f => $('v_' + f.key).addEventListener('input', save));
+
+// --- Generators (mirrors uadrci_config.html simple builders) ---
+function buildAhk() {
+  const vals = getValues();
+  const esc = s => String(s).replace(/`/g, '``').replace(/"/g, '""');
+  const hk = hotkey.ahk;
+  const hkName = hotkey.display;
+  let iniLines = '';
+  FIELDS.forEach(f => {
+    if (f.key === 'caseNum') return;
+    const v = vals[f.key] || '';
+    if (v) iniLines += '    content .= "' + f.key + '=' + esc(v) + '`n"\n';
+  });
+
+  return (
+    '; =========================================================================\n' +
+    '; UADRCI SIMPLE — one hotkey fills all fields and fires F12\n' +
+    '; =========================================================================\n' +
+    '; DATA_MODE controls how the case number is supplied:\n' +
+    ';   "hardcoded" — uses CASE_HARDCODED below\n' +
+    ';   "prompt"    — pops an InputBox each press\n' +
+    ';   "file"      — reads next line of case_list.txt, advances progress\n' +
+    '; =========================================================================\n' +
+    '\n' +
+    '#Requires AutoHotkey v2.0\n' +
+    '#SingleInstance Force\n' +
+    '#UseHook true\n' +
+    '\n' +
+    'global DATA_MODE      := "' + dataMode + '"\n' +
+    'global CASE_HARDCODED := "' + esc(vals.caseNum || '') + '"\n' +
+    '\n' +
+    'global iniDir       := A_AppData . "\\UADRCI"\n' +
+    'global iniPath      := iniDir . "\\simple.ini"\n' +
+    'global caseListPath := iniDir . "\\case_list.txt"\n' +
+    'global progressPath := iniDir . "\\progress.txt"\n' +
+    'global debugPath    := iniDir . "\\debug_simple.txt"\n' +
+    '\n' +
+    'DirCreate(iniDir)\n' +
+    '\n' +
+    'DebugLog(msg) {\n' +
+    '    global debugPath\n' +
+    '    try FileAppend(FormatTime(, "HH:mm:ss") . " | " . msg . "`n", debugPath)\n' +
+    '}\n' +
+    '\n' +
+    'DebugLog("=== SIMPLE STARTED === mode=" . DATA_MODE)\n' +
+    '\n' +
+    'WriteINI(caseNum) {\n' +
+    '    global iniPath\n' +
+    '    content := ""\n' +
+    '    if (caseNum != "")\n' +
+    '        content .= "caseNum=" . caseNum . "`n"\n' +
+    iniLines +
+    '    try FileDelete(iniPath)\n' +
+    '    FileAppend(content, iniPath)\n' +
+    '}\n' +
+    '\n' +
+    'GetNextCaseFromFile() {\n' +
+    '    global caseListPath, progressPath\n' +
+    '    if !FileExist(caseListPath)\n' +
+    '        return ""\n' +
+    '    lines := StrSplit(FileRead(caseListPath), "`n", "`r")\n' +
+    '    idx := 1\n' +
+    '    if FileExist(progressPath)\n' +
+    '        idx := Integer(Trim(FileRead(progressPath))) + 1\n' +
+    '    if (idx < 1 || idx > lines.Length)\n' +
+    '        return ""\n' +
+    '    try FileDelete(progressPath)\n' +
+    '    FileAppend(String(idx), progressPath)\n' +
+    '    return Trim(lines[idx])\n' +
+    '}\n' +
+    '\n' +
+    'FindQuick3270() {\n' +
+    '    patterns := ["Quick3270", "ahk_exe Quick3270.exe", "ahk_exe quick3270.exe", "ahk_class Quick3270", "ahk_class QWS3270", "UADRCI", "SPIRIT"]\n' +
+    '    for pattern in patterns {\n' +
+    '        hwnd := WinExist(pattern)\n' +
+    '        if hwnd\n' +
+    '            return hwnd\n' +
+    '    }\n' +
+    '    return 0\n' +
+    '}\n' +
+    '\n' +
+    hk + '::\n' +
+    '{\n' +
+    '    SoundBeep(800, 100)\n' +
+    '    DebugLog("HOTKEY pressed, mode=" . DATA_MODE)\n' +
+    '\n' +
+    '    caseNum := ""\n' +
+    '    if (DATA_MODE = "hardcoded") {\n' +
+    '        caseNum := CASE_HARDCODED\n' +
+    '    } else if (DATA_MODE = "prompt") {\n' +
+    '        ib := InputBox("Enter case number:", "UADRCI Simple", "w300 h120")\n' +
+    '        if (ib.Result != "OK")\n' +
+    '            return\n' +
+    '        caseNum := Trim(ib.Value)\n' +
+    '    } else if (DATA_MODE = "file") {\n' +
+    '        caseNum := GetNextCaseFromFile()\n' +
+    '        if (caseNum = "") {\n' +
+    '            SoundBeep(300, 300)\n' +
+    '            MsgBox("No more cases in case_list.txt (or file missing).", "UADRCI Simple")\n' +
+    '            return\n' +
+    '        }\n' +
+    '    }\n' +
+    '\n' +
+    '    WriteINI(caseNum)\n' +
+    '    DebugLog("INI written, case=" . caseNum)\n' +
+    '\n' +
+    '    hwnd := FindQuick3270()\n' +
+    '    if !hwnd {\n' +
+    '        SoundBeep(300, 300)\n' +
+    '        MsgBox("Quick3270 window not found. Open it first.", "UADRCI Simple")\n' +
+    '        return\n' +
+    '    }\n' +
+    '    WinActivate("ahk_id " . hwnd)\n' +
+    '    Sleep(200)\n' +
+    '    Send("^{F8}")\n' +
+    '}\n'
+  );
+}
+
+function buildMac() {
+  let fillCode = '';
+  FIELDS.forEach(f => {
+    fillCode += '    If vals.Exists("' + f.key + '") And vals("' + f.key + '") <> "" Then\n';
+    fillCode += '        Sess.SetCursor ' + f.row + ', ' + f.col + '\n';
+    fillCode += '        Sess.SendKeys vals("' + f.key + '")\n';
+    fillCode += '    End If\n\n';
+  });
+
+  return (
+    "' =========================================================================\n" +
+    "' UADRCI SIMPLE Bridge Macro — fills fields, then sends PF12\n" +
+    "' =========================================================================\n" +
+    "' Triggered by uadrci_simple.ahk via Ctrl+F8.\n" +
+    "' Reads %APPDATA%\\UADRCI\\simple.ini, fills fields, sends <PF12>.\n" +
+    "' SETUP: Quick3270 -> Tools -> Macros -> New Macro -> paste, save as 'uadrci_simple'\n" +
+    "'        Quick3270 -> Tools -> Customize -> Keyboard -> bind Ctrl+F8 to it\n" +
+    "' =========================================================================\n" +
+    "\n" +
+    "Sub Main\n" +
+    "    Dim Sess\n" +
+    "    Set Sess = Application.ActiveSession\n" +
+    "    If Sess Is Nothing Then\n" +
+    '        MsgBox "No active session.", vbExclamation, "UADRCI Simple"\n' +
+    "        Exit Sub\n" +
+    "    End If\n" +
+    "\n" +
+    "    Dim fso, shell, filePath\n" +
+    "    Set fso = CreateObject(\"Scripting.FileSystemObject\")\n" +
+    "    Set shell = CreateObject(\"WScript.Shell\")\n" +
+    "    filePath = shell.ExpandEnvironmentStrings(\"%APPDATA%\") & \"\\UADRCI\\simple.ini\"\n" +
+    "\n" +
+    "    If Not fso.FileExists(filePath) Then\n" +
+    '        MsgBox "No case data at:" & vbCrLf & filePath, vbExclamation, "UADRCI Simple"\n' +
+    "        Exit Sub\n" +
+    "    End If\n" +
+    "\n" +
+    "    Dim vals : Set vals = CreateObject(\"Scripting.Dictionary\")\n" +
+    "    Dim f : Set f = fso.OpenTextFile(filePath, 1)\n" +
+    "    Dim ln, parts\n" +
+    "    Do While Not f.AtEndOfStream\n" +
+    "        ln = f.ReadLine\n" +
+    "        If InStr(ln, \"=\") > 0 Then\n" +
+    "            parts = Split(ln, \"=\", 2)\n" +
+    "            vals(Trim(parts(0))) = Trim(parts(1))\n" +
+    "        End If\n" +
+    "    Loop\n" +
+    "    f.Close\n" +
+    "\n" +
+    "    Sess.WaitHostQuiet 500\n" +
+    "\n" +
+    fillCode +
+    "    ' Submit (F12)\n" +
+    "    Sess.SendKeys \"<PF12>\"\n" +
+    "    Sess.WaitHostQuiet 2000\n" +
+    "End Sub\n"
+  );
+}
+
+function downloadFile(content, name) {
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+$('downloadBtn').addEventListener('click', () => {
+  downloadFile(buildAhk(), 'uadrci_simple.ahk');
+  setTimeout(() => downloadFile(buildMac(), 'uadrci_simple.mac'), 250);
+  const s = $('status');
+  s.textContent = '✓ Downloaded uadrci_simple.ahk + uadrci_simple.mac';
+  s.classList.add('ok');
+  setTimeout(() => { s.textContent = 'Auto-saved to your browser'; s.classList.remove('ok'); }, 3000);
+});
+
+load();
+</script>
+</body>
+</html>
